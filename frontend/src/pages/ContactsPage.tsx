@@ -98,7 +98,7 @@ export const ContactsPage: React.FC = () => {
         </div>
 
         {/* Filter Controls Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2">
           {/* Search Box */}
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
@@ -107,7 +107,7 @@ export const ContactsPage: React.FC = () => {
               placeholder="Search by name, company, role..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-xs pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+              className="w-full text-xs pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
             />
           </div>
 
@@ -116,7 +116,7 @@ export const ContactsPage: React.FC = () => {
             <select
               value={relationshipType}
               onChange={(e) => setRelationshipType(e.target.value)}
-              className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium text-slate-700"
+              className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium text-slate-700"
             >
               <option value="all">All Relationship Types</option>
               <option value="founder">Founders</option>
@@ -136,7 +136,7 @@ export const ContactsPage: React.FC = () => {
             <select
               value={selectedTag}
               onChange={(e) => setSelectedTag(e.target.value)}
-              className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium text-slate-700"
+              className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium text-slate-700"
             >
               <option value="">All Tags</option>
               {tags.map((t) => (
@@ -146,27 +146,27 @@ export const ContactsPage: React.FC = () => {
           </div>
 
           {/* Follow-up Due toggle & Sort */}
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setFollowUpDue(!followUpDue)}
-              className={`flex-1 text-xs py-2 px-3 rounded-xl border font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+              className={`w-full text-xs py-2.5 px-2 rounded-xl border font-semibold flex items-center justify-center gap-1 transition-colors whitespace-nowrap ${
                 followUpDue
                   ? 'bg-amber-100 text-amber-900 border-amber-300'
                   : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
               }`}
             >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Follow-ups Due</span>
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Follow-ups</span>
             </button>
 
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium text-slate-700"
+              className="w-full text-xs px-2.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium text-slate-700 truncate"
             >
-              <option value="updated_at">Recently Updated</option>
-              <option value="last_interaction_at">Last Interaction</option>
-              <option value="relationship_strength">Strength (High to Low)</option>
+              <option value="updated_at">Updated</option>
+              <option value="last_interaction_at">Last Touch</option>
+              <option value="relationship_strength">Strength</option>
               <option value="first_name">Name (A-Z)</option>
             </select>
           </div>
