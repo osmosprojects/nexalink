@@ -16,7 +16,6 @@ import {
   Building,
   Briefcase,
   UserCheck,
-  Sparkles,
   CheckCircle2,
   Loader2,
   Zap,
@@ -24,22 +23,10 @@ import {
   Heart,
   Compass,
   Users2,
-  Check,
   Upload,
-  X
+  RotateCcw
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-
-const PRESET_AVATARS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
-];
-
-const HOBBY_SUGGESTIONS = ['Golf', 'Marathon Running', 'Chess', 'Podcasting', 'Reading', 'Tennis', 'Scuba Diving', 'Photography', 'Skiing', 'Cooking'];
-const INTEREST_SUGGESTIONS = ['AI & Deeptech', 'Angel Investing', 'SaaS Growth', 'Cross-border M&A', 'Clean Energy', 'Real Estate', 'Web3 & Crypto', 'Fintech', 'HealthTech'];
 
 export const ProfilePage: React.FC = () => {
   const { user, profile, isProfileComplete, refreshProfile } = useAuth();
@@ -48,12 +35,12 @@ export const ProfilePage: React.FC = () => {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Avatar state
+  // Avatar state - Empty string default if no custom uploaded avatar
   const [avatarUrl, setAvatarUrl] = useState<string>(
-    user?.avatarUrl || profile?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'
+    user?.avatarUrl || profile?.avatar_url || ''
   );
 
-  // Form state matching light mode business network profile
+  // Core Identity form state
   const [formData, setFormData] = useState({
     name: user?.displayName || '',
     email: user?.email || '',
@@ -64,47 +51,39 @@ export const ProfilePage: React.FC = () => {
     website: profile?.website || profile?.skills?.website || '',
   });
 
-  // Networking Group Member state
-  const [isGroupMember, setIsGroupMember] = useState<boolean>(() => {
+  // Networking Group Member list (dynamic list with + and delete)
+  const [networkingGroups, setNetworkingGroups] = useState<string[]>(() => {
     const group = profile?.skills?.networkingGroup;
-    return Boolean(group && (group.isMember || (typeof group === 'string' && group.trim().length > 0)));
-  });
-  const [networkingGroupNames, setNetworkingGroupNames] = useState<string>(() => {
-    const group = profile?.skills?.networkingGroup;
-    if (typeof group === 'string') return group;
-    return group?.groupNames || 'BNI / YPO / EO / TiE / Rotary';
+    if (Array.isArray(group) && group.length > 0) return group;
+    if (typeof group === 'string' && group.trim()) return [group];
+    if (group && typeof group === 'object' && group.groupNames) {
+      return group.groupNames.split(',').map((g: string) => g.trim()).filter(Boolean);
+    }
+    return [''];
   });
 
-  // 3 Hobbies Cards state
+  // 3 Hobbies (dynamic list with + and delete)
   const [hobbies, setHobbies] = useState<string[]>(() => {
     const raw = profile?.skills?.hobbies;
-    if (Array.isArray(raw) && raw.length > 0) {
-      const filled = [...raw];
-      while (filled.length < 3) filled.push('');
-      return filled.slice(0, 3);
-    }
-    return ['Golf & Business Networking', 'Marathon Running', 'Book Club & Reading'];
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return ['', '', ''];
   });
 
-  // 3 Interests Cards state
+  // 3 Interests (dynamic list with + and delete)
   const [userInterests, setUserInterests] = useState<string[]>(() => {
     const raw = profile?.skills?.interests;
-    if (Array.isArray(raw) && raw.length > 0) {
-      const filled = [...raw];
-      while (filled.length < 3) filled.push('');
-      return filled.slice(0, 3);
-    }
-    return ['AI & Deeptech Ventures', 'Angel Investing & Syndicates', 'Enterprise SaaS Scaleups'];
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return ['', '', ''];
   });
 
   // Section A: Which businesses do you want to meet?
   const [targetBusinesses, setTargetBusinesses] = useState<string[]>(() => {
     const raw = profile?.networking_goals;
     if (Array.isArray(raw) && raw.length > 0) return raw;
-    return ['Series A VC Funds & Family Offices', 'Precision Electronics Manufacturers'];
+    return [''];
   });
 
-  // Section B: Who can you connect people to
+  // Section B: Who can you connect people to?
   const [connectionsOffered, setConnectionsOffered] = useState<ConnectablePerson[]>(() => {
     const raw = profile?.interests;
     if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'object') {
@@ -116,15 +95,7 @@ export const ProfilePage: React.FC = () => {
         role: item.role || item.designation || '',
       }));
     }
-    return [
-      {
-        id: 'conn-demo-1',
-        businessDomain: 'Fintech & Digital Payments',
-        personName: 'Rohan Mehta',
-        orgName: 'NovaPay Global',
-        role: 'VP of Product Alliances',
-      },
-    ];
+    return [];
   });
 
   // New connection bridge form state
@@ -138,7 +109,7 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (user || profile) {
-      setAvatarUrl(user?.avatarUrl || profile?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80');
+      setAvatarUrl(user?.avatarUrl || profile?.avatar_url || '');
       setFormData({
         name: user?.displayName || '',
         email: user?.email || '',
@@ -150,21 +121,21 @@ export const ProfilePage: React.FC = () => {
       });
 
       const group = profile?.skills?.networkingGroup;
-      if (group) {
-        setIsGroupMember(Boolean(group.isMember || (typeof group === 'string' && group.trim().length > 0)));
-        setNetworkingGroupNames(typeof group === 'string' ? group : group.groupNames || '');
+      if (Array.isArray(group) && group.length > 0) {
+        setNetworkingGroups(group);
+      } else if (typeof group === 'string' && group.trim()) {
+        setNetworkingGroups([group]);
+      } else if (group && typeof group === 'object' && group.groupNames) {
+        const parsed = group.groupNames.split(',').map((g: string) => g.trim()).filter(Boolean);
+        setNetworkingGroups(parsed.length > 0 ? parsed : ['']);
       }
 
-      if (Array.isArray(profile?.skills?.hobbies)) {
-        const filled = [...profile.skills.hobbies];
-        while (filled.length < 3) filled.push('');
-        setHobbies(filled.slice(0, 3));
+      if (Array.isArray(profile?.skills?.hobbies) && profile.skills.hobbies.length > 0) {
+        setHobbies(profile.skills.hobbies);
       }
 
-      if (Array.isArray(profile?.skills?.interests)) {
-        const filled = [...profile.skills.interests];
-        while (filled.length < 3) filled.push('');
-        setUserInterests(filled.slice(0, 3));
+      if (Array.isArray(profile?.skills?.interests) && profile.skills.interests.length > 0) {
+        setUserInterests(profile.skills.interests);
       }
 
       if (Array.isArray(profile?.networking_goals) && profile.networking_goals.length > 0) {
@@ -185,7 +156,7 @@ export const ProfilePage: React.FC = () => {
     }
   }, [user, profile]);
 
-  // Image Upload Handler (Convert to base64 Data URL)
+  // File upload converter
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -204,36 +175,74 @@ export const ProfilePage: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleHobbyChange = (index: number, val: string) => {
+  const handleResetAvatar = () => {
+    setAvatarUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Networking Group Handlers
+  const handleAddGroup = () => setNetworkingGroups([...networkingGroups, '']);
+  const handleUpdateGroup = (idx: number, val: string) => {
+    const updated = [...networkingGroups];
+    updated[idx] = val;
+    setNetworkingGroups(updated);
+  };
+  const handleRemoveGroup = (idx: number) => {
+    if (networkingGroups.length <= 1) {
+      setNetworkingGroups(['']);
+      return;
+    }
+    setNetworkingGroups(networkingGroups.filter((_, i) => i !== idx));
+  };
+
+  // Hobbies Handlers
+  const handleAddHobby = () => setHobbies([...hobbies, '']);
+  const handleUpdateHobby = (idx: number, val: string) => {
     const updated = [...hobbies];
-    updated[index] = val;
+    updated[idx] = val;
     setHobbies(updated);
   };
+  const handleRemoveHobby = (idx: number) => {
+    if (hobbies.length <= 1) {
+      setHobbies(['']);
+      return;
+    }
+    setHobbies(hobbies.filter((_, i) => i !== idx));
+  };
 
-  const handleInterestChange = (index: number, val: string) => {
+  // Interests Handlers
+  const handleAddInterest = () => setUserInterests([...userInterests, '']);
+  const handleUpdateInterest = (idx: number, val: string) => {
     const updated = [...userInterests];
-    updated[index] = val;
+    updated[idx] = val;
     setUserInterests(updated);
   };
-
-  const handleAddTargetBusiness = () => {
-    setTargetBusinesses([...targetBusinesses, '']);
+  const handleRemoveInterest = (idx: number) => {
+    if (userInterests.length <= 1) {
+      setUserInterests(['']);
+      return;
+    }
+    setUserInterests(userInterests.filter((_, i) => i !== idx));
   };
 
-  const handleUpdateTargetBusiness = (index: number, val: string) => {
+  // Target Business Handlers
+  const handleAddTargetBusiness = () => setTargetBusinesses([...targetBusinesses, '']);
+  const handleUpdateTargetBusiness = (idx: number, val: string) => {
     const updated = [...targetBusinesses];
-    updated[index] = val;
+    updated[idx] = val;
     setTargetBusinesses(updated);
   };
-
-  const handleRemoveTargetBusiness = (index: number) => {
+  const handleRemoveTargetBusiness = (idx: number) => {
     if (targetBusinesses.length <= 1) {
       setTargetBusinesses(['']);
       return;
     }
-    setTargetBusinesses(targetBusinesses.filter((_, i) => i !== index));
+    setTargetBusinesses(targetBusinesses.filter((_, i) => i !== idx));
   };
 
+  // Connection Bridge Handlers
   const handleAddConnectionBridge = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newConn.businessDomain.trim() || !newConn.personName.trim()) return;
@@ -242,12 +251,7 @@ export const ProfilePage: React.FC = () => {
       id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
     setConnectionsOffered([...connectionsOffered, newEntry]);
-    setNewConn({
-      businessDomain: '',
-      personName: '',
-      orgName: '',
-      role: '',
-    });
+    setNewConn({ businessDomain: '', personName: '', orgName: '', role: '' });
     setShowAddConnRow(false);
   };
 
@@ -264,6 +268,7 @@ export const ProfilePage: React.FC = () => {
       const cleanTargets = targetBusinesses.map((t) => t.trim()).filter(Boolean);
       const cleanHobbies = hobbies.map((h) => h.trim()).filter(Boolean);
       const cleanInterests = userInterests.map((i) => i.trim()).filter(Boolean);
+      const cleanGroups = networkingGroups.map((g) => g.trim()).filter(Boolean);
 
       await api.put('/profile', {
         name: formData.name,
@@ -279,10 +284,7 @@ export const ProfilePage: React.FC = () => {
           twitter: formData.twitter,
           website: formData.website,
         },
-        networkingGroup: {
-          isMember: isGroupMember,
-          groupNames: isGroupMember ? networkingGroupNames : '',
-        },
+        networkingGroup: cleanGroups,
         hobbies: cleanHobbies,
         userInterests: cleanInterests,
         targetBusinesses: cleanTargets.length > 0 ? cleanTargets : ['General Business Networking'],
@@ -291,7 +293,7 @@ export const ProfilePage: React.FC = () => {
 
       await refreshProfile();
       setSavedSuccess(true);
-      confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
+      confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
 
       setTimeout(() => {
         setSavedSuccess(false);
@@ -308,16 +310,16 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
-      {/* Onboarding Alert Banner */}
+      {/* Onboarding Alert Banner if incomplete */}
       {!isProfileComplete && (
-        <div className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white p-5 rounded-3xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white p-5 rounded-3xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
-              <h3 className="font-bold text-sm sm:text-base">Complete Your Profile & Persona to Unlock NexaLink</h3>
+              <h3 className="font-bold text-sm sm:text-base">Complete Your Profile Setup</h3>
             </div>
             <p className="text-xs text-brand-100 max-w-xl">
-              Fill in your photo, phone, biography, and the target businesses you want to meet below to activate your CRM account.
+              Please enter your Phone, Biography, and Target Businesses below to activate your CRM account.
             </p>
           </div>
           <div className="shrink-0 px-3.5 py-1.5 bg-white/20 backdrop-blur-md rounded-xl text-xs font-extrabold border border-white/30">
@@ -326,20 +328,16 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* Top Header Banner - Light Theme */}
-      <div className="bg-white border border-slate-200/90 p-5 sm:p-7 rounded-3xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold shadow-inner shrink-0 border border-brand-100">
+      {/* Page Action Header Bar (No top splash card) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
             <UserCheck className="w-6 h-6 text-brand-600" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-              Networker Profile & Connection Architecture
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-2xl">
-              Tailor your professional identity, networking group affiliations, personal interests, and introduction bridges.
-            </p>
-          </div>
+            <span>User Profile</span>
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Manage your personal identity, networking group memberships, hobbies, interests, and connection bridges.
+          </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
@@ -354,7 +352,7 @@ export const ProfilePage: React.FC = () => {
             type="button"
             disabled={loading}
             onClick={() => handleSaveProfile()}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-brand-600/20 active:scale-95 disabled:opacity-60"
+            className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-brand-600/20 active:scale-95 disabled:opacity-60"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>Save Profile</span>
@@ -363,38 +361,31 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
-        {/* Left Column: Personal Photo & Identity Details (5 cols) */}
+        {/* Left Column: Profile Photo & Identity (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Photo & Upload Card */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Camera className="w-4 h-4 text-brand-600" />
-                <span>Profile Photo</span>
-              </h2>
-              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                Public Picture
-              </span>
-            </div>
+          {/* Profile Photo Card */}
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Camera className="w-4 h-4 text-brand-600" />
+              <span>Profile Photo</span>
+            </h2>
 
             <div className="flex flex-col sm:flex-row items-center gap-5">
-              <div className="relative group">
-                <img
-                  src={avatarUrl}
-                  alt={formData.name || 'User'}
-                  className="w-24 h-24 rounded-full object-cover ring-4 ring-brand-50 shadow-md transition-transform group-hover:scale-105"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-0 right-0 p-2 bg-brand-600 text-white rounded-full shadow-md hover:bg-brand-700 transition-transform active:scale-90"
-                  title="Upload New Photo"
-                >
-                  <Camera className="w-4 h-4" />
-                </button>
+              <div className="relative shrink-0">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={formData.name || 'User Profile'}
+                    className="w-24 h-24 rounded-full object-cover border-2 border-slate-200 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
+                    <User className="w-12 h-12 text-slate-400" />
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-2 text-center sm:text-left flex-1">
+              <div className="space-y-2.5 text-center sm:text-left flex-1">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -406,47 +397,26 @@ export const ProfilePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 rounded-xl text-xs font-bold transition-all"
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 rounded-xl text-xs font-bold transition-all shadow-xs"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload Image</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      setAvatarUrl(
-                        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'
-                      )
-                    }
-                    className="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl text-xs font-semibold transition-all"
+                    onClick={handleResetAvatar}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-semibold transition-all"
                   >
-                    Reset
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset</span>
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-400">PNG, JPG or WebP up to 5MB.</p>
-
-                {/* Preset Avatars */}
-                <div className="pt-2">
-                  <p className="text-[10px] font-bold uppercase text-slate-400 mb-1.5">Or choose a preset profile picture:</p>
-                  <div className="flex items-center gap-1.5 justify-center sm:justify-start">
-                    {PRESET_AVATARS.map((preset, idx) => (
-                      <img
-                        key={idx}
-                        src={preset}
-                        alt="Preset"
-                        onClick={() => setAvatarUrl(preset)}
-                        className={`w-7 h-7 rounded-full object-cover cursor-pointer hover:scale-110 transition-all ${
-                          avatarUrl === preset ? 'ring-2 ring-brand-600 scale-105' : 'opacity-70 hover:opacity-100'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <p className="text-[11px] text-slate-400">Upload a JPG, PNG or WebP image from your device.</p>
               </div>
             </div>
           </div>
 
-          {/* Personal Identity Details Card */}
+          {/* Personal Identity Form Card */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <User className="w-4 h-4 text-brand-600" />
@@ -462,7 +432,7 @@ export const ProfilePage: React.FC = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. Sanjeev Sharma"
+                  placeholder="Enter full name"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
                   required
                 />
@@ -492,7 +462,7 @@ export const ProfilePage: React.FC = () => {
                     <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="+91 98765 43210"
+                      placeholder="Enter phone number"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
@@ -510,7 +480,7 @@ export const ProfilePage: React.FC = () => {
                   rows={4}
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  placeholder="Brief summary of your background, leadership roles, and core industry focus..."
+                  placeholder="Brief summary of your background, experience, and leadership focus..."
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed font-normal"
                   required
                 />
@@ -567,9 +537,9 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Networking Groups, Hobbies, Interests, Target Businesses & Bridges (7 cols) */}
+        {/* Right Column: Groups, Hobbies, Interests, Target Businesses & Bridges (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Networking Group Affiliation Card */}
+          {/* 1) Networking Group Member Card (Dynamic List with + and Trash) */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -578,56 +548,46 @@ export const ProfilePage: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900">Networking Group Member</h2>
-                  <p className="text-xs text-slate-500">Are you an active member of any professional networking organizations or clubs?</p>
+                  <p className="text-xs text-slate-500">List the networking groups, chapters, or clubs you belong to.</p>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={handleAddGroup}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Group</span>
+              </button>
             </div>
 
-            <div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100 space-y-3">
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="isGroupMember"
-                    checked={isGroupMember}
-                    onChange={() => setIsGroupMember(true)}
-                    className="w-4 h-4 text-brand-600 accent-brand-600 focus:ring-brand-500"
-                  />
-                  <span>Yes, I am a member</span>
-                </label>
-                <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="isGroupMember"
-                    checked={!isGroupMember}
-                    onChange={() => setIsGroupMember(false)}
-                    className="w-4 h-4 text-slate-400 accent-slate-400"
-                  />
-                  <span>No, independent networker</span>
-                </label>
-              </div>
-
-              {isGroupMember && (
-                <div className="pt-2 space-y-1.5 animate-fadeIn">
-                  <label className="block text-xs font-semibold text-indigo-950">
-                    Group / Chapter / Club Names
-                  </label>
+            <div className="space-y-2.5">
+              {networkingGroups.map((grp, idx) => (
+                <div key={idx} className="flex items-center gap-2">
                   <input
                     type="text"
-                    value={networkingGroupNames}
-                    onChange={(e) => setNetworkingGroupNames(e.target.value)}
-                    placeholder="e.g. BNI Apex Chapter, YPO South Asia, EO Mumbai, TiE Silicon Valley, Rotary Club"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-indigo-200 text-slate-900 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                    placeholder="Enter networking group or chapter name"
+                    value={grp}
+                    onChange={(e) => handleUpdateGroup(idx, e.target.value)}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                   />
-                  <p className="text-[11px] text-indigo-600 font-medium">
-                    This helps match you with fellow chapter members and cross-network connectors.
-                  </p>
+                  {networkingGroups.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveGroup(idx)}
+                      className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      title="Remove group"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           </div>
 
-          {/* 3 Hobbies Cards */}
+          {/* 2) 3 Hobbies Card (Dynamic List with + and Trash) */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -635,53 +595,47 @@ export const ProfilePage: React.FC = () => {
                   <Heart className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">3 Personal Hobbies</h2>
-                  <p className="text-xs text-slate-500">Personal icebreakers and casual conversation starters for warm introductions.</p>
+                  <h2 className="text-base font-bold text-slate-900">3 Hobbies</h2>
+                  <p className="text-xs text-slate-500">Personal interests and hobbies for casual icebreakers.</p>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={handleAddHobby}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Hobby</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-2.5">
               {hobbies.map((hobby, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase text-rose-600 tracking-wider">Hobby {idx + 1}</span>
-                  </div>
+                <div key={idx} className="flex items-center gap-2">
                   <input
                     type="text"
+                    placeholder={`Hobby ${idx + 1}`}
                     value={hobby}
-                    onChange={(e) => handleHobbyChange(idx, e.target.value)}
-                    placeholder={`e.g. ${HOBBY_SUGGESTIONS[idx] || 'Golf'}`}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    onChange={(e) => handleUpdateHobby(idx, e.target.value)}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
                   />
+                  {hobbies.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveHobby(idx)}
+                      className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      title="Remove hobby"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-              ))}
-            </div>
-
-            {/* Quick Hobby Suggestion Pills */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              <span className="text-[11px] font-bold text-slate-400">Quick Suggest:</span>
-              {HOBBY_SUGGESTIONS.slice(0, 6).map((sug) => (
-                <button
-                  key={sug}
-                  type="button"
-                  onClick={() => {
-                    const emptyIdx = hobbies.findIndex((h) => !h.trim());
-                    if (emptyIdx !== -1) {
-                      handleHobbyChange(emptyIdx, sug);
-                    } else {
-                      handleHobbyChange(2, sug);
-                    }
-                  }}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-[11px] font-semibold transition-colors border border-slate-200/60"
-                >
-                  + {sug}
-                </button>
               ))}
             </div>
           </div>
 
-          {/* 3 Interest Cards */}
+          {/* 3) 3 Interests Card (Dynamic List with + and Trash) */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -689,48 +643,42 @@ export const ProfilePage: React.FC = () => {
                   <Compass className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">3 Core Professional Interests</h2>
-                  <p className="text-xs text-slate-500">Key domain themes, technology focus areas, or investment interests.</p>
+                  <h2 className="text-base font-bold text-slate-900">3 Interests</h2>
+                  <p className="text-xs text-slate-500">Professional focus areas, industries, or topic interests.</p>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={handleAddInterest}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-all shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Interest</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-2.5">
               {userInterests.map((interest, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase text-purple-600 tracking-wider">Interest {idx + 1}</span>
-                  </div>
+                <div key={idx} className="flex items-center gap-2">
                   <input
                     type="text"
+                    placeholder={`Interest ${idx + 1}`}
                     value={interest}
-                    onChange={(e) => handleInterestChange(idx, e.target.value)}
-                    placeholder={`e.g. ${INTEREST_SUGGESTIONS[idx] || 'AI & SaaS'}`}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    onChange={(e) => handleUpdateInterest(idx, e.target.value)}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium"
                   />
+                  {userInterests.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveInterest(idx)}
+                      className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      title="Remove interest"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-              ))}
-            </div>
-
-            {/* Quick Interest Suggestion Pills */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              <span className="text-[11px] font-bold text-slate-400">Quick Suggest:</span>
-              {INTEREST_SUGGESTIONS.slice(0, 6).map((sug) => (
-                <button
-                  key={sug}
-                  type="button"
-                  onClick={() => {
-                    const emptyIdx = userInterests.findIndex((i) => !i.trim());
-                    if (emptyIdx !== -1) {
-                      handleInterestChange(emptyIdx, sug);
-                    } else {
-                      handleInterestChange(2, sug);
-                    }
-                  }}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-purple-50 text-slate-600 hover:text-purple-700 text-[11px] font-semibold transition-colors border border-slate-200/60"
-                >
-                  + {sug}
-                </button>
               ))}
             </div>
           </div>
@@ -767,7 +715,7 @@ export const ProfilePage: React.FC = () => {
                 <div key={idx} className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="e.g. Precision Electronics Manufacturers, Series A VC Funds..."
+                    placeholder="Enter target business vertical or industry"
                     value={target}
                     onChange={(e) => handleUpdateTargetBusiness(idx, e.target.value)}
                     className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
@@ -785,16 +733,9 @@ export const ProfilePage: React.FC = () => {
                 </div>
               ))}
             </div>
-
-            <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-200/70">
-              <Sparkles className="w-4 h-4 text-brand-600 shrink-0" />
-              <span>
-                The AutoConnector engine uses these fields to continuously scan your network for matching connectors.
-              </span>
-            </div>
           </div>
 
-          {/* Section B: Who can you connect people to */}
+          {/* Section B: Who can you connect people to? */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
@@ -839,7 +780,7 @@ export const ProfilePage: React.FC = () => {
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">Business Domain / Industry</label>
                     <input
                       type="text"
-                      placeholder="e.g. Fintech & Digital Payments"
+                      placeholder="e.g. Industry vertical"
                       value={newConn.businessDomain}
                       onChange={(e) => setNewConn({ ...newConn, businessDomain: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500"
@@ -851,7 +792,7 @@ export const ProfilePage: React.FC = () => {
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">Person Name</label>
                     <input
                       type="text"
-                      placeholder="e.g. Rohan Mehta"
+                      placeholder="e.g. Full Name"
                       value={newConn.personName}
                       onChange={(e) => setNewConn({ ...newConn, personName: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500"
@@ -863,7 +804,7 @@ export const ProfilePage: React.FC = () => {
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">Organization / Company</label>
                     <input
                       type="text"
-                      placeholder="e.g. NovaPay Global"
+                      placeholder="e.g. Company Name"
                       value={newConn.orgName}
                       onChange={(e) => setNewConn({ ...newConn, orgName: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500"
@@ -874,7 +815,7 @@ export const ProfilePage: React.FC = () => {
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">Role / Designation</label>
                     <input
                       type="text"
-                      placeholder="e.g. VP of Product Alliances"
+                      placeholder="e.g. Role or Designation"
                       value={newConn.role}
                       onChange={(e) => setNewConn({ ...newConn, role: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500"
@@ -908,20 +849,26 @@ export const ProfilePage: React.FC = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-sm text-slate-900">{conn.personName}</span>
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
-                          {conn.businessDomain}
-                        </span>
+                        {conn.businessDomain && (
+                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
+                            {conn.businessDomain}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <span className="flex items-center gap-1 text-slate-700 font-medium">
-                          <Building className="w-3.5 h-3.5 text-slate-400" />
-                          {conn.orgName || 'N/A'}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1 text-slate-500 font-medium">
-                          <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                          {conn.role || 'Key Contact'}
-                        </span>
+                        {conn.orgName && (
+                          <span className="flex items-center gap-1 text-slate-700 font-medium">
+                            <Building className="w-3.5 h-3.5 text-slate-400" />
+                            {conn.orgName}
+                          </span>
+                        )}
+                        {conn.orgName && conn.role && <span>•</span>}
+                        {conn.role && (
+                          <span className="flex items-center gap-1 text-slate-500 font-medium">
+                            <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                            {conn.role}
+                          </span>
+                        )}
                       </div>
                     </div>
 

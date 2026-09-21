@@ -35,8 +35,8 @@ export class ProfileController {
       if (data.name && typeof data.name === 'string') {
         await UserRepository.updateName(userId, data.name);
       }
-      if (data.avatar_url) {
-        await UserRepository.updateAvatar(userId, data.avatar_url);
+      if (data.avatar_url !== undefined) {
+        await UserRepository.updateAvatar(userId, data.avatar_url || '');
       }
 
       await ProfileRepository.upsertProfile(userId, {
