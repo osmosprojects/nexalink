@@ -8,6 +8,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const UserRepository_1 = require("../repositories/UserRepository");
 const ProfileRepository_1 = require("../repositories/ProfileRepository");
+const db_1 = require("../config/db");
 const env_1 = require("../config/env");
 const response_1 = require("../helpers/response");
 const audit_1 = require("../middleware/audit");
@@ -92,9 +93,10 @@ class AuthController {
     }
     static async demoLogin(req, res, next) {
         try {
-            const user = await UserRepository_1.UserRepository.findByEmail('demo@nexalink.com');
+            const users = await (0, db_1.query)('SELECT * FROM users WHERE status = ? ORDER BY user_id ASC LIMIT 1', ['active']);
+            const user = users && users.length > 0 ? users[0] : null;
             if (!user) {
-                return (0, response_1.sendError)(res, 'Demo account not seeded. Please run database seed.', 404);
+                return (0, response_1.sendError)(res, 'No active user account found in database.', 404);
             }
             const token = jsonwebtoken_1.default.sign({ userId: user.user_id, email: user.email, displayName: user.display_name }, env_1.config.jwtSecret, { expiresIn: '7d' });
             res.cookie('token', token, {

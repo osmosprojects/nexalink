@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserRepository } from '../repositories/UserRepository';
 import { ProfileRepository } from '../repositories/ProfileRepository';
+import { query } from '../config/db';
 import { config } from '../config/env';
 import { sendSuccess, sendError } from '../helpers/response';
 import { logAudit } from '../middleware/audit';
@@ -109,9 +110,10 @@ export class AuthController {
 
   static async demoLogin(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = await UserRepository.findByEmail('demo@nexalink.com');
+      const users = await query<any[]>('SELECT * FROM users WHERE status = ? ORDER BY user_id ASC LIMIT 1', ['active']);
+      const user = users && users.length > 0 ? users[0] : null;
       if (!user) {
-        return sendError(res, 'Demo account not seeded. Please run database seed.', 404);
+        return sendError(res, 'No active user account found in database.', 404);
       }
 
       const token = jwt.sign(
