@@ -18,7 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSearch,
   unreadCount = 0,
 }) => {
-  const { user, profile } = useAuth();
+  const { user, profile, isProfileComplete } = useAuth();
   const navigate = useNavigate();
 
   return (
