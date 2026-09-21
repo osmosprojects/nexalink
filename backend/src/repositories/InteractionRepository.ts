@@ -1,4 +1,5 @@
 import { query, withTransaction } from '../config/db';
+import { TagRepository } from './TagRepository';
 
 export interface InteractionRow {
   interaction_id: number;
@@ -109,7 +110,7 @@ export class InteractionRepository {
     follow_up_date?: string | null;
     sentiment?: string;
   }): Promise<number> {
-    return withTransaction(async (conn) => {
+    const interactionId = await withTransaction(async (conn) => {
       const interactionDate = data.interaction_date || new Date().toISOString().slice(0, 19).replace('T', ' ');
       const followUpReq = data.follow_up_required ? 1 : 0;
 
@@ -179,6 +180,10 @@ export class InteractionRepository {
 
       return interactionId;
     });
+
+    // Automatically synchronize Hot/Warm/Cold relationship temperature tag
+    await TagRepository.syncContactWarmth(userId, data.contact_id);
+    return interactionId;
   }
 
   static async update(userId: number, interactionId: number, data: Partial<InteractionRow>): Promise<void> {

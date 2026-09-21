@@ -17,7 +17,8 @@ import {
   UserCheck,
   LogOut,
   ChevronRight,
-  Plus
+  Plus,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -27,7 +28,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
-  const { user, profile, logout } = useAuth();
+  const { user, profile, isProfileComplete, logout } = useAuth();
   const navigate = useNavigate();
 
   const mainNav = [
@@ -51,17 +52,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
     { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   ];
 
-  const bottomNav = [
-    { to: '/settings', label: 'Settings', icon: Settings },
-    { to: '/profile', label: 'Profile', icon: UserCheck },
-  ];
+  const handleNavClick = (e: React.MouseEvent, path: string) => {
+    if (!isProfileComplete && path !== '/profile') {
+      e.preventDefault();
+      navigate('/profile');
+    }
+  };
 
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-slate-900 text-slate-300 h-screen sticky top-0 border-r border-slate-800 z-30 select-none">
       {/* Brand Header */}
       <div className="p-5 flex items-center justify-between border-b border-slate-800/80">
         <div 
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(isProfileComplete ? '/dashboard' : '/profile')}
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-brand-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">
@@ -80,11 +83,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
       {/* Quick Action Button */}
       <div className="px-4 pt-4 pb-2">
         <button
-          onClick={onOpenQuickAdd}
-          className="w-full bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-medium text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition-all hover:shadow-brand-600/30 active:scale-[0.98]"
+          onClick={() => {
+            if (!isProfileComplete) {
+              navigate('/profile');
+              return;
+            }
+            onOpenQuickAdd();
+          }}
+          className={`w-full bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-medium text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition-all hover:shadow-brand-600/30 active:scale-[0.98] ${
+            !isProfileComplete ? 'opacity-70 cursor-pointer' : ''
+          }`}
         >
-          <Plus className="w-4 h-4" />
-          <span>Quick Add</span>
+          {!isProfileComplete ? <Lock className="w-3.5 h-3.5" /> : <Plus className="w-4 h-4" />}
+          <span>{!isProfileComplete ? 'Complete Setup' : 'Quick Add'}</span>
         </button>
       </div>
 
@@ -95,14 +106,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
           <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Core CRM</p>
           {mainNav.map((item) => {
             const Icon = item.icon;
+            const isLocked = !isProfileComplete;
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={(e) => handleNavClick(e, item.to)}
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                    isActive
+                    isActive && !isLocked
                       ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
+                      : isLocked
+                      ? 'text-slate-500 hover:bg-slate-800/40 cursor-not-allowed opacity-60'
                       : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
                   }`
                 }
@@ -111,6 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
                 </div>
+                {isLocked && <Lock className="w-3 h-3 text-slate-600" />}
               </NavLink>
             );
           })}
@@ -121,14 +137,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
           <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Productivity</p>
           {productivityNav.map((item) => {
             const Icon = item.icon;
+            const isLocked = !isProfileComplete;
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={(e) => handleNavClick(e, item.to)}
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                    isActive
+                    isActive && !isLocked
                       ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
+                      : isLocked
+                      ? 'text-slate-500 hover:bg-slate-800/40 cursor-not-allowed opacity-60'
                       : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
                   }`
                 }
@@ -137,6 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
                 </div>
+                {isLocked && <Lock className="w-3 h-3 text-slate-600" />}
               </NavLink>
             );
           })}
@@ -147,14 +168,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
           <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Intelligence & Network</p>
           {secondaryNav.map((item) => {
             const Icon = item.icon;
+            const isLocked = !isProfileComplete;
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={(e) => handleNavClick(e, item.to)}
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                    isActive
+                    isActive && !isLocked
                       ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
+                      : isLocked
+                      ? 'text-slate-500 hover:bg-slate-800/40 cursor-not-allowed opacity-60'
                       : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
                   }`
                 }
@@ -163,11 +188,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
                   <Icon className="w-4 h-4 text-purple-400" />
                   <span>{item.label}</span>
                 </div>
-                {item.badge && (
+                {isLocked ? (
+                  <Lock className="w-3 h-3 text-slate-600" />
+                ) : item.badge ? (
                   <span className="text-[10px] font-bold bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30">
                     {item.badge}
                   </span>
-                )}
+                ) : null}
               </NavLink>
             );
           })}
@@ -177,46 +204,65 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
       {/* User Footer */}
       <div className="p-3 border-t border-slate-800/80 bg-slate-900/60 space-y-2">
         <div className="space-y-0.5">
-          {bottomNav.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    isActive
-                      ? 'bg-slate-800 text-white font-semibold'
-                      : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
-                  }`
-                }
-              >
-                <Icon className="w-4 h-4 text-slate-400" />
-                <span>{item.label}</span>
-              </NavLink>
-            );
-          })}
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                isActive
+                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
+                  : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
+              }`
+            }
+          >
+            <div className="flex items-center gap-2.5">
+              <UserCheck className="w-4 h-4 text-brand-400" />
+              <span>Profile & Persona</span>
+            </div>
+            {!isProfileComplete && (
+              <span className="text-[9px] font-extrabold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/40 animate-pulse">
+                Action Required
+              </span>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/settings"
+            onClick={(e) => handleNavClick(e, '/settings')}
+            className={({ isActive }) =>
+              `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                isActive && isProfileComplete
+                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
+                  : !isProfileComplete
+                  ? 'text-slate-500 hover:bg-slate-800/40 cursor-not-allowed opacity-60'
+                  : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
+              }`
+            }
+          >
+            <div className="flex items-center gap-2.5">
+              <Settings className="w-4 h-4" />
+              <span>Settings</span>
+            </div>
+            {!isProfileComplete && <Lock className="w-3 h-3 text-slate-600" />}
+          </NavLink>
         </div>
 
-        <div className="pt-2 border-t border-slate-800/50 flex items-center justify-between px-2">
-          <div 
-            onClick={() => navigate('/profile')}
-            className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
-          >
+        {/* User Card */}
+        <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between px-2">
+          <div className="flex items-center gap-2.5 min-w-0">
             <img
-              src={user?.avatarUrl || profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+              src={user?.avatarUrl || profile?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'}
               alt={user?.displayName || 'User'}
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-700"
+              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-700 shrink-0"
             />
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-white truncate max-w-[100px]">{user?.displayName || 'User'}</p>
-              <p className="text-[10px] text-slate-400 truncate max-w-[100px]">{user?.email}</p>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate">{user?.displayName || 'User'}</p>
+              <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
             </div>
           </div>
           <button
             onClick={() => logout()}
-            title="Sign out"
-            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors shrink-0"
+            title="Sign Out"
           >
             <LogOut className="w-4 h-4" />
           </button>

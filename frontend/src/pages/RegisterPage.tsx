@@ -18,8 +18,12 @@ export const RegisterPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await register(email, password, displayName);
-      navigate('/dashboard');
+      const res = await register(email, password, displayName);
+      if (res.isComplete) {
+        navigate('/dashboard');
+      } else {
+        navigate('/profile');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
     } finally {

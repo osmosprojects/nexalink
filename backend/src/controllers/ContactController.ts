@@ -12,7 +12,20 @@ export class ContactController {
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.userId;
-      const { search, relationship_type, tag, company, follow_up_due, sort_by, sort_order, page, limit } = req.query;
+      // Auto-synchronize Hot/Warm/Cold warmth tags
+      await TagRepository.syncContactWarmth(userId);
+
+      const {
+        search,
+        relationship_type,
+        tag,
+        company,
+        follow_up_due,
+        sort_by,
+        sort_order,
+        page,
+        limit,
+      } = req.query;
 
       const result = await ContactRepository.list(userId, {
         search: search as string,
@@ -88,6 +101,7 @@ export class ContactController {
         tagNames,
       });
 
+      await TagRepository.syncContactWarmth(userId, contactId);
       const contact = await ContactRepository.getById(userId, contactId);
       await logAudit(req, 'CONTACT_CREATED', 'contact', contactId);
 

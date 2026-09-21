@@ -171,6 +171,29 @@ export const ContactsPage: React.FC = () => {
             </select>
           </div>
         </div>
+
+        {/* Quick Relationship Warmth Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 touch-scroll pt-2 border-t border-slate-100">
+          <span className="text-[11px] text-slate-400 font-semibold shrink-0 mr-1">Warmth:</span>
+          {[
+            { label: 'All Contacts', value: '' },
+            { label: '🔥 Hot (Active)', value: '🔥 Hot' },
+            { label: '☀️ Warm (15-45d)', value: '☀️ Warm' },
+            { label: '❄️ Cold (Needs Touch)', value: '❄️ Cold' },
+          ].map((w) => (
+            <button
+              key={w.label}
+              onClick={() => setSelectedTag(selectedTag === w.value ? '' : w.value)}
+              className={`text-xs px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all ${
+                selectedTag === w.value
+                  ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Loading State */}
@@ -198,9 +221,9 @@ export const ContactsPage: React.FC = () => {
           </div>
           <button
             onClick={() => openQuickAdd?.()}
-            className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20"
+            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-md transition-all"
           >
-            Add Your First Contact
+            Add First Contact
           </button>
         </div>
       )}
@@ -255,20 +278,31 @@ export const ContactsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Tags */}
+                  {/* Tags & Warmth Badges */}
                   {contact.tags && contact.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-3">
-                      {contact.tags.slice(0, 3).map((t) => (
-                        <span
-                          key={t.tag_id}
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600"
-                        >
-                          #{t.name}
-                        </span>
-                      ))}
-                      {contact.tags.length > 3 && (
+                      {contact.tags.slice(0, 4).map((t) => {
+                        const isWarmth = t.name.includes('Hot') || t.name.includes('Warm') || t.name.includes('Cold');
+                        return (
+                          <span
+                            key={t.tag_id}
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
+                              t.name.includes('Hot')
+                                ? 'bg-rose-50 text-rose-700 border-rose-200 font-bold'
+                                : t.name.includes('Warm')
+                                ? 'bg-amber-50 text-amber-700 border-amber-200 font-bold'
+                                : t.name.includes('Cold')
+                                ? 'bg-blue-50 text-blue-700 border-blue-200 font-bold'
+                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                            }`}
+                          >
+                            {isWarmth ? t.name : `#${t.name}`}
+                          </span>
+                        );
+                      })}
+                      {contact.tags.length > 4 && (
                         <span className="text-[10px] text-slate-400 font-medium">
-                          +{contact.tags.length - 3}
+                          +{contact.tags.length - 4}
                         </span>
                       )}
                     </div>

@@ -7,14 +7,25 @@ interface AuthContextType {
   profile: UserProfile | null;
   persona: UserPersona | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
-  demoLogin: () => Promise<void>;
+  isProfileComplete: boolean;
+  login: (email: string, password: string) => Promise<{ isComplete: boolean }>;
+  register: (email: string, password: string, displayName: string) => Promise<{ isComplete: boolean }>;
+  demoLogin: () => Promise<{ isComplete: boolean }>;
   logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: () => Promise<{ isComplete: boolean }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const checkIsProfileComplete = (profile: UserProfile | null, persona: UserPersona | null): boolean => {
+  if (!profile || !persona) return false;
+  const hasHeadline = Boolean(profile.headline && profile.headline.trim().length > 0);
+  const hasCompany = Boolean(profile.company && profile.company.trim().length > 0);
+  const hasIndustry = Boolean(profile.industry && profile.industry.trim().length > 0);
+  const hasPersonaName = Boolean(persona.persona_name && persona.persona_name.trim().length > 0);
+  const hasCommStyle = Boolean(persona.communication_style && persona.communication_style.trim().length > 0);
+  return hasHeadline && hasCompany && hasIndustry && hasPersonaName && hasCommStyle;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -22,16 +33,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [persona, setPersona] = useState<UserPersona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchCurrentUser = async () => {
+  const isProfileComplete = checkIsProfileComplete(profile, persona);
+
+  const fetchCurrentUser = async (): Promise<{ isComplete: boolean }> => {
     try {
       const data = await api.get<{ user: User; profile: UserProfile; persona: UserPersona }>('/auth/me');
       setUser(data.user);
       setProfile(data.profile);
       setPersona(data.persona);
+      return { isComplete: checkIsProfileComplete(data.profile, data.persona) };
     } catch {
       setUser(null);
       setProfile(null);
       setPersona(null);
+      return { isComplete: false };
     } finally {
       setIsLoading(false);
     }
@@ -44,19 +59,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     const data = await api.post<{ user: User; token: string }>('/auth/login', { email, password });
     localStorage.setItem('token', data.token);
-    await fetchCurrentUser();
+    return await fetchCurrentUser();
   };
 
   const register = async (email: string, password: string, displayName: string) => {
     const data = await api.post<{ user: User; token: string }>('/auth/register', { email, password, displayName });
     localStorage.setItem('token', data.token);
-    await fetchCurrentUser();
+    return await fetchCurrentUser();
   };
 
   const demoLogin = async () => {
     const data = await api.post<{ user: User; token: string }>('/auth/demo-login');
     localStorage.setItem('token', data.token);
-    await fetchCurrentUser();
+    return await fetchCurrentUser();
   };
 
   const logout = async () => {
@@ -72,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshProfile = async () => {
-    await fetchCurrentUser();
+    return await fetchCurrentUser();
   };
 
   return (
@@ -82,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile,
         persona,
         isLoading,
+        isProfileComplete,
         login,
         register,
         demoLogin,

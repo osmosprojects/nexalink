@@ -17,8 +17,12 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await login(email, password);
-      navigate('/dashboard');
+      const res = await login(email, password);
+      if (res.isComplete) {
+        navigate('/dashboard');
+      } else {
+        navigate('/profile');
+      }
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
     } finally {
@@ -30,8 +34,12 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await demoLogin();
-      navigate('/dashboard');
+      const res = await demoLogin();
+      if (res.isComplete) {
+        navigate('/dashboard');
+      } else {
+        navigate('/profile');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to initialize demo account');
     } finally {

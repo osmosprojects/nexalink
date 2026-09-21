@@ -18,7 +18,8 @@ import {
   UserCheck,
   LogOut,
   MessageSquareShare,
-  Plus
+  Plus,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -28,17 +29,18 @@ interface BottomNavProps {
 
 export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
   const [showMoreDrawer, setShowMoreDrawer] = useState(false);
-  const { user, profile, logout } = useAuth();
+  const { user, profile, isProfileComplete, logout } = useAuth();
   const navigate = useNavigate();
 
   const primaryTabs = [
     { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
     { to: '/discover', label: 'Discover', icon: Compass },
     { to: '/connections', label: 'People', icon: Users },
-    { to: '/tasks', label: 'Tasks', icon: CheckSquare },
+    { to: '/profile', label: 'Profile', icon: UserCheck, highlight: !isProfileComplete },
   ];
 
   const moreItems = [
+    { to: '/tasks', label: 'Tasks', icon: CheckSquare },
     { to: '/interactions', label: 'Interactions', icon: MessageSquareShare },
     { to: '/goals', label: 'Goals', icon: Target },
     { to: '/kanban', label: 'Kanban Board', icon: KanbanSquare },
@@ -51,23 +53,44 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
     { to: '/settings', label: 'Settings', icon: Settings },
   ];
 
+  const handleNavClick = (e: React.MouseEvent, path: string) => {
+    if (!isProfileComplete && path !== '/profile') {
+      e.preventDefault();
+      navigate('/profile');
+    }
+  };
+
   return (
     <>
       {/* Mobile Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 z-40 flex items-center justify-around shadow-lg">
         {primaryTabs.map((tab) => {
           const Icon = tab.icon;
+          const isLocked = !isProfileComplete && tab.to !== '/profile';
           return (
             <NavLink
               key={tab.to}
               to={tab.to}
+              onClick={(e) => handleNavClick(e, tab.to)}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
-                  isActive ? 'text-brand-600 font-semibold scale-105' : 'text-slate-500 hover:text-slate-800'
+                `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
+                  isActive && (!isLocked || tab.to === '/profile')
+                    ? 'text-brand-600 font-semibold scale-105'
+                    : isLocked
+                    ? 'text-slate-400 opacity-60'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`
               }
             >
-              <Icon className="w-5 h-5 mb-0.5" />
+              <div className="relative">
+                <Icon className="w-5 h-5 mb-0.5" />
+                {tab.highlight && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full ring-2 ring-white animate-pulse" />
+                )}
+                {isLocked && (
+                  <Lock className="w-2.5 h-2.5 absolute -bottom-0.5 -right-0.5 text-slate-400" />
+                )}
+              </div>
               <span className="text-[10px]">{tab.label}</span>
             </NavLink>
           );
@@ -76,7 +99,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
         {/* More Button */}
         <button
           onClick={() => setShowMoreDrawer(true)}
-          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             showMoreDrawer ? 'text-brand-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -92,11 +115,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
             className="flex-1"
             onClick={() => setShowMoreDrawer(false)}
           />
-          <div className="bg-white rounded-t-3xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto space-y-5 animate-slideUp">
+          <div className="bg-white rounded-t-3xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto space-y-4 animate-slideUp">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <img
-                  src={user?.avatarUrl || profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                  src={user?.avatarUrl || profile?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'}
                   alt={user?.displayName || 'User'}
                   className="w-10 h-10 rounded-full object-cover ring-2 ring-brand-500/20"
                 />
@@ -117,34 +140,48 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
             <button
               onClick={() => {
                 setShowMoreDrawer(false);
+                if (!isProfileComplete) {
+                  navigate('/profile');
+                  return;
+                }
                 onOpenQuickAdd();
               }}
               className="w-full bg-gradient-to-r from-brand-600 to-purple-600 text-white font-semibold text-sm py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-600/20"
             >
-              <Plus className="w-4 h-4" />
-              <span>Create New Record</span>
+              {!isProfileComplete ? <Lock className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              <span>{!isProfileComplete ? 'Complete Profile Setup First' : 'Create New Record'}</span>
             </button>
 
             {/* Grid of Navigation Links */}
             <div className="grid grid-cols-2 gap-2.5">
               {moreItems.map((item) => {
                 const Icon = item.icon;
+                const isLocked = !isProfileComplete && item.to !== '/profile';
                 return (
                   <button
                     key={item.to}
                     onClick={() => {
                       setShowMoreDrawer(false);
-                      navigate(item.to);
+                      if (isLocked) {
+                        navigate('/profile');
+                      } else {
+                        navigate(item.to);
+                      }
                     }}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-brand-50 border border-slate-100 text-left transition-colors"
+                    className={`flex items-center gap-2.5 p-3 rounded-2xl border text-left transition-colors ${
+                      isLocked
+                        ? 'bg-slate-50/70 border-slate-100 text-slate-400 opacity-60'
+                        : 'bg-slate-50 hover:bg-brand-50 border-slate-100 text-slate-800'
+                    }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-brand-600 shadow-sm border border-slate-100">
+                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-brand-600 shadow-sm border border-slate-100 shrink-0">
                       <Icon className="w-4 h-4" />
                     </div>
-                    <div>
-                      <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
-                        {item.label}
-                        {item.badge && (
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-semibold flex items-center justify-between gap-1 truncate">
+                        <span>{item.label}</span>
+                        {isLocked && <Lock className="w-3 h-3 text-slate-400 shrink-0" />}
+                        {!isLocked && item.badge && (
                           <span className="text-[9px] font-bold bg-purple-100 text-purple-700 px-1 py-0.2 rounded">
                             {item.badge}
                           </span>

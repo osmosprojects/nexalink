@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import {
@@ -12,12 +13,16 @@ import {
   Mail,
   Check,
   Loader2,
-  Tag
+  Tag,
+  ArrowRight,
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const ProfilePage: React.FC = () => {
-  const { user, profile, persona, refreshProfile } = useAuth();
+  const { user, profile, persona, isProfileComplete, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -40,10 +45,10 @@ export const ProfilePage: React.FC = () => {
 
   // Persona form state
   const [personaData, setPersonaData] = useState({
-    persona_name: persona?.persona_name || '',
-    communication_style: persona?.communication_style || '',
-    preferred_people: persona?.preferred_people || '',
-    networking_goal: persona?.networking_goal || '',
+    persona_name: persona?.persona_name || 'Strategic Networker',
+    communication_style: persona?.communication_style || 'Concise & Strategic',
+    preferred_people: persona?.preferred_people || 'Founders, Tech Leaders, Mentors, Investors',
+    networking_goal: persona?.networking_goal || 'Build meaningful long-term professional relationships',
     confidence: persona?.confidence || 85,
   });
 
@@ -59,9 +64,12 @@ export const ProfilePage: React.FC = () => {
         networking_goals: formData.networking_goals.split(',').map((s) => s.trim()).filter(Boolean),
       });
       await api.put('/profile/persona', personaData);
-      await refreshProfile();
-      setSuccessMsg('Profile & AI Persona saved successfully!');
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.7 } });
+      const res = await refreshProfile();
+      setSuccessMsg('Profile & AI Persona saved! Redirecting to dashboard...');
+      confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
     } catch (err: any) {
       alert(err.message || 'Failed to save profile');
     } finally {
@@ -71,6 +79,24 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Onboarding Notice Banner */}
+      {!isProfileComplete && (
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white p-5 rounded-3xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-200 fill-amber-200 shrink-0" />
+              <h3 className="font-bold text-sm sm:text-base">Complete Your Profile & Persona to Unlock NexaLink</h3>
+            </div>
+            <p className="text-xs text-amber-100 max-w-xl">
+              To give you personalized AI conversation starters, smart matchmaking, and network insights, please fill in your professional identity below.
+            </p>
+          </div>
+          <div className="shrink-0 px-3 py-1.5 bg-black/20 rounded-xl text-xs font-bold border border-white/20">
+            Step 1 of 1
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card flex items-center justify-between">
         <div>
@@ -80,7 +106,7 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {successMsg && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-2">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-2 animate-fadeIn">
           <Check className="w-4 h-4 text-emerald-600" />
           <span>{successMsg}</span>
         </div>
@@ -117,85 +143,90 @@ export const ProfilePage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Company</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Company <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
+                required
+                placeholder="e.g. Acme Corp / NexaLink"
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+                className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Job Title</label>
               <input
                 type="text"
+                placeholder="e.g. Director of Engineering / Founder"
                 value={formData.job_title}
                 onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+                className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Headline</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Professional Headline <span className="text-rose-500">*</span>
+            </label>
             <input
               type="text"
+              required
+              placeholder="e.g. Engineering Leader | Building High-Scale Enterprise Systems"
               value={formData.headline}
               onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-              className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+              className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Bio / About</label>
-            <textarea
-              rows={3}
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Location</label>
               <input
                 type="text"
+                placeholder="e.g. Mumbai, India / San Francisco, CA"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+                className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">LinkedIn URL</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Industry <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
-                value={formData.linkedin_url}
-                onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Avatar Image URL</label>
-              <input
-                type="text"
-                value={formData.avatar_url}
-                onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+                required
+                placeholder="e.g. Technology / SaaS / Venture Capital"
+                value={formData.industry}
+                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
               />
             </div>
           </div>
 
-          {/* Tags & Focus Areas */}
-          <div className="space-y-3 pt-2">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Bio</label>
+            <textarea
+              rows={3}
+              placeholder="Brief summary of your professional background, passions, and current focus..."
+              value={formData.bio}
+              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Skills (Comma-separated)</label>
               <input
                 type="text"
-                placeholder="React, TypeScript, Node.js, AI, SaaS"
+                placeholder="Leadership, React, Node.js, Strategy"
                 value={formData.skills}
                 onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+                className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
               />
             </div>
             <div>
@@ -205,13 +236,13 @@ export const ProfilePage: React.FC = () => {
                 placeholder="Generative AI, Startups, Angel Investing"
                 value={formData.interests}
                 onChange={(e) => setFormData({ ...formData, interests: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+                className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
               />
             </div>
           </div>
         </div>
 
-        {/* AI Persona Card (Guide Section 13) */}
+        {/* AI Persona Card */}
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-purple-200 shadow-card space-y-5">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-purple-950 flex items-center gap-2">
@@ -225,22 +256,29 @@ export const ProfilePage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Persona Name</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Persona Name <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
+                required
+                placeholder="e.g. Strategic Tech Leader / Product Innovator"
                 value={personaData.persona_name}
                 onChange={(e) => setPersonaData({ ...personaData, persona_name: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+                className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Communication Style</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Communication Style <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
-                placeholder="e.g. Concise, high-signal, authentic"
+                required
+                placeholder="e.g. Concise, high-signal, authentic, direct"
                 value={personaData.communication_style}
                 onChange={(e) => setPersonaData({ ...personaData, communication_style: e.target.value })}
-                className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+                className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden"
               />
             </div>
           </div>
@@ -249,10 +287,10 @@ export const ProfilePage: React.FC = () => {
             <label className="block text-xs font-semibold text-slate-700 mb-1">Preferred People to Meet</label>
             <input
               type="text"
-              placeholder="e.g. AI Founders, Seed/Series A VCs, CTOs"
+              placeholder="e.g. AI Founders, Seed/Series A VCs, CTOs, Design Leaders"
               value={personaData.preferred_people}
               onChange={(e) => setPersonaData({ ...personaData, preferred_people: e.target.value })}
-              className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+              className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden"
             />
           </div>
 
@@ -263,7 +301,7 @@ export const ProfilePage: React.FC = () => {
               placeholder="e.g. Build long-term strategic relationships with founders and technical leaders"
               value={personaData.networking_goal}
               onChange={(e) => setPersonaData({ ...personaData, networking_goal: e.target.value })}
-              className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden"
+              className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden"
             />
           </div>
         </div>
@@ -273,10 +311,10 @@ export const ProfilePage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-2 transition-all active:scale-95"
+            className="px-6 py-3 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-lg shadow-brand-600/20 flex items-center gap-2 transition-all active:scale-95 cursor-pointer"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            <span>Save Profile & Persona</span>
+            <span>Save Profile & Unlock Dashboard</span>
           </button>
         </div>
       </form>
