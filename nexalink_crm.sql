@@ -10,7 +10,7 @@ START TRANSACTION;
 SET time_zone = "+00:00";
 
 -- --------------------------------------------------------
--- Table structure for table `users`
+-- Drop Tables
 -- --------------------------------------------------------
 DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `notifications`;
@@ -30,6 +30,9 @@ DROP TABLE IF EXISTS `user_profiles`;
 DROP TABLE IF EXISTS `oauth_accounts`;
 DROP TABLE IF EXISTS `users`;
 
+-- --------------------------------------------------------
+-- 1. Users Table
+-- --------------------------------------------------------
 CREATE TABLE `users` (
   `user_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `email` VARCHAR(255) NOT NULL,
@@ -43,7 +46,7 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `oauth_accounts`
+-- 2. OAuth Accounts Table
 -- --------------------------------------------------------
 CREATE TABLE `oauth_accounts` (
   `oauth_account_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -52,12 +55,14 @@ CREATE TABLE `oauth_accounts` (
   `provider_user_id` VARCHAR(255) NOT NULL,
   `provider_email` VARCHAR(255) NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY `uq_oauth_provider_uid` (`provider`, `provider_user_id`),
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uq_oauth_provider_user` (`provider`, `provider_user_id`),
+  KEY `idx_oauth_user` (`user_id`),
   CONSTRAINT `fk_oauth_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `user_profiles`
+-- 3. User Profiles Table
 -- --------------------------------------------------------
 CREATE TABLE `user_profiles` (
   `profile_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -70,10 +75,8 @@ CREATE TABLE `user_profiles` (
   `industry` VARCHAR(100) NULL,
   `website` VARCHAR(255) NULL,
   `linkedin_url` VARCHAR(255) NULL,
-  `twitter_url` VARCHAR(255) NULL,
-  `github_url` VARCHAR(255) NULL,
   `phone` VARCHAR(50) NULL,
-  `timezone` VARCHAR(50) NOT NULL DEFAULT 'UTC',
+  `timezone` VARCHAR(50) DEFAULT 'Asia/Kolkata',
   `avatar_url` VARCHAR(500) NULL,
   `skills` JSON NULL,
   `interests` JSON NULL,
@@ -84,81 +87,81 @@ CREATE TABLE `user_profiles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `user_personas`
+-- 4. User Personas Table
 -- --------------------------------------------------------
 CREATE TABLE `user_personas` (
   `persona_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` BIGINT UNSIGNED NOT NULL,
-  `persona_name` VARCHAR(100) NOT NULL,
-  `communication_style` VARCHAR(100) NULL,
+  `persona_name` VARCHAR(100) NOT NULL DEFAULT 'Default Persona',
+  `communication_style` VARCHAR(100) DEFAULT 'Concise & Strategic',
   `preferred_people` TEXT NULL,
   `networking_goal` TEXT NULL,
   `interests` TEXT NULL,
-  `confidence` INT NOT NULL DEFAULT 85,
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `confidence` INT DEFAULT 85,
+  `is_active` TINYINT(1) DEFAULT 1,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT `fk_persona_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+  KEY `idx_personas_user` (`user_id`),
+  CONSTRAINT `fk_personas_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `tags`
--- --------------------------------------------------------
-CREATE TABLE `tags` (
-  `tag_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  `user_id` BIGINT UNSIGNED NOT NULL,
-  `name` VARCHAR(50) NOT NULL,
-  `color` VARCHAR(20) NOT NULL DEFAULT '#6366f1',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY `uq_user_tag` (`user_id`, `name`),
-  CONSTRAINT `fk_tags_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
--- Table structure for table `contacts`
+-- 5. Contacts Table
 -- --------------------------------------------------------
 CREATE TABLE `contacts` (
   `contact_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` BIGINT UNSIGNED NOT NULL,
   `first_name` VARCHAR(100) NOT NULL,
-  `last_name` VARCHAR(100) NULL,
+  `last_name` VARCHAR(100) NOT NULL,
   `email` VARCHAR(255) NULL,
   `phone` VARCHAR(50) NULL,
   `company` VARCHAR(150) NULL,
   `job_title` VARCHAR(150) NULL,
   `location` VARCHAR(150) NULL,
-  `avatar_url` VARCHAR(500) NULL,
+  `website` VARCHAR(255) NULL,
   `linkedin_url` VARCHAR(255) NULL,
-  `twitter_url` VARCHAR(255) NULL,
-  `status` ENUM('lead','active','dormant','archived') NOT NULL DEFAULT 'active',
+  `avatar_url` VARCHAR(500) NULL,
+  `relationship_type` ENUM('friend','mentor','mentee','colleague','client','prospect','founder','investor','recruiter','partner','other') NOT NULL DEFAULT 'other',
   `relationship_strength` INT NOT NULL DEFAULT 50,
-  `circle` ENUM('inner','strategic','professional','acquaintance') NOT NULL DEFAULT 'professional',
-  `lead_score` INT NOT NULL DEFAULT 50,
-  `source` VARCHAR(100) NULL,
-  `last_contacted_at` DATETIME NULL,
+  `last_interaction_at` DATETIME NULL,
   `next_follow_up_at` DATETIME NULL,
   `notes` TEXT NULL,
-  `custom_fields` JSON NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  KEY `idx_contacts_user_status` (`user_id`, `status`),
-  KEY `idx_contacts_user_circle` (`user_id`, `circle`),
+  KEY `idx_contacts_user` (`user_id`),
+  KEY `idx_contacts_followup` (`user_id`, `next_follow_up_at`),
+  KEY `idx_contacts_strength` (`user_id`, `relationship_strength`),
   CONSTRAINT `fk_contacts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `contact_tags`
+-- 6. Tags Table
+-- --------------------------------------------------------
+CREATE TABLE `tags` (
+  `tag_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `name` VARCHAR(50) NOT NULL,
+  `color` VARCHAR(20) DEFAULT '#2563EB',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uq_user_tag` (`user_id`, `name`),
+  KEY `idx_tags_user` (`user_id`),
+  CONSTRAINT `fk_tags_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- 7. Contact Tags Junction Table
 -- --------------------------------------------------------
 CREATE TABLE `contact_tags` (
   `contact_id` BIGINT UNSIGNED NOT NULL,
   `tag_id` BIGINT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`contact_id`, `tag_id`),
   CONSTRAINT `fk_ct_contact` FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`contact_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_ct_tag` FOREIGN KEY (`tag_id`) REFERENCES `tags` (`tag_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `goals`
+-- 8. Goals Table
 -- --------------------------------------------------------
 CREATE TABLE `goals` (
   `goal_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -179,7 +182,7 @@ CREATE TABLE `goals` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `goal_progress`
+-- 9. Goal Progress Table
 -- --------------------------------------------------------
 CREATE TABLE `goal_progress` (
   `progress_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -193,7 +196,7 @@ CREATE TABLE `goal_progress` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `interactions`
+-- 10. Interactions Table
 -- --------------------------------------------------------
 CREATE TABLE `interactions` (
   `interaction_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -202,66 +205,74 @@ CREATE TABLE `interactions` (
   `goal_id` BIGINT UNSIGNED NULL,
   `interaction_type` ENUM('meeting','call','email','message','coffee','event','introduction','note','other') NOT NULL DEFAULT 'other',
   `title` VARCHAR(255) NOT NULL,
-  `description` TEXT NULL,
-  `sentiment` ENUM('positive','neutral','negative') NOT NULL DEFAULT 'positive',
-  `impact_score` INT NOT NULL DEFAULT 5,
-  `occurred_at` DATETIME NOT NULL,
+  `interaction_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `duration_minutes` INT DEFAULT 30,
+  `summary` TEXT NULL,
+  `outcome` TEXT NULL,
+  `follow_up_required` TINYINT(1) NOT NULL DEFAULT 0,
+  `follow_up_date` DATE NULL,
+  `sentiment` ENUM('positive','neutral','negative') DEFAULT 'positive',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  KEY `idx_interactions_user_date` (`user_id`, `occurred_at`),
+  KEY `idx_interactions_contact_date` (`contact_id`, `interaction_date`),
+  KEY `idx_interactions_user_date` (`user_id`, `interaction_date`),
   CONSTRAINT `fk_interactions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_interactions_contact` FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`contact_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_interactions_goal` FOREIGN KEY (`goal_id`) REFERENCES `goals` (`goal_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `meetings`
+-- 11. Meetings Table
 -- --------------------------------------------------------
 CREATE TABLE `meetings` (
   `meeting_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` BIGINT UNSIGNED NOT NULL,
-  `contact_id` BIGINT UNSIGNED NOT NULL,
+  `contact_id` BIGINT UNSIGNED NULL,
+  `goal_id` BIGINT UNSIGNED NULL,
   `title` VARCHAR(255) NOT NULL,
-  `description` TEXT NULL,
+  `meeting_type` ENUM('coffee','video','office','conference','phone','other') NOT NULL DEFAULT 'video',
+  `start_at` DATETIME NOT NULL,
+  `end_at` DATETIME NOT NULL,
   `location` VARCHAR(255) NULL,
   `meeting_url` VARCHAR(500) NULL,
-  `start_time` DATETIME NOT NULL,
-  `end_time` DATETIME NOT NULL,
-  `status` ENUM('scheduled','completed','cancelled','rescheduled') NOT NULL DEFAULT 'scheduled',
-  `prep_notes` TEXT NULL,
-  `followup_notes` TEXT NULL,
+  `agenda` TEXT NULL,
+  `outcome` TEXT NULL,
+  `notes` TEXT NULL,
+  `follow_up_date` DATE NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  KEY `idx_meetings_user_start` (`user_id`, `start_time`),
+  KEY `idx_meetings_user_start` (`user_id`, `start_at`),
   CONSTRAINT `fk_meetings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_meetings_contact` FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`contact_id`) ON DELETE CASCADE
+  CONSTRAINT `fk_meetings_contact` FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`contact_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_meetings_goal` FOREIGN KEY (`goal_id`) REFERENCES `goals` (`goal_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `tasks`
+-- 12. Tasks Table
 -- --------------------------------------------------------
 CREATE TABLE `tasks` (
   `task_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` BIGINT UNSIGNED NOT NULL,
   `contact_id` BIGINT UNSIGNED NULL,
   `goal_id` BIGINT UNSIGNED NULL,
-  `meeting_id` BIGINT UNSIGNED NULL,
   `title` VARCHAR(255) NOT NULL,
   `description` TEXT NULL,
-  `due_date` DATE NULL,
+  `status` ENUM('todo','in_progress','done','cancelled') NOT NULL DEFAULT 'todo',
   `priority` ENUM('low','medium','high','urgent') NOT NULL DEFAULT 'medium',
-  `status` ENUM('todo','in_progress','completed','cancelled') NOT NULL DEFAULT 'todo',
+  `due_date` DATE NULL,
+  `completed_at` DATETIME NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY `idx_tasks_user_status` (`user_id`, `status`),
+  KEY `idx_tasks_due_date` (`user_id`, `due_date`),
   CONSTRAINT `fk_tasks_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_tasks_contact` FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`contact_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_tasks_goal` FOREIGN KEY (`goal_id`) REFERENCES `goals` (`goal_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_tasks_meeting` FOREIGN KEY (`meeting_id`) REFERENCES `meetings` (`meeting_id`) ON DELETE SET NULL
+  CONSTRAINT `fk_tasks_goal` FOREIGN KEY (`goal_id`) REFERENCES `goals` (`goal_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `notes`
+-- 13. Notes Table
 -- --------------------------------------------------------
 CREATE TABLE `notes` (
   `note_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -270,7 +281,7 @@ CREATE TABLE `notes` (
   `meeting_id` BIGINT UNSIGNED NULL,
   `goal_id` BIGINT UNSIGNED NULL,
   `task_id` BIGINT UNSIGNED NULL,
-  `title` VARCHAR(255) NULL,
+  `title` VARCHAR(255) NOT NULL,
   `content` TEXT NOT NULL,
   `is_pinned` TINYINT(1) NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -284,7 +295,7 @@ CREATE TABLE `notes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `recommendations`
+-- 14. Recommendations Table
 -- --------------------------------------------------------
 CREATE TABLE `recommendations` (
   `recommendation_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -306,7 +317,7 @@ CREATE TABLE `recommendations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `posts`
+-- 15. Posts Table
 -- --------------------------------------------------------
 CREATE TABLE `posts` (
   `post_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -323,14 +334,14 @@ CREATE TABLE `posts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `notifications`
+-- 16. Notifications Table
 -- --------------------------------------------------------
 CREATE TABLE `notifications` (
   `notification_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` BIGINT UNSIGNED NOT NULL,
+  `type` ENUM('follow_up_due','meeting_reminder','goal_deadline','task_due','ai_suggestion','connection_request','system') NOT NULL DEFAULT 'system',
   `title` VARCHAR(255) NOT NULL,
   `message` TEXT NOT NULL,
-  `notification_type` VARCHAR(50) NOT NULL DEFAULT 'general',
   `entity_type` VARCHAR(50) NULL,
   `entity_id` BIGINT UNSIGNED NULL,
   `is_read` TINYINT(1) NOT NULL DEFAULT 0,
@@ -340,7 +351,7 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `audit_logs`
+-- 17. Audit Logs Table
 -- --------------------------------------------------------
 CREATE TABLE `audit_logs` (
   `audit_id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -357,7 +368,7 @@ CREATE TABLE `audit_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ========================================================
--- SEED DATA: 8 Users (Password for all: password123)
+-- SEED DATA: 8 Clean Users (Password for all: password123)
 -- Password hash: $2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq
 -- ========================================================
 
