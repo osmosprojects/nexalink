@@ -4,7 +4,9 @@
   "description": "NexaLink CRM — AI Relationship CRM (React 18 + Node.js + MySQL)",
   "main": "backend/dist/server.js",
   "scripts": {
-    "build": "mkdir -p backend/public && cp -r frontend/dist/* backend/public/",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && npm install && npm run build",
+    "build": "npm run build:frontend && npm run build:backend && mkdir -p backend/public && cp -r frontend/dist/* backend/public/",
     "start": "node backend/dist/server.js",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev"
