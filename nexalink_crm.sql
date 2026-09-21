@@ -377,7 +377,7 @@ CREATE TABLE `audit_logs` (
 
 -- 1. Demo User (Password: password123)
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `display_name`, `avatar_url`, `status`) VALUES
-(1, 'demo@nexalink.com', '$2b$10$7vN34h3P190XW2sF/U7VheN94xI7gR1m5sZcQZcI4s7eG8O1uXGjG', 'Rahul Mehta', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 'active');
+(1, 'demo@nexalink.com', '$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq', 'Rahul Mehta', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 'active');
 
 -- 2. User Profile
 INSERT INTO `user_profiles` (`profile_id`, `user_id`, `headline`, `bio`, `company`, `job_title`, `location`, `industry`, `website`, `linkedin_url`, `phone`, `timezone`, `avatar_url`, `skills`, `interests`, `networking_goals`) VALUES
