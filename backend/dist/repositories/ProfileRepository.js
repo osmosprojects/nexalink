@@ -4,18 +4,15 @@ exports.ProfileRepository = void 0;
 const db_1 = require("../config/db");
 class ProfileRepository {
     static async isProfileComplete(userId) {
-        const profileRows = await (0, db_1.query)(`SELECT headline, company, industry FROM user_profiles WHERE user_id = ? LIMIT 1`, [userId]);
+        const profileRows = await (0, db_1.query)(`SELECT bio, phone, networking_goals FROM user_profiles WHERE user_id = ? LIMIT 1`, [userId]);
         if (!profileRows[0])
             return false;
         const p = profileRows[0];
-        if (!p.headline || !p.headline.trim() || !p.company || !p.company.trim() || !p.industry || !p.industry.trim()) {
+        if (!p.bio || !p.bio.trim() || !p.phone || !p.phone.trim()) {
             return false;
         }
-        const personaRows = await (0, db_1.query)(`SELECT persona_name, communication_style FROM user_personas WHERE user_id = ? AND is_active = 1 LIMIT 1`, [userId]);
-        if (!personaRows[0])
-            return false;
-        const persona = personaRows[0];
-        if (!persona.persona_name || !persona.persona_name.trim() || !persona.communication_style || !persona.communication_style.trim()) {
+        const goals = typeof p.networking_goals === 'string' ? JSON.parse(p.networking_goals) : p.networking_goals;
+        if (!goals || !Array.isArray(goals) || goals.length === 0 || !goals.some((g) => typeof g === 'string' && g.trim().length > 0)) {
             return false;
         }
         return true;

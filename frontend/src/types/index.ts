@@ -7,23 +7,38 @@ export interface User {
   createdAt?: string;
 }
 
+export interface ConnectablePerson {
+  id: string;
+  businessDomain: string;
+  personName: string;
+  orgName: string;
+  role: string;
+}
+
 export interface UserProfile {
-  profile_id: number;
-  user_id: number;
-  headline: string | null;
-  bio: string | null;
-  company: string | null;
-  job_title: string | null;
-  location: string | null;
-  industry: string | null;
-  website: string | null;
-  linkedin_url: string | null;
-  phone: string | null;
-  timezone: string;
-  avatar_url: string | null;
-  skills: string[];
-  interests: string[];
-  networking_goals: string[];
+  profile_id?: number;
+  user_id?: number;
+  headline?: string | null;
+  bio?: string | null;
+  company?: string | null;
+  job_title?: string | null;
+  location?: string | null;
+  industry?: string | null;
+  website?: string | null;
+  linkedin_url?: string | null;
+  phone?: string | null;
+  timezone?: string;
+  avatar_url?: string | null;
+  skills?: any;
+  interests?: any;
+  networking_goals?: any;
+  targetBusinesses?: string[];
+  connectionsOffered?: ConnectablePerson[];
+  socialLinks?: {
+    linkedin?: string;
+    twitter?: string;
+    website?: string;
+  };
 }
 
 export interface UserPersona {

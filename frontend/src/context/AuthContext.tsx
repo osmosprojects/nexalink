@@ -17,14 +17,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const checkIsProfileComplete = (profile: UserProfile | null, persona: UserPersona | null): boolean => {
-  if (!profile || !persona) return false;
-  const hasHeadline = Boolean(profile.headline && profile.headline.trim().length > 0);
-  const hasCompany = Boolean(profile.company && profile.company.trim().length > 0);
-  const hasIndustry = Boolean(profile.industry && profile.industry.trim().length > 0);
-  const hasPersonaName = Boolean(persona.persona_name && persona.persona_name.trim().length > 0);
-  const hasCommStyle = Boolean(persona.communication_style && persona.communication_style.trim().length > 0);
-  return hasHeadline && hasCompany && hasIndustry && hasPersonaName && hasCommStyle;
+export const checkIsProfileComplete = (profile: UserProfile | null, _persona?: UserPersona | null): boolean => {
+  if (!profile) return false;
+  const hasBio = Boolean(profile.bio && profile.bio.trim().length > 0);
+  const hasPhone = Boolean(profile.phone && profile.phone.trim().length > 0);
+  const goals = Array.isArray(profile.networking_goals)
+    ? profile.networking_goals
+    : Array.isArray(profile.targetBusinesses)
+    ? profile.targetBusinesses
+    : [];
+  const hasTargetBusiness = goals.some((g: any) => typeof g === 'string' && g.trim().length > 0);
+  return hasBio && hasPhone && hasTargetBusiness;
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

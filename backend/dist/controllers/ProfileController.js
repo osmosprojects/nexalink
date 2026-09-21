@@ -31,10 +31,22 @@ class ProfileController {
         try {
             const userId = req.user.userId;
             const data = req.body;
+            if (data.name && typeof data.name === 'string') {
+                await UserRepository_1.UserRepository.updateName(userId, data.name);
+            }
             if (data.avatar_url) {
                 await UserRepository_1.UserRepository.updateAvatar(userId, data.avatar_url);
             }
-            await ProfileRepository_1.ProfileRepository.upsertProfile(userId, data);
+            await ProfileRepository_1.ProfileRepository.upsertProfile(userId, {
+                bio: data.bio,
+                phone: data.phone,
+                website: data.website || data.socialLinks?.website,
+                linkedin_url: data.linkedin || data.socialLinks?.linkedin,
+                skills: data.socialLinks || (data.twitter ? { twitter: data.twitter } : {}),
+                networking_goals: data.targetBusinesses || data.networking_goals || [],
+                interests: data.connectionsOffered || data.interests || [],
+                headline: data.bio ? data.bio.slice(0, 100) : null,
+            });
             const updated = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
             await (0, audit_1.logAudit)(req, 'PROFILE_UPDATED', 'profile', userId);
             return (0, response_1.sendSuccess)(res, { profile: updated });

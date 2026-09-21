@@ -47,4 +47,8 @@ export class UserRepository {
   static async updateAvatar(userId: number, avatarUrl: string): Promise<void> {
     await query(`UPDATE users SET avatar_url = ? WHERE user_id = ?`, [avatarUrl, userId]);
   }
+
+  static async updateName(userId: number, displayName: string): Promise<void> {
+    await query(`UPDATE users SET display_name = ? WHERE user_id = ?`, [displayName.trim(), userId]);
+  }
 }
