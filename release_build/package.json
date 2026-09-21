@@ -1,0 +1,26 @@
+{
+  "name": "nexalink-crm",
+  "version": "1.0.0",
+  "description": "NexaLink CRM — AI Relationship CRM (React 18 + Node.js + MySQL)",
+  "main": "backend/dist/server.js",
+  "scripts": {
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && npm install && npm run build",
+    "build": "npm run build:frontend && npm run build:backend && mkdir -p backend/public && cp -r frontend/dist/* backend/public/",
+    "start": "node backend/dist/server.js",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.12.0",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
+  }
+}
