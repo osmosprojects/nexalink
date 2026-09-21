@@ -40,22 +40,22 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-850 to-brand-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 text-slate-100">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-850 to-brand-950 flex flex-col justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 text-slate-100 w-full max-w-full overflow-x-hidden">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center px-2">
         {/* Logo Badge */}
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-purple-600 text-white font-black text-2xl shadow-xl shadow-brand-500/30 mb-4 animate-bounce-short">
+        <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-purple-600 text-white font-black text-xl sm:text-2xl shadow-xl shadow-brand-500/30 mb-3 sm:mb-4 animate-bounce-short">
           N
         </div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+        <h2 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
           NexaLink <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">CRM</span>
         </h2>
-        <p className="mt-2 text-xs sm:text-sm text-slate-400">
+        <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-400">
           Build Meaningful Connections. Track Relationships. Achieve Your Goals.
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-        <div className="bg-white text-slate-900 py-8 px-6 sm:px-10 shadow-2xl rounded-3xl border border-slate-100/10 backdrop-blur-md">
+      <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md px-1 sm:px-0">
+        <div className="bg-white text-slate-900 py-6 sm:py-8 px-4 sm:px-10 shadow-2xl rounded-2xl sm:rounded-3xl border border-slate-100/10 backdrop-blur-md">
           {/* Quick Demo Access Callout */}
           <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-brand-50 to-purple-50 border border-brand-200/60 flex items-center justify-between gap-3">
             <div className="space-y-0.5">
