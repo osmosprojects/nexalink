@@ -18,6 +18,7 @@ const NotificationController_1 = require("../controllers/NotificationController"
 const SearchController_1 = require("../controllers/SearchController");
 const DashboardController_1 = require("../controllers/DashboardController");
 const auth_1 = require("../middleware/auth");
+const requireProfile_1 = require("../middleware/requireProfile");
 exports.apiRouter = (0, express_1.Router)();
 // Health Check
 exports.apiRouter.get('/health', (req, res) => {
@@ -30,12 +31,14 @@ exports.apiRouter.post('/auth/demo-login', AuthController_1.AuthController.demoL
 exports.apiRouter.post('/auth/logout', AuthController_1.AuthController.logout);
 // Protected Routes (Require Auth Middleware)
 exports.apiRouter.use(auth_1.authMiddleware);
-// Auth Me
+// Auth Me (Allowed during onboarding)
 exports.apiRouter.get('/auth/me', AuthController_1.AuthController.me);
-// Profile & Persona
+// Profile & Persona (Allowed during onboarding to complete profile)
 exports.apiRouter.get('/profile', ProfileController_1.ProfileController.getProfile);
 exports.apiRouter.put('/profile', ProfileController_1.ProfileController.updateProfile);
 exports.apiRouter.put('/profile/persona', ProfileController_1.ProfileController.updatePersona);
+// GATED MODULES: All endpoints below strictly require a complete Profile & Persona
+exports.apiRouter.use(requireProfile_1.requireProfileCompleteMiddleware);
 // Dashboard Aggregated
 exports.apiRouter.get('/dashboard', DashboardController_1.DashboardController.getDashboard);
 // Global Search

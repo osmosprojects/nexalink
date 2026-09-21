@@ -15,6 +15,7 @@ import { NotificationController } from '../controllers/NotificationController';
 import { SearchController } from '../controllers/SearchController';
 import { DashboardController } from '../controllers/DashboardController';
 import { authMiddleware } from '../middleware/auth';
+import { requireProfileCompleteMiddleware } from '../middleware/requireProfile';
 
 export const apiRouter = Router();
 
@@ -32,13 +33,16 @@ apiRouter.post('/auth/logout', AuthController.logout);
 // Protected Routes (Require Auth Middleware)
 apiRouter.use(authMiddleware);
 
-// Auth Me
+// Auth Me (Allowed during onboarding)
 apiRouter.get('/auth/me', AuthController.me);
 
-// Profile & Persona
+// Profile & Persona (Allowed during onboarding to complete profile)
 apiRouter.get('/profile', ProfileController.getProfile);
 apiRouter.put('/profile', ProfileController.updateProfile);
 apiRouter.put('/profile/persona', ProfileController.updatePersona);
+
+// GATED MODULES: All endpoints below strictly require a complete Profile & Persona
+apiRouter.use(requireProfileCompleteMiddleware);
 
 // Dashboard Aggregated
 apiRouter.get('/dashboard', DashboardController.getDashboard);

@@ -36,6 +36,30 @@ export interface UserPersonaRow {
 }
 
 export class ProfileRepository {
+  static async isProfileComplete(userId: number): Promise<boolean> {
+    const profileRows = await query<UserProfileRow[]>(
+      `SELECT headline, company, industry FROM user_profiles WHERE user_id = ? LIMIT 1`,
+      [userId]
+    );
+    if (!profileRows[0]) return false;
+    const p = profileRows[0];
+    if (!p.headline || !p.headline.trim() || !p.company || !p.company.trim() || !p.industry || !p.industry.trim()) {
+      return false;
+    }
+
+    const personaRows = await query<UserPersonaRow[]>(
+      `SELECT persona_name, communication_style FROM user_personas WHERE user_id = ? AND is_active = 1 LIMIT 1`,
+      [userId]
+    );
+    if (!personaRows[0]) return false;
+    const persona = personaRows[0];
+    if (!persona.persona_name || !persona.persona_name.trim() || !persona.communication_style || !persona.communication_style.trim()) {
+      return false;
+    }
+
+    return true;
+  }
+
   static async getProfileByUserId(userId: number): Promise<UserProfileRow | null> {
     const rows = await query<UserProfileRow[]>(
       `SELECT * FROM user_profiles WHERE user_id = ? LIMIT 1`,

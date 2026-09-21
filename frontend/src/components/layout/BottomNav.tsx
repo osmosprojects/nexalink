@@ -64,48 +64,59 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
     <>
       {/* Mobile Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 z-40 flex items-center justify-around shadow-lg">
-        {primaryTabs.map((tab) => {
-          const Icon = tab.icon;
-          const isLocked = !isProfileComplete && tab.to !== '/profile';
-          return (
+        {!isProfileComplete ? (
+          <>
             <NavLink
-              key={tab.to}
-              to={tab.to}
-              onClick={(e) => handleNavClick(e, tab.to)}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
-                  isActive && (!isLocked || tab.to === '/profile')
-                    ? 'text-brand-600 font-semibold scale-105'
-                    : isLocked
-                    ? 'text-slate-400 opacity-60'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`
-              }
+              to="/profile"
+              className="flex items-center justify-center gap-2 py-2 px-6 rounded-xl bg-brand-600 text-white font-semibold text-xs shadow-md shadow-brand-600/30"
             >
-              <div className="relative">
-                <Icon className="w-5 h-5 mb-0.5" />
-                {tab.highlight && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full ring-2 ring-white animate-pulse" />
-                )}
-                {isLocked && (
-                  <Lock className="w-2.5 h-2.5 absolute -bottom-0.5 -right-0.5 text-slate-400" />
-                )}
-              </div>
-              <span className="text-[10px]">{tab.label}</span>
+              <UserCheck className="w-4 h-4" />
+              <span>Complete Profile Setup</span>
             </NavLink>
-          );
-        })}
+            <button
+              onClick={() => logout()}
+              className="flex items-center gap-1.5 py-2 px-4 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-medium"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
+          </>
+        ) : (
+          <>
+            {primaryTabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <NavLink
+                  key={tab.to}
+                  to={tab.to}
+                  className={({ isActive }) =>
+                    `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
+                      isActive
+                        ? 'text-brand-600 font-semibold scale-105'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`
+                  }
+                >
+                  <div className="relative">
+                    <Icon className="w-5 h-5 mb-0.5" />
+                  </div>
+                  <span className="text-[10px]">{tab.label}</span>
+                </NavLink>
+              );
+            })}
 
-        {/* More Button */}
-        <button
-          onClick={() => setShowMoreDrawer(true)}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-            showMoreDrawer ? 'text-brand-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Menu className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px]">More</span>
-        </button>
+            {/* More Button */}
+            <button
+              onClick={() => setShowMoreDrawer(true)}
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                showMoreDrawer ? 'text-brand-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Menu className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px]">More</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* More Bottom Sheet / Drawer */}

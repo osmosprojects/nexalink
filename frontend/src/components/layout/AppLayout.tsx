@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { BottomNav } from './BottomNav';
@@ -49,11 +49,9 @@ export const AppLayout: React.FC = () => {
   };
 
   // Enforce Mandatory Profile & Persona Completion Guard
-  useEffect(() => {
-    if (!isLoading && user && !isProfileComplete && path !== '/profile') {
-      navigate('/profile', { replace: true });
-    }
-  }, [isLoading, user, isProfileComplete, path, navigate]);
+  if (!isLoading && user && !isProfileComplete && path !== '/profile') {
+    return <Navigate to="/profile" replace />;
+  }
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
