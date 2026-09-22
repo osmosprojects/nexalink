@@ -123,7 +123,7 @@ export const ProfilePage: React.FC = () => {
   // 5) Networking Goals Target state
   const [networkingTargetMeets, setNetworkingTargetMeets] = useState<number>(() => {
     const raw = profile?.skills?.networkingTargetMeets;
-    if (typeof raw === 'number' && raw > 0) return raw;
+    if (typeof raw === 'number' && raw >= 0) return raw;
     return 5;
   });
   const [networkingTargetPeriod, setNetworkingTargetPeriod] = useState<'week' | 'month'>(() => {
@@ -133,7 +133,7 @@ export const ProfilePage: React.FC = () => {
   });
   const [networkingNewConnections, setNetworkingNewConnections] = useState<number>(() => {
     const raw = profile?.skills?.networkingNewConnections;
-    if (typeof raw === 'number' && raw > 0) return raw;
+    if (typeof raw === 'number' && raw >= 0) return raw;
     return 10;
   });
 
@@ -204,7 +204,7 @@ export const ProfilePage: React.FC = () => {
         setUserGoals(profile.skills.goals);
       }
 
-      if (typeof profile?.skills?.networkingTargetMeets === 'number' && profile.skills.networkingTargetMeets > 0) {
+      if (typeof profile?.skills?.networkingTargetMeets === 'number' && profile.skills.networkingTargetMeets >= 0) {
         setNetworkingTargetMeets(profile.skills.networkingTargetMeets);
       }
 
@@ -212,7 +212,7 @@ export const ProfilePage: React.FC = () => {
         setNetworkingTargetPeriod(profile.skills.networkingTargetPeriod);
       }
 
-      if (typeof profile?.skills?.networkingNewConnections === 'number' && profile.skills.networkingNewConnections > 0) {
+      if (typeof profile?.skills?.networkingNewConnections === 'number' && profile.skills.networkingNewConnections >= 0) {
         setNetworkingNewConnections(profile.skills.networkingNewConnections);
       }
 
@@ -1262,10 +1262,13 @@ export const ProfilePage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-700 mb-1">Meetings per week</label>
                 <input
                   type="number"
-                  min="1"
+                  min="0"
                   max="100"
                   value={networkingTargetMeets}
-                  onChange={(e) => setNetworkingTargetMeets(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setNetworkingTargetMeets(isNaN(val) ? 0 : Math.max(0, val));
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 />
               </div>
@@ -1274,10 +1277,13 @@ export const ProfilePage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-700 mb-1">New connections per month</label>
                 <input
                   type="number"
-                  min="1"
+                  min="0"
                   max="500"
                   value={networkingNewConnections}
-                  onChange={(e) => setNetworkingNewConnections(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setNetworkingNewConnections(isNaN(val) ? 0 : Math.max(0, val));
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 />
               </div>
