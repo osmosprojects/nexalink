@@ -24,7 +24,13 @@ import {
   Compass,
   Users2,
   Upload,
-  RotateCcw
+  RotateCcw,
+  Search,
+  Lightbulb,
+  ChevronDown,
+  GraduationCap,
+  Building2,
+  Target
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -35,7 +41,7 @@ export const ProfilePage: React.FC = () => {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Avatar state - Empty string default if no custom uploaded avatar
+  // Avatar state
   const [avatarUrl, setAvatarUrl] = useState<string>(
     user?.avatarUrl || profile?.avatar_url || ''
   );
@@ -51,7 +57,7 @@ export const ProfilePage: React.FC = () => {
     website: profile?.website || profile?.skills?.website || '',
   });
 
-  // Networking Group Member list (dynamic list with + and delete)
+  // 1) Networking Group Member state & local input
   const [networkingGroups, setNetworkingGroups] = useState<string[]>(() => {
     const group = profile?.skills?.networkingGroup;
     if (Array.isArray(group) && group.length > 0) return group;
@@ -59,29 +65,33 @@ export const ProfilePage: React.FC = () => {
     if (group && typeof group === 'object' && group.groupNames) {
       return group.groupNames.split(',').map((g: string) => g.trim()).filter(Boolean);
     }
-    return [''];
+    return [];
   });
+  const [groupInput, setGroupInput] = useState('');
 
-  // 3 Hobbies (dynamic list with + and delete)
+  // 2) 3 Hobbies state & local input
   const [hobbies, setHobbies] = useState<string[]>(() => {
     const raw = profile?.skills?.hobbies;
     if (Array.isArray(raw) && raw.length > 0) return raw;
-    return ['', '', ''];
+    return [];
   });
+  const [hobbyInput, setHobbyInput] = useState('');
 
-  // 3 Interests (dynamic list with + and delete)
+  // 3) 3 Interests state & local input
   const [userInterests, setUserInterests] = useState<string[]>(() => {
     const raw = profile?.skills?.interests;
     if (Array.isArray(raw) && raw.length > 0) return raw;
-    return ['', '', ''];
+    return [];
   });
+  const [interestInput, setInterestInput] = useState('');
 
   // Section A: Which businesses do you want to meet?
   const [targetBusinesses, setTargetBusinesses] = useState<string[]>(() => {
     const raw = profile?.networking_goals;
     if (Array.isArray(raw) && raw.length > 0) return raw;
-    return [''];
+    return [];
   });
+  const [targetInput, setTargetInput] = useState('');
 
   // Section B: Who can you connect people to?
   const [connectionsOffered, setConnectionsOffered] = useState<ConnectablePerson[]>(() => {
@@ -127,7 +137,7 @@ export const ProfilePage: React.FC = () => {
         setNetworkingGroups([group]);
       } else if (group && typeof group === 'object' && group.groupNames) {
         const parsed = group.groupNames.split(',').map((g: string) => g.trim()).filter(Boolean);
-        setNetworkingGroups(parsed.length > 0 ? parsed : ['']);
+        setNetworkingGroups(parsed);
       }
 
       if (Array.isArray(profile?.skills?.hobbies) && profile.skills.hobbies.length > 0) {
@@ -182,64 +192,48 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  // Networking Group Handlers
-  const handleAddGroup = () => setNetworkingGroups([...networkingGroups, '']);
-  const handleUpdateGroup = (idx: number, val: string) => {
-    const updated = [...networkingGroups];
-    updated[idx] = val;
-    setNetworkingGroups(updated);
+  // Group Handlers
+  const handleAddGroup = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!groupInput.trim()) return;
+    setNetworkingGroups([...networkingGroups, groupInput.trim()]);
+    setGroupInput('');
   };
-  const handleRemoveGroup = (idx: number) => {
-    if (networkingGroups.length <= 1) {
-      setNetworkingGroups(['']);
-      return;
-    }
-    setNetworkingGroups(networkingGroups.filter((_, i) => i !== idx));
+  const handleRemoveGroup = (index: number) => {
+    setNetworkingGroups(networkingGroups.filter((_, i) => i !== index));
   };
 
-  // Hobbies Handlers
-  const handleAddHobby = () => setHobbies([...hobbies, '']);
-  const handleUpdateHobby = (idx: number, val: string) => {
-    const updated = [...hobbies];
-    updated[idx] = val;
-    setHobbies(updated);
+  // Hobby Handlers
+  const handleAddHobby = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!hobbyInput.trim()) return;
+    setHobbies([...hobbies, hobbyInput.trim()]);
+    setHobbyInput('');
   };
-  const handleRemoveHobby = (idx: number) => {
-    if (hobbies.length <= 1) {
-      setHobbies(['']);
-      return;
-    }
-    setHobbies(hobbies.filter((_, i) => i !== idx));
+  const handleRemoveHobby = (index: number) => {
+    setHobbies(hobbies.filter((_, i) => i !== index));
   };
 
-  // Interests Handlers
-  const handleAddInterest = () => setUserInterests([...userInterests, '']);
-  const handleUpdateInterest = (idx: number, val: string) => {
-    const updated = [...userInterests];
-    updated[idx] = val;
-    setUserInterests(updated);
+  // Interest Handlers
+  const handleAddInterest = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!interestInput.trim()) return;
+    setUserInterests([...userInterests, interestInput.trim()]);
+    setInterestInput('');
   };
-  const handleRemoveInterest = (idx: number) => {
-    if (userInterests.length <= 1) {
-      setUserInterests(['']);
-      return;
-    }
-    setUserInterests(userInterests.filter((_, i) => i !== idx));
+  const handleRemoveInterest = (index: number) => {
+    setUserInterests(userInterests.filter((_, i) => i !== index));
   };
 
   // Target Business Handlers
-  const handleAddTargetBusiness = () => setTargetBusinesses([...targetBusinesses, '']);
-  const handleUpdateTargetBusiness = (idx: number, val: string) => {
-    const updated = [...targetBusinesses];
-    updated[idx] = val;
-    setTargetBusinesses(updated);
+  const handleAddTargetBusiness = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!targetInput.trim()) return;
+    setTargetBusinesses([...targetBusinesses, targetInput.trim()]);
+    setTargetInput('');
   };
-  const handleRemoveTargetBusiness = (idx: number) => {
-    if (targetBusinesses.length <= 1) {
-      setTargetBusinesses(['']);
-      return;
-    }
-    setTargetBusinesses(targetBusinesses.filter((_, i) => i !== idx));
+  const handleRemoveTargetBusiness = (index: number) => {
+    setTargetBusinesses(targetBusinesses.filter((_, i) => i !== index));
   };
 
   // Connection Bridge Handlers
@@ -328,7 +322,7 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* Page Action Header Bar (No top splash card) */}
+      {/* Page Action Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
@@ -352,7 +346,7 @@ export const ProfilePage: React.FC = () => {
             type="button"
             disabled={loading}
             onClick={() => handleSaveProfile()}
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-brand-600/20 active:scale-95 disabled:opacity-60"
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95 disabled:opacity-60"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>Save Profile</span>
@@ -366,7 +360,7 @@ export const ProfilePage: React.FC = () => {
           {/* Profile Photo Card */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Camera className="w-4 h-4 text-brand-600" />
+              <Camera className="w-4 h-4 text-indigo-600" />
               <span>Profile Photo</span>
             </h2>
 
@@ -397,7 +391,7 @@ export const ProfilePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 rounded-xl text-xs font-bold transition-all shadow-xs"
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all shadow-xs"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload Image</span>
@@ -419,21 +413,21 @@ export const ProfilePage: React.FC = () => {
           {/* Personal Identity Form Card */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <User className="w-4 h-4 text-brand-600" />
+              <User className="w-4 h-4 text-indigo-600" />
               <span>Personal & Professional Identity</span>
             </h2>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Full Name <span className="text-brand-600">*</span>
+                  Full Name <span className="text-indigo-600">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Enter full name"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                   required
                 />
               </div>
@@ -456,7 +450,7 @@ export const ProfilePage: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Phone Number <span className="text-brand-600">*</span>
+                    Phone Number <span className="text-indigo-600">*</span>
                   </label>
                   <div className="relative">
                     <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
@@ -465,7 +459,7 @@ export const ProfilePage: React.FC = () => {
                       placeholder="Enter phone number"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                       required
                     />
                   </div>
@@ -474,14 +468,14 @@ export const ProfilePage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Professional Biography <span className="text-brand-600">*</span>
+                  Professional Biography <span className="text-indigo-600">*</span>
                 </label>
                 <textarea
                   rows={4}
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                   placeholder="Brief summary of your background, experience, and leadership focus..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed font-normal"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed font-normal"
                   required
                 />
               </div>
@@ -502,7 +496,7 @@ export const ProfilePage: React.FC = () => {
                       placeholder="https://linkedin.com/in/username"
                       value={formData.linkedin}
                       onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -515,7 +509,7 @@ export const ProfilePage: React.FC = () => {
                       placeholder="https://twitter.com/username"
                       value={formData.twitter}
                       onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -528,7 +522,7 @@ export const ProfilePage: React.FC = () => {
                       placeholder="https://yourwebsite.com"
                       value={formData.website}
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                 </div>
@@ -539,222 +533,403 @@ export const ProfilePage: React.FC = () => {
 
         {/* Right Column: Groups, Hobbies, Interests, Target Businesses & Bridges (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          {/* 1) Networking Group Member Card (Dynamic List with + and Trash) */}
+
+          {/* 1) Networking Group Member Card (Matching Mockup Design) */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                  <Users2 className="w-5 h-5" />
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <Users2 className="w-6 h-6 text-indigo-600" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Networking Group Member</h2>
-                  <p className="text-xs text-slate-500">List the networking groups, chapters, or clubs you belong to.</p>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Networking Group Member</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">List the networking groups, chapters, or clubs you belong to.</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleAddGroup}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all shrink-0"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Group</span>
               </button>
             </div>
 
-            <div className="space-y-2.5">
-              {networkingGroups.map((grp, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter networking group or chapter name"
-                    value={grp}
-                    onChange={(e) => handleUpdateGroup(idx, e.target.value)}
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                  />
-                  {networkingGroups.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveGroup(idx)}
-                      className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                      title="Remove group"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+            {/* Input Row */}
+            <form onSubmit={handleAddGroup} className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-2xl flex items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-500">
+                <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={groupInput}
+                  onChange={(e) => setGroupInput(e.target.value)}
+                  placeholder="Enter networking group name..."
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0"
+              >
+                Add
+              </button>
+            </form>
+
+            {/* Group Count & Sort bar */}
+            <div className="flex items-center justify-between pt-1">
+              <h3 className="text-sm font-bold text-slate-900">Your Groups ({networkingGroups.length})</h3>
+              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
+                <span>A → Z</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* Item List */}
+            <div className="space-y-3">
+              {networkingGroups.length === 0 ? (
+                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+                  No networking groups added yet. Type a group name above and click "Add".
                 </div>
-              ))}
+              ) : (
+                networkingGroups.map((grp, idx) => {
+                  const iconColors = [
+                    'bg-indigo-50 text-indigo-600',
+                    'bg-emerald-50 text-emerald-600',
+                    'bg-purple-50 text-purple-600',
+                    'bg-amber-50 text-amber-600',
+                  ];
+                  const chosenColor = iconColors[idx % iconColors.length];
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-indigo-200 transition-all gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-10 h-10 rounded-xl ${chosenColor} flex items-center justify-center shrink-0`}>
+                          <Users2 className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-slate-900 truncate">{grp}</h4>
+                          <p className="text-xs text-slate-500 font-medium truncate">Professional Network • Active Member</p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGroup(idx)}
+                        className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
+                        title="Remove group"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Bottom Tip Card */}
+            <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-3.5 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                <Lightbulb className="w-4 h-4 text-indigo-600" />
+              </div>
+              <p className="text-xs font-medium text-indigo-950 leading-relaxed">
+                <strong className="text-indigo-700 font-bold">Tip:</strong> Join relevant groups to expand your network and get better opportunities!
+              </p>
             </div>
           </div>
 
-          {/* 2) 3 Hobbies Card (Dynamic List with + and Trash) */}
+
+          {/* 2) 3 Hobbies Card (Matching Mockup Design) */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-rose-50 text-rose-600 rounded-xl">
-                  <Heart className="w-5 h-5" />
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                  <Heart className="w-6 h-6 text-rose-600" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">3 Hobbies</h2>
-                  <p className="text-xs text-slate-500">Personal interests and hobbies for casual icebreakers.</p>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">3 Hobbies</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">List your favorite personal hobbies and activities.</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleAddHobby}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all shrink-0"
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Hobby</span>
               </button>
             </div>
 
-            <div className="space-y-2.5">
-              {hobbies.map((hobby, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder={`Hobby ${idx + 1}`}
-                    value={hobby}
-                    onChange={(e) => handleUpdateHobby(idx, e.target.value)}
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
-                  />
-                  {hobbies.length > 1 && (
+            {/* Input Row */}
+            <form onSubmit={handleAddHobby} className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-2xl flex items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-rose-500">
+                <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={hobbyInput}
+                  onChange={(e) => setHobbyInput(e.target.value)}
+                  placeholder="Enter hobby name..."
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0"
+              >
+                Add
+              </button>
+            </form>
+
+            {/* Hobby Count Header */}
+            <div className="flex items-center justify-between pt-1">
+              <h3 className="text-sm font-bold text-slate-900">Your Hobbies ({hobbies.length})</h3>
+              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
+                <span>A → Z</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* Item List */}
+            <div className="space-y-3">
+              {hobbies.length === 0 ? (
+                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+                  No hobbies added yet. Type a hobby name above and click "Add".
+                </div>
+              ) : (
+                hobbies.map((hb, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-rose-200 transition-all gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                        <Heart className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-slate-900 truncate">{hb}</h4>
+                        <p className="text-xs text-slate-500 font-medium truncate">Personal Interest</p>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => handleRemoveHobby(idx)}
-                      className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                       title="Remove hobby"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* 3) 3 Interests Card (Dynamic List with + and Trash) */}
+
+          {/* 3) 3 Interests Card (Matching Mockup Design) */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-purple-50 text-purple-600 rounded-xl">
-                  <Compass className="w-5 h-5" />
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <Compass className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">3 Interests</h2>
-                  <p className="text-xs text-slate-500">Professional focus areas, industries, or topic interests.</p>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">3 Interests</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">List your professional focus areas and key domain interests.</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleAddInterest}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-all shrink-0"
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Interest</span>
               </button>
             </div>
 
-            <div className="space-y-2.5">
-              {userInterests.map((interest, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder={`Interest ${idx + 1}`}
-                    value={interest}
-                    onChange={(e) => handleUpdateInterest(idx, e.target.value)}
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium"
-                  />
-                  {userInterests.length > 1 && (
+            {/* Input Row */}
+            <form onSubmit={handleAddInterest} className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-2xl flex items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-purple-500">
+                <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={interestInput}
+                  onChange={(e) => setInterestInput(e.target.value)}
+                  placeholder="Enter interest name..."
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0"
+              >
+                Add
+              </button>
+            </form>
+
+            {/* Interest Count Header */}
+            <div className="flex items-center justify-between pt-1">
+              <h3 className="text-sm font-bold text-slate-900">Your Interests ({userInterests.length})</h3>
+              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
+                <span>A → Z</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* Item List */}
+            <div className="space-y-3">
+              {userInterests.length === 0 ? (
+                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+                  No interests added yet. Type an interest above and click "Add".
+                </div>
+              ) : (
+                userInterests.map((interest, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-purple-200 transition-all gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                        <Compass className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-slate-900 truncate">{interest}</h4>
+                        <p className="text-xs text-slate-500 font-medium truncate">Professional Domain</p>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => handleRemoveInterest(idx)}
-                      className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                       title="Remove interest"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Section A: Which businesses do you want to meet? */}
+
+          {/* Section A: Which businesses do you want to meet? (Matching Mockup Design) */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold">
-                    A
-                  </span>
-                  <h2 className="text-base font-bold text-slate-900">Which businesses do you want to meet?</h2>
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <Target className="w-6 h-6 text-indigo-600" />
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  Specify target industry verticals, enterprise types, or niche sectors.
-                </p>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Target Businesses</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">Specify target industry verticals, enterprise types, or niche sectors you want to meet.</p>
+                </div>
               </div>
 
               <button
-                id="btn-add-target-business"
                 type="button"
                 onClick={handleAddTargetBusiness}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-xl text-xs font-bold transition-all shrink-0"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Target Field</span>
+                <span>Add Target</span>
               </button>
             </div>
 
-            {/* List of Target Fields */}
-            <div className="space-y-2.5">
-              {targetBusinesses.map((target, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter target business vertical or industry"
-                    value={target}
-                    onChange={(e) => handleUpdateTargetBusiness(idx, e.target.value)}
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
-                  />
-                  {targetBusinesses.length > 1 && (
+            {/* Input Row */}
+            <form onSubmit={handleAddTargetBusiness} className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-2xl flex items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-500">
+                <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={targetInput}
+                  onChange={(e) => setTargetInput(e.target.value)}
+                  placeholder="Enter target business vertical or industry..."
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0"
+              >
+                Add
+              </button>
+            </form>
+
+            {/* List Header */}
+            <div className="flex items-center justify-between pt-1">
+              <h3 className="text-sm font-bold text-slate-900">Your Target Fields ({targetBusinesses.length})</h3>
+              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
+                <span>A → Z</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* Item List */}
+            <div className="space-y-3">
+              {targetBusinesses.length === 0 ? (
+                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+                  No target business verticals added yet. Type a target industry above and click "Add".
+                </div>
+              ) : (
+                targetBusinesses.map((target, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-indigo-200 transition-all gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        <Building2 className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-slate-900 truncate">{target}</h4>
+                        <p className="text-xs text-slate-500 font-medium truncate">Target Industry Vertical</p>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => handleRemoveTargetBusiness(idx)}
-                      className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                       title="Remove field"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           {/* Section B: Who can you connect people to? */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">
-                    B
-                  </span>
-                  <h2 className="text-base font-bold text-slate-900">Who can you connect people to?</h2>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Building className="w-6 h-6 text-emerald-600" />
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  List key contacts, industry experts, and organizations you can introduce peers to.
-                </p>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Who can you connect people to?</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">List key contacts, industry experts, and organizations you can introduce peers to.</p>
+                </div>
               </div>
 
               <button
                 id="btn-add-connection-offered"
                 type="button"
                 onClick={() => setShowAddConnRow(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all shrink-0"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Connection Bridge</span>
@@ -834,48 +1009,50 @@ export const ProfilePage: React.FC = () => {
               </form>
             )}
 
+            {/* List Header */}
+            <div className="flex items-center justify-between pt-1">
+              <h3 className="text-sm font-bold text-slate-900">Your Connection Bridges ({connectionsOffered.length})</h3>
+              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
+                <span>A → Z</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
             {/* List of Connections Offered */}
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {connectionsOffered.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/70 rounded-2xl border border-dashed border-slate-200">
+                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
                   No connection bridges added yet. Click "+ Add Connection Bridge" above to specify who you can connect peers with.
                 </div>
               ) : (
                 connectionsOffered.map((conn) => (
                   <div
                     key={conn.id}
-                    className="flex items-start justify-between p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 transition-all"
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-emerald-200 transition-all gap-3"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-900">{conn.personName}</span>
-                        {conn.businessDomain && (
-                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
-                            {conn.businessDomain}
-                          </span>
-                        )}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <UserCheck className="w-5 h-5" />
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        {conn.orgName && (
-                          <span className="flex items-center gap-1 text-slate-700 font-medium">
-                            <Building className="w-3.5 h-3.5 text-slate-400" />
-                            {conn.orgName}
-                          </span>
-                        )}
-                        {conn.orgName && conn.role && <span>•</span>}
-                        {conn.role && (
-                          <span className="flex items-center gap-1 text-slate-500 font-medium">
-                            <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                            {conn.role}
-                          </span>
-                        )}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-slate-900 truncate">{conn.personName}</h4>
+                          {conn.businessDomain && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold shrink-0">
+                              {conn.businessDomain}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
+                          {conn.orgName ? `${conn.orgName}` : ''} {conn.orgName && conn.role ? '•' : ''} {conn.role ? `${conn.role}` : ''}
+                        </p>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleRemoveConnectionOffered(conn.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                       title="Delete bridge"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -885,6 +1062,7 @@ export const ProfilePage: React.FC = () => {
               )}
             </div>
           </div>
+
         </div>
       </div>
     </div>
