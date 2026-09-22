@@ -11,8 +11,10 @@ export interface ConnectablePerson {
   id: string;
   businessDomain: string;
   personName: string;
-  orgName: string;
+  orgName?: string;
   role: string;
+  city?: string;
+  relationship?: string;
 }
 
 export interface UserProfile {
@@ -34,12 +36,13 @@ export interface UserProfile {
   networking_goals?: any;
   targetBusinesses?: string[];
   connectionsOffered?: ConnectablePerson[];
-  networkingTargetMeets?: number;
   networkingTargetPeriod?: 'week' | 'month';
   networkingNewConnections?: number;
+  currentCity?: string;
+  targetCities?: string[];
   socialLinks?: {
     linkedin?: string;
-    twitter?: string;
+    instagram?: string;
     website?: string;
   };
 }

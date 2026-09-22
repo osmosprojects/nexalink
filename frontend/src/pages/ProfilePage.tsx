@@ -9,7 +9,7 @@ import {
   Phone,
   Globe,
   Linkedin,
-  Twitter,
+  Instagram,
   Plus,
   Trash2,
   Save,
@@ -33,7 +33,8 @@ import {
   X,
   Link2,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  MapPin
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -79,10 +80,21 @@ export const ProfilePage: React.FC = () => {
     email: user?.email || '',
     phone: profile?.phone || '',
     bio: profile?.bio || '',
-    linkedin: profile?.linkedin_url || profile?.skills?.linkedin || '',
-    twitter: profile?.skills?.twitter || '',
-    website: profile?.website || profile?.skills?.website || '',
+    linkedin: profile?.linkedin_url || profile?.skills?.socialLinks?.linkedin || profile?.skills?.linkedin || '',
+    instagram: profile?.skills?.socialLinks?.instagram || profile?.skills?.instagram || '',
+    website: profile?.website || profile?.skills?.socialLinks?.website || profile?.skills?.website || '',
   });
+
+  // Networking Locations state
+  const [currentCity, setCurrentCity] = useState<string>(() => {
+    return profile?.skills?.currentCity || profile?.location || '';
+  });
+  const [targetCities, setTargetCities] = useState<string[]>(() => {
+    const raw = profile?.skills?.targetCities;
+    if (Array.isArray(raw)) return raw;
+    return [];
+  });
+  const [targetCityInput, setTargetCityInput] = useState('');
 
   // 1) Networking Group Member state & local input
   const [networkingGroups, setNetworkingGroups] = useState<string[]>(() => {
@@ -120,12 +132,7 @@ export const ProfilePage: React.FC = () => {
   });
   const [goalInput, setGoalInput] = useState('');
 
-  // 5) Networking Goals Target state
-  const [networkingTargetMeets, setNetworkingTargetMeets] = useState<number>(() => {
-    const raw = profile?.skills?.networkingTargetMeets;
-    if (typeof raw === 'number' && raw >= 0) return raw;
-    return 5;
-  });
+  // 5) Networking Goals Target state (Frequency & Connections)
   const [networkingTargetPeriod, setNetworkingTargetPeriod] = useState<'week' | 'month'>(() => {
     const raw = profile?.skills?.networkingTargetPeriod;
     if (raw === 'month' || raw === 'week') return raw;
@@ -155,6 +162,8 @@ export const ProfilePage: React.FC = () => {
         personName: item.personName || item.name || '',
         orgName: item.orgName || item.company || '',
         role: item.role || item.designation || '',
+        city: item.city || '',
+        relationship: item.relationship || item.orgName || '',
       }));
     }
     return [];
@@ -166,6 +175,8 @@ export const ProfilePage: React.FC = () => {
     personName: '',
     orgName: '',
     role: '',
+    city: '',
+    relationship: '',
   });
   const [showAddConnRow, setShowAddConnRow] = useState(false);
 
@@ -177,10 +188,18 @@ export const ProfilePage: React.FC = () => {
         email: user?.email || '',
         phone: profile?.phone || '',
         bio: profile?.bio || '',
-        linkedin: profile?.linkedin_url || profile?.skills?.linkedin || '',
-        twitter: profile?.skills?.twitter || '',
-        website: profile?.website || profile?.skills?.website || '',
+        linkedin: profile?.linkedin_url || profile?.skills?.socialLinks?.linkedin || profile?.skills?.linkedin || '',
+        instagram: profile?.skills?.socialLinks?.instagram || profile?.skills?.instagram || '',
+        website: profile?.website || profile?.skills?.socialLinks?.website || profile?.skills?.website || '',
       });
+
+      if (profile?.skills?.currentCity || profile?.location) {
+        setCurrentCity(profile.skills?.currentCity || profile.location || '');
+      }
+
+      if (Array.isArray(profile?.skills?.targetCities)) {
+        setTargetCities(profile.skills.targetCities);
+      }
 
       const group = profile?.skills?.networkingGroup;
       if (Array.isArray(group) && group.length > 0) {
@@ -204,10 +223,6 @@ export const ProfilePage: React.FC = () => {
         setUserGoals(profile.skills.goals);
       }
 
-      if (typeof profile?.skills?.networkingTargetMeets === 'number' && profile.skills.networkingTargetMeets >= 0) {
-        setNetworkingTargetMeets(profile.skills.networkingTargetMeets);
-      }
-
       if (profile?.skills?.networkingTargetPeriod === 'week' || profile?.skills?.networkingTargetPeriod === 'month') {
         setNetworkingTargetPeriod(profile.skills.networkingTargetPeriod);
       }
@@ -228,6 +243,8 @@ export const ProfilePage: React.FC = () => {
             personName: item.personName || item.name || '',
             orgName: item.orgName || item.company || '',
             role: item.role || item.designation || '',
+            city: item.city || '',
+            relationship: item.relationship || item.orgName || '',
           }))
         );
       }
@@ -260,6 +277,18 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
+  // Location Handlers
+  const handleAddTargetCity = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!targetCityInput.trim()) return;
+    if (targetCities.length >= 10) return;
+    setTargetCities([...targetCities, targetCityInput.trim()]);
+    setTargetCityInput('');
+  };
+  const handleRemoveTargetCity = (index: number) => {
+    setTargetCities(targetCities.filter((_, i) => i !== index));
+  };
+
   // Group Handlers
   const handleAddGroup = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -267,6 +296,7 @@ export const ProfilePage: React.FC = () => {
     if (networkingGroups.length >= 10) return;
     setNetworkingGroups([...networkingGroups, groupInput.trim()]);
     setGroupInput('');
+    if (validationErrors.groups) setValidationErrors((prev) => ({ ...prev, groups: '' }));
   };
   const handleRemoveGroup = (index: number) => {
     setNetworkingGroups(networkingGroups.filter((_, i) => i !== index));
@@ -279,6 +309,7 @@ export const ProfilePage: React.FC = () => {
     if (hobbies.length >= 5) return;
     setHobbies([...hobbies, hobbyInput.trim()]);
     setHobbyInput('');
+    if (validationErrors.hobbies) setValidationErrors((prev) => ({ ...prev, hobbies: '' }));
   };
   const handleRemoveHobby = (index: number) => {
     setHobbies(hobbies.filter((_, i) => i !== index));
@@ -291,6 +322,7 @@ export const ProfilePage: React.FC = () => {
     if (userInterests.length >= 10) return;
     setUserInterests([...userInterests, interestInput.trim()]);
     setInterestInput('');
+    if (validationErrors.interests) setValidationErrors((prev) => ({ ...prev, interests: '' }));
   };
   const handleRemoveInterest = (index: number) => {
     setUserInterests(userInterests.filter((_, i) => i !== index));
@@ -303,6 +335,7 @@ export const ProfilePage: React.FC = () => {
     if (userGoals.length >= 5) return;
     setUserGoals([...userGoals, goalInput.trim()]);
     setGoalInput('');
+    if (validationErrors.objectives) setValidationErrors((prev) => ({ ...prev, objectives: '' }));
   };
   const handleRemoveGoal = (index: number) => {
     setUserGoals(userGoals.filter((_, i) => i !== index));
@@ -315,6 +348,7 @@ export const ProfilePage: React.FC = () => {
     if (targetBusinesses.length >= 10) return;
     setTargetBusinesses([...targetBusinesses, targetInput.trim()]);
     setTargetInput('');
+    if (validationErrors.targets) setValidationErrors((prev) => ({ ...prev, targets: '' }));
   };
   const handleRemoveTargetBusiness = (index: number) => {
     setTargetBusinesses(targetBusinesses.filter((_, i) => i !== index));
@@ -330,8 +364,9 @@ export const ProfilePage: React.FC = () => {
       id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
     setConnectionsOffered([...connectionsOffered, newEntry]);
-    setNewConn({ businessDomain: '', personName: '', orgName: '', role: '' });
+    setNewConn({ businessDomain: '', personName: '', orgName: '', role: '', city: '', relationship: '' });
     setShowAddConnRow(false);
+    if (validationErrors.bridges) setValidationErrors((prev) => ({ ...prev, bridges: '' }));
   };
 
   const handleRemoveConnectionOffered = (id: string) => {
@@ -368,7 +403,7 @@ export const ProfilePage: React.FC = () => {
 
     const cleanInterests = userInterests.map((i) => i.trim()).filter(Boolean);
     if (cleanInterests.length === 0) {
-      errors.interests = 'At least 1 Professional Interest is required.';
+      errors.interests = 'At least 1 Interest is required.';
     }
 
     const cleanGoals = userGoals.map((g) => g.trim()).filter(Boolean);
@@ -408,6 +443,8 @@ export const ProfilePage: React.FC = () => {
     }
 
     try {
+      const cleanTargetCities = targetCities.map((c) => c.trim()).filter(Boolean);
+
       await api.put('/profile', {
         name: formData.name,
         email: formData.email,
@@ -415,18 +452,19 @@ export const ProfilePage: React.FC = () => {
         bio: formData.bio,
         avatar_url: avatarUrl,
         linkedin: formData.linkedin,
-        twitter: formData.twitter,
+        instagram: formData.instagram,
         website: formData.website,
         socialLinks: {
           linkedin: formData.linkedin,
-          twitter: formData.twitter,
+          instagram: formData.instagram,
           website: formData.website,
         },
+        currentCity,
+        targetCities: cleanTargetCities,
         networkingGroup: cleanGroups,
         hobbies: cleanHobbies,
         userInterests: cleanInterests,
         goals: cleanGoals,
-        networkingTargetMeets,
         networkingTargetPeriod,
         networkingNewConnections,
         targetBusinesses: cleanTargets,
@@ -505,8 +543,8 @@ export const ProfilePage: React.FC = () => {
               </>
             ) : (
               <>
-                <Save className="w-4 h-4 text-blue-700" />
-                <span>Save Profile & Complete Setup</span>
+                <UserCheck className="w-4 h-4 text-blue-700" />
+                <span>Complete Profile Setup</span>
               </>
             )}
           </button>
@@ -569,7 +607,7 @@ export const ProfilePage: React.FC = () => {
       {/* 3. MAIN CONTENT 2-COLUMN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* LEFT COLUMN: Profile Photo & Identity */}
+        {/* LEFT COLUMN: Profile Photo, Identity & Locations */}
         <div className="lg:col-span-5 space-y-6">
           
           {/* BLOCK 1: Profile Photo (Collapsible) */}
@@ -694,7 +732,7 @@ export const ProfilePage: React.FC = () => {
                         setValidationErrors((prev) => ({ ...prev, name: '' }));
                       }
                     }}
-                    placeholder="Abhishek Tiwari"
+                    placeholder="Your Full Name"
                     className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
                       validationErrors.name
                         ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
@@ -735,7 +773,7 @@ export const ProfilePage: React.FC = () => {
                       <input
                         type="text"
                         required
-                        placeholder="84544986"
+                        placeholder="e.g. +91 9876543210"
                         value={formData.phone}
                         onChange={(e) => {
                           setFormData({ ...formData, phone: e.target.value });
@@ -780,7 +818,7 @@ export const ProfilePage: React.FC = () => {
                         setValidationErrors((prev) => ({ ...prev, bio: '' }));
                       }
                     }}
-                    placeholder="Experienced technology professional with a passion for building innovative solutions and creating meaningful connections in the industry."
+                    placeholder="Brief overview of your professional background, achievements, and key domain expertise."
                     className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden leading-relaxed ${
                       validationErrors.bio
                         ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
@@ -808,7 +846,7 @@ export const ProfilePage: React.FC = () => {
                       </div>
                       <input
                         type="url"
-                        placeholder="https://linkedin.com/in/abhishek-tiwari"
+                        placeholder="https://linkedin.com/in/username"
                         value={formData.linkedin}
                         onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
                         className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
@@ -817,17 +855,17 @@ export const ProfilePage: React.FC = () => {
                     </div>
 
                     <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-sky-500">
-                        <Twitter className="w-4 h-4" />
+                      <div className="absolute left-3 top-2.5 text-pink-600">
+                        <Instagram className="w-4 h-4" />
                       </div>
                       <input
                         type="url"
-                        placeholder="https://twitter.com/abhishek_tiwari"
-                        value={formData.twitter}
-                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                        placeholder="https://instagram.com/username"
+                        value={formData.instagram}
+                        onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
                         className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       />
-                      {formData.twitter && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                      {formData.instagram && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
                     </div>
 
                     <div className="relative">
@@ -836,7 +874,7 @@ export const ProfilePage: React.FC = () => {
                       </div>
                       <input
                         type="url"
-                        placeholder="https://nexalink.com"
+                        placeholder="https://yourwebsite.com"
                         value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                         className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
@@ -848,12 +886,103 @@ export const ProfilePage: React.FC = () => {
               </form>
             )}
           </div>
+
+          {/* BLOCK 3: Networking Locations (Collapsible) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+            {/* Header */}
+            <div
+              onClick={() => toggleBlock('locations')}
+              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <MapPin className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Locations</h2>
+                  <p className="text-[11px] text-slate-500 font-medium">Manage your current location and target cities for networking.</p>
+                </div>
+              </div>
+              <div className="text-slate-400 hover:text-slate-600 p-1">
+                {collapsedBlocks['locations'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </div>
+            </div>
+
+            {/* Body */}
+            {!collapsedBlocks['locations'] && (
+              <div className="p-5 space-y-4 animate-fadeIn">
+                {/* Field 1: Current City */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    I am in city
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={currentCity}
+                      onChange={(e) => setCurrentCity(e.target.value)}
+                      placeholder="enter your city (e.g. Mumbai)..."
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+
+                {/* Field 2: Target Cities */}
+                <div className="pt-2 border-t border-slate-100 space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">
+                    I am looking to network with people in
+                  </label>
+                  <form onSubmit={handleAddTargetCity} className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        value={targetCityInput}
+                        onChange={(e) => setTargetCityInput(e.target.value)}
+                        placeholder="enter city name..."
+                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                    >
+                      + Add
+                    </button>
+                  </form>
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {targetCities.length === 0 ? (
+                      <div className="text-xs text-slate-400 italic">No target cities added yet.</div>
+                    ) : (
+                      targetCities.map((city, idx) => (
+                        <div
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold animate-fadeIn"
+                        >
+                          <span>📍 {city}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTargetCity(idx)}
+                            className="hover:text-emerald-900 transition-colors p-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* RIGHT COLUMN: Groups, Hobbies, Interests, Objectives */}
         <div className="lg:col-span-7 space-y-6">
 
-          {/* BLOCK 3: Networking Groups (Collapsible) */}
+          {/* BLOCK 4: Networking Groups (Collapsible) */}
           <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
             validationErrors.groups ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
           }`}>
@@ -944,7 +1073,7 @@ export const ProfilePage: React.FC = () => {
             )}
           </div>
 
-          {/* BLOCK 4: Hobbies (Collapsible) */}
+          {/* BLOCK 5: Hobbies (Collapsible) */}
           <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
             validationErrors.hobbies ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
           }`}>
@@ -1035,7 +1164,7 @@ export const ProfilePage: React.FC = () => {
             )}
           </div>
 
-          {/* BLOCK 5: Professional Interests (Collapsible) */}
+          {/* BLOCK 6: Interests (Collapsible) */}
           <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
             validationErrors.interests ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
           }`}>
@@ -1050,7 +1179,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
-                    <span>Professional Interests</span>
+                    <span>Interests</span>
                     {validationErrors.interests && (
                       <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
                         <AlertCircle className="w-3 h-3" />
@@ -1058,7 +1187,7 @@ export const ProfilePage: React.FC = () => {
                       </span>
                     )}
                   </h2>
-                  <p className="text-[11px] text-slate-500 font-medium">List your professional focus areas and key domain interests.</p>
+                  <p className="text-[11px] text-slate-500 font-medium">List your favorite interests and focus areas.</p>
                 </div>
               </div>
               <div className="text-slate-400 hover:text-slate-600 p-1">
@@ -1126,7 +1255,7 @@ export const ProfilePage: React.FC = () => {
             )}
           </div>
 
-          {/* BLOCK 6: Networking Objectives (Collapsible) */}
+          {/* BLOCK 7: Networking Objectives (Collapsible) */}
           <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
             validationErrors.objectives ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
           }`}>
@@ -1222,7 +1351,7 @@ export const ProfilePage: React.FC = () => {
       {/* 4. BOTTOM 3-COLUMN SECTION */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
         
-        {/* BLOCK 7: Networking Goals (Collapsible) */}
+        {/* BLOCK 8: Networking Goals (Collapsible - Frequency & Connections) */}
         <div className="md:col-span-4 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
           {/* Header */}
           <div
@@ -1235,7 +1364,7 @@ export const ProfilePage: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Goals</h2>
-                <p className="text-[11px] text-slate-500 font-medium">Set your networking targets and frequency.</p>
+                <p className="text-[11px] text-slate-500 font-medium">Set your networking target frequency and connections.</p>
               </div>
             </div>
             <div className="text-slate-400 hover:text-slate-600 p-1">
@@ -1245,7 +1374,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* Body */}
           {!collapsedBlocks['goals'] && (
-            <div className="p-5 space-y-3.5 animate-fadeIn">
+            <div className="p-5 space-y-4 animate-fadeIn">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Frequency</label>
                 <select
@@ -1259,22 +1388,7 @@ export const ProfilePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Meetings per week</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={networkingTargetMeets}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value, 10);
-                    setNetworkingTargetMeets(isNaN(val) ? 0 : Math.max(0, val));
-                  }}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">New connections per month</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Connections</label>
                 <input
                   type="number"
                   min="0"
@@ -1287,11 +1401,23 @@ export const ProfilePage: React.FC = () => {
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 />
               </div>
+
+              <div className="p-3.5 bg-blue-50/80 border border-blue-200/80 rounded-2xl flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold">
+                  <Target className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-blue-600 tracking-wider block">Target Goal</span>
+                  <p className="text-xs font-bold text-slate-900">
+                    {networkingNewConnections} connections per {networkingTargetPeriod}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
 
-        {/* BLOCK 8: Target Industries & Businesses (Collapsible) */}
+        {/* BLOCK 9: Target Industries & Businesses (Collapsible) */}
         <div className={`md:col-span-4 bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
           validationErrors.targets ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
         }`}>
@@ -1382,7 +1508,7 @@ export const ProfilePage: React.FC = () => {
           )}
         </div>
 
-        {/* BLOCK 9: Connection Bridges (Collapsible) */}
+        {/* BLOCK 10: Connection Bridges (Collapsible) */}
         <div className={`md:col-span-4 bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
           validationErrors.bridges ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
         }`}>
@@ -1406,7 +1532,7 @@ export const ProfilePage: React.FC = () => {
                   )}
                 </h2>
                 <p className="text-[11px] text-slate-500 font-medium truncate">
-                  Who can you connect people to? Add key contacts and domains.
+                  Who can you connect people to? Add key contacts and relationship details.
                 </p>
               </div>
             </div>
@@ -1482,9 +1608,16 @@ export const ProfilePage: React.FC = () => {
                     />
                     <input
                       type="text"
-                      placeholder="Reason for connection / Notes"
-                      value={newConn.orgName}
-                      onChange={(e) => setNewConn({ ...newConn, orgName: e.target.value })}
+                      placeholder="City / Location (e.g. Mumbai, New York)"
+                      value={newConn.city || ''}
+                      onChange={(e) => setNewConn({ ...newConn, city: e.target.value })}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
+                    />
+                    <input
+                      type="text"
+                      placeholder="relationship with you (e.g. Friend, College Alumni, Family)"
+                      value={newConn.relationship || ''}
+                      onChange={(e) => setNewConn({ ...newConn, relationship: e.target.value, orgName: e.target.value })}
                       className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
                     />
                   </div>
@@ -1519,16 +1652,23 @@ export const ProfilePage: React.FC = () => {
                           <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
                             {initials}
                           </div>
-                          <div className="min-w-0 space-y-0.5">
+                          <div className="min-w-0 space-y-1">
                             <h4 className="text-xs font-bold text-slate-900 truncate">{conn.personName}</h4>
                             <p className="text-[11px] font-medium text-slate-500 truncate">
                               {conn.role || 'Contact'} {conn.businessDomain ? `• ${conn.businessDomain}` : ''}
                             </p>
-                            {conn.orgName && (
-                              <p className="text-[10px] font-normal text-slate-400 leading-tight">
-                                {conn.orgName}
-                              </p>
-                            )}
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 flex-wrap">
+                              {conn.city && (
+                                <span className="px-2 py-0.5 rounded bg-slate-200/70 font-semibold text-slate-700">
+                                  📍 {conn.city}
+                                </span>
+                              )}
+                              {(conn.relationship || conn.orgName) && (
+                                <span className="px-2 py-0.5 rounded bg-indigo-100/70 font-semibold text-indigo-700">
+                                  🤝 {conn.relationship || conn.orgName}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 

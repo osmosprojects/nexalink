@@ -44,23 +44,36 @@ class ProfileController {
                 linkedin_url: data.linkedin || data.socialLinks?.linkedin,
                 avatar_url: data.avatar_url || null,
                 skills: {
-                    twitter: data.twitter,
                     networkingGroup: data.networkingGroup,
                     hobbies: data.hobbies || [],
                     interests: data.userInterests || data.interestsList || [],
                     goals: data.goals || data.userGoals || [],
-                    networkingTargetMeets: data.networkingTargetMeets ?? 5,
                     networkingTargetPeriod: data.networkingTargetPeriod || 'week',
                     networkingNewConnections: data.networkingNewConnections ?? 10,
-                    socialLinks: data.socialLinks,
+                    currentCity: data.currentCity || '',
+                    targetCities: data.targetCities || [],
+                    socialLinks: {
+                        linkedin: data.linkedin || data.socialLinks?.linkedin,
+                        instagram: data.instagram || data.socialLinks?.instagram,
+                        website: data.website || data.socialLinks?.website,
+                    },
                 },
                 networking_goals: data.targetBusinesses || data.networking_goals || [],
                 interests: data.connectionsOffered || data.interests || [],
                 headline: data.bio ? data.bio.slice(0, 100) : null,
             });
-            const updated = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
+            const updatedProfile = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
+            const updatedUser = await UserRepository_1.UserRepository.findById(userId);
             await (0, audit_1.logAudit)(req, 'PROFILE_UPDATED', 'profile', userId);
-            return (0, response_1.sendSuccess)(res, { profile: updated });
+            return (0, response_1.sendSuccess)(res, {
+                profile: updatedProfile,
+                user: {
+                    userId: updatedUser?.user_id,
+                    email: updatedUser?.email,
+                    displayName: updatedUser?.display_name,
+                    avatarUrl: updatedUser?.avatar_url,
+                },
+            });
         }
         catch (err) {
             next(err);
