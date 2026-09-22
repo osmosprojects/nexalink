@@ -50,8 +50,8 @@ app.use('/api', limiter);
 app.use('/api', routes_1.apiRouter);
 // Serve static frontend assets in production if available
 const possibleStaticDirs = [
-    path_1.default.join(__dirname, '../public'),
     path_1.default.join(__dirname, '../../frontend/dist'),
+    path_1.default.join(__dirname, '../public'),
     path_1.default.join(__dirname, 'public'),
 ];
 let staticServed = false;

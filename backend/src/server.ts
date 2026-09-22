@@ -54,8 +54,8 @@ app.use('/api', apiRouter);
 
 // Serve static frontend assets in production if available
 const possibleStaticDirs = [
-  path.join(__dirname, '../public'),
   path.join(__dirname, '../../frontend/dist'),
+  path.join(__dirname, '../public'),
   path.join(__dirname, 'public'),
 ];
 
