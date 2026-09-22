@@ -32,7 +32,8 @@ import {
   Zap,
   X,
   Link2,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -41,6 +42,8 @@ export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationSummary, setValidationSummary] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Collapsible section state
@@ -327,65 +330,72 @@ export const ProfilePage: React.FC = () => {
     if (e) e.preventDefault();
     setLoading(true);
     setSavedSuccess(false);
+    setValidationSummary(null);
+
+    const errors: Record<string, string> = {};
+
+    if (!formData.name || !formData.name.trim()) {
+      errors.name = 'Full Name is required.';
+    }
+    if (!formData.phone || !formData.phone.trim()) {
+      errors.phone = 'Phone Number is required.';
+    }
+    if (!formData.bio || !formData.bio.trim()) {
+      errors.bio = 'Professional Biography is required.';
+    }
+
+    const cleanGroups = networkingGroups.map((g) => g.trim()).filter(Boolean);
+    if (cleanGroups.length === 0) {
+      errors.groups = 'At least 1 Networking Group is required.';
+    }
+
+    const cleanHobbies = hobbies.map((h) => h.trim()).filter(Boolean);
+    if (cleanHobbies.length === 0) {
+      errors.hobbies = 'At least 1 Hobby is required.';
+    }
+
+    const cleanInterests = userInterests.map((i) => i.trim()).filter(Boolean);
+    if (cleanInterests.length === 0) {
+      errors.interests = 'At least 1 Professional Interest is required.';
+    }
+
+    const cleanGoals = userGoals.map((g) => g.trim()).filter(Boolean);
+    if (cleanGoals.length === 0) {
+      errors.objectives = 'At least 1 Networking Objective is required.';
+    }
+
+    const cleanTargets = targetBusinesses.map((t) => t.trim()).filter(Boolean);
+    if (cleanTargets.length === 0) {
+      errors.targets = 'At least 1 Target Industry or Business is required.';
+    }
+
+    if (connectionsOffered.length === 0) {
+      errors.bridges = 'At least 1 Connection Bridge is required.';
+    }
+
+    setValidationErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      // Auto-expand any collapsed cards that have validation errors
+      setCollapsedBlocks((prev) => {
+        const updated = { ...prev };
+        if (errors.name || errors.phone || errors.bio) updated['identity'] = false;
+        if (errors.groups) updated['groups'] = false;
+        if (errors.hobbies) updated['hobbies'] = false;
+        if (errors.interests) updated['interests'] = false;
+        if (errors.objectives) updated['objectives'] = false;
+        if (errors.targets) updated['targets'] = false;
+        if (errors.bridges) updated['bridges'] = false;
+        return updated;
+      });
+
+      setValidationSummary('Please complete all required profile fields highlighted in red below.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setLoading(false);
+      return;
+    }
 
     try {
-      if (!formData.name || !formData.name.trim()) {
-        alert('Please enter your Full Name.');
-        setLoading(false);
-        return;
-      }
-      if (!formData.phone || !formData.phone.trim()) {
-        alert('Please enter your Phone Number.');
-        setLoading(false);
-        return;
-      }
-      if (!formData.bio || !formData.bio.trim()) {
-        alert('Please enter your Professional Biography.');
-        setLoading(false);
-        return;
-      }
-
-      const cleanGroups = networkingGroups.map((g) => g.trim()).filter(Boolean);
-      if (cleanGroups.length === 0) {
-        alert('Please add at least 1 Networking Group.');
-        setLoading(false);
-        return;
-      }
-
-      const cleanHobbies = hobbies.map((h) => h.trim()).filter(Boolean);
-      if (cleanHobbies.length === 0) {
-        alert('Please add at least 1 Hobby.');
-        setLoading(false);
-        return;
-      }
-
-      const cleanInterests = userInterests.map((i) => i.trim()).filter(Boolean);
-      if (cleanInterests.length === 0) {
-        alert('Please add at least 1 Professional Interest.');
-        setLoading(false);
-        return;
-      }
-
-      const cleanGoals = userGoals.map((g) => g.trim()).filter(Boolean);
-      if (cleanGoals.length === 0) {
-        alert('Please add at least 1 Networking Objective.');
-        setLoading(false);
-        return;
-      }
-
-      const cleanTargets = targetBusinesses.map((t) => t.trim()).filter(Boolean);
-      if (cleanTargets.length === 0) {
-        alert('Please add at least 1 Target Industry or Business.');
-        setLoading(false);
-        return;
-      }
-
-      if (connectionsOffered.length === 0) {
-        alert('Please add at least 1 Connection Bridge.');
-        setLoading(false);
-        return;
-      }
-
       await api.put('/profile', {
         name: formData.name,
         email: formData.email,
@@ -420,9 +430,9 @@ export const ProfilePage: React.FC = () => {
         if (isComplete) {
           navigate('/dashboard');
         }
-      }, 1200);
+      }, 1000);
     } catch (err: any) {
-      alert(err.message || 'Failed to save profile');
+      setValidationSummary(err.message || 'Failed to save profile. Please check your data and try again.');
     } finally {
       setLoading(false);
     }
@@ -461,13 +471,52 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {savedSuccess && (
-          <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-500/20 backdrop-blur-md text-white border border-emerald-400/40 rounded-xl text-xs font-semibold animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-            <span>Profile saved</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {savedSuccess && (
+            <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-500/20 backdrop-blur-md text-white border border-emerald-400/40 rounded-xl text-xs font-semibold animate-fadeIn">
+              <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+              <span>Profile saved</span>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleSaveProfile}
+            disabled={loading}
+            className="w-full sm:w-auto px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-blue-700" />
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 text-blue-700" />
+                <span>Save Profile & Complete Setup</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* VALIDATION ERROR SUMMARY BANNER */}
+      {validationSummary && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-2xl flex items-start gap-3 animate-fadeIn shadow-sm">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h4 className="text-xs font-bold text-rose-900">Incomplete Profile Setup</h4>
+            <p className="text-xs text-rose-700 font-medium mt-0.5">{validationSummary}</p>
+            {Object.keys(validationErrors).length > 0 && (
+              <ul className="list-disc list-inside text-xs text-rose-700 mt-2 space-y-0.5 font-medium">
+                {Object.values(validationErrors).map((err, idx) => (
+                  <li key={idx}>{err}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 2. COMPLETION & QUICK TIPS ROW */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
@@ -583,7 +632,11 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* BLOCK 2: Personal & Professional Identity (Collapsible) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+            (validationErrors.name || validationErrors.phone || validationErrors.bio)
+              ? 'border-rose-300 ring-2 ring-rose-100'
+              : 'border-slate-200/90'
+          }`}>
             {/* Header */}
             <div
               onClick={() => toggleBlock('identity')}
@@ -594,7 +647,15 @@ export const ProfilePage: React.FC = () => {
                   <User className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Personal & Professional Identity</h2>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                    <span>Personal & Professional Identity</span>
+                    {(validationErrors.name || validationErrors.phone || validationErrors.bio) && (
+                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>Action Required</span>
+                      </span>
+                    )}
+                  </h2>
                   <p className="text-[11px] text-slate-500 font-medium">Tell us about yourself and your professional background.</p>
                 </div>
               </div>
@@ -608,22 +669,37 @@ export const ProfilePage: React.FC = () => {
               <form onSubmit={handleSaveProfile} className="p-5 space-y-4 animate-fadeIn">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Full Name <span className="text-blue-600">*</span>
+                    Full Name <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      if (validationErrors.name) {
+                        setValidationErrors((prev) => ({ ...prev, name: '' }));
+                      }
+                    }}
                     placeholder="Abhishek Tiwari"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                      validationErrors.name
+                        ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                        : 'border-slate-200 focus:ring-blue-500'
+                    }`}
                   />
+                  {validationErrors.name && (
+                    <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>{validationErrors.name}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Email Address <span className="text-blue-600">*</span>
+                      Email Address <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <Mail className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -639,7 +715,7 @@ export const ProfilePage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Phone Number <span className="text-blue-600">*</span>
+                      Phone Number <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <Phone className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -648,18 +724,33 @@ export const ProfilePage: React.FC = () => {
                         required
                         placeholder="84544986"
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                        onChange={(e) => {
+                          setFormData({ ...formData, phone: e.target.value });
+                          if (validationErrors.phone) {
+                            setValidationErrors((prev) => ({ ...prev, phone: '' }));
+                          }
+                        }}
+                        className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                          validationErrors.phone
+                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                            : 'border-slate-200 focus:ring-blue-500'
+                        }`}
                       />
-                      {formData.phone && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                      {formData.phone && !validationErrors.phone && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
                     </div>
+                    {validationErrors.phone && (
+                      <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>{validationErrors.phone}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-bold text-slate-700">
-                      Professional Biography <span className="text-blue-600">*</span>
+                      Professional Biography <span className="text-rose-500">*</span>
                     </label>
                     <span className="text-[10px] font-bold text-slate-400">
                       {formData.bio.length} / 500
@@ -670,10 +761,25 @@ export const ProfilePage: React.FC = () => {
                     maxLength={500}
                     required
                     value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, bio: e.target.value });
+                      if (validationErrors.bio) {
+                        setValidationErrors((prev) => ({ ...prev, bio: '' }));
+                      }
+                    }}
                     placeholder="Experienced technology professional with a passion for building innovative solutions and creating meaningful connections in the industry."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden leading-relaxed"
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden leading-relaxed ${
+                      validationErrors.bio
+                        ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                        : 'border-slate-200 focus:ring-blue-500'
+                    }`}
                   />
+                  {validationErrors.bio && (
+                    <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>{validationErrors.bio}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Social Links */}
@@ -735,7 +841,9 @@ export const ProfilePage: React.FC = () => {
         <div className="lg:col-span-7 space-y-6">
 
           {/* BLOCK 3: Networking Groups (Collapsible) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+            validationErrors.groups ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+          }`}>
             {/* Header */}
             <div
               onClick={() => toggleBlock('groups')}
@@ -746,7 +854,15 @@ export const ProfilePage: React.FC = () => {
                   <Users2 className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Groups</h2>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                    <span>Networking Groups</span>
+                    {validationErrors.groups && (
+                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>At least 1 required</span>
+                      </span>
+                    )}
+                  </h2>
                   <p className="text-[11px] text-slate-500 font-medium">Manage your networking group memberships, chapters, or clubs.</p>
                 </div>
               </div>
@@ -758,6 +874,13 @@ export const ProfilePage: React.FC = () => {
             {/* Body */}
             {!collapsedBlocks['groups'] && (
               <div className="p-5 space-y-4 animate-fadeIn">
+                {validationErrors.groups && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{validationErrors.groups}</span>
+                  </div>
+                )}
+
                 <form onSubmit={handleAddGroup} className="flex items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -809,7 +932,9 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* BLOCK 4: Hobbies (Collapsible) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+            validationErrors.hobbies ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+          }`}>
             {/* Header */}
             <div
               onClick={() => toggleBlock('hobbies')}
@@ -820,7 +945,15 @@ export const ProfilePage: React.FC = () => {
                   <Heart className="w-4 h-4 text-rose-500" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Hobbies</h2>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                    <span>Hobbies</span>
+                    {validationErrors.hobbies && (
+                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>At least 1 required</span>
+                      </span>
+                    )}
+                  </h2>
                   <p className="text-[11px] text-slate-500 font-medium">List your favorite personal hobbies and activities.</p>
                 </div>
               </div>
@@ -832,6 +965,13 @@ export const ProfilePage: React.FC = () => {
             {/* Body */}
             {!collapsedBlocks['hobbies'] && (
               <div className="p-5 space-y-4 animate-fadeIn">
+                {validationErrors.hobbies && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{validationErrors.hobbies}</span>
+                  </div>
+                )}
+
                 <form onSubmit={handleAddHobby} className="flex items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -883,7 +1023,9 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* BLOCK 5: Professional Interests (Collapsible) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+            validationErrors.interests ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+          }`}>
             {/* Header */}
             <div
               onClick={() => toggleBlock('interests')}
@@ -894,7 +1036,15 @@ export const ProfilePage: React.FC = () => {
                   <Compass className="w-4 h-4 text-purple-600" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Professional Interests</h2>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                    <span>Professional Interests</span>
+                    {validationErrors.interests && (
+                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>At least 1 required</span>
+                      </span>
+                    )}
+                  </h2>
                   <p className="text-[11px] text-slate-500 font-medium">List your professional focus areas and key domain interests.</p>
                 </div>
               </div>
@@ -906,6 +1056,13 @@ export const ProfilePage: React.FC = () => {
             {/* Body */}
             {!collapsedBlocks['interests'] && (
               <div className="p-5 space-y-4 animate-fadeIn">
+                {validationErrors.interests && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{validationErrors.interests}</span>
+                  </div>
+                )}
+
                 <form onSubmit={handleAddInterest} className="flex items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -957,7 +1114,9 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* BLOCK 6: Networking Objectives (Collapsible) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+            validationErrors.objectives ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+          }`}>
             {/* Header */}
             <div
               onClick={() => toggleBlock('objectives')}
@@ -968,7 +1127,15 @@ export const ProfilePage: React.FC = () => {
                   <Zap className="w-4 h-4 text-amber-600" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Objectives</h2>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                    <span>Networking Objectives</span>
+                    {validationErrors.objectives && (
+                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>At least 1 required</span>
+                      </span>
+                    )}
+                  </h2>
                   <p className="text-[11px] text-slate-500 font-medium">What are you trying to achieve through networking?</p>
                 </div>
               </div>
@@ -980,6 +1147,13 @@ export const ProfilePage: React.FC = () => {
             {/* Body */}
             {!collapsedBlocks['objectives'] && (
               <div className="p-5 space-y-4 animate-fadeIn">
+                {validationErrors.objectives && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{validationErrors.objectives}</span>
+                  </div>
+                )}
+
                 <form onSubmit={handleAddGoal} className="flex items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -1099,7 +1273,9 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         {/* BLOCK 8: Target Industries & Businesses (Collapsible) */}
-        <div className="md:col-span-4 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+        <div className={`md:col-span-4 bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+          validationErrors.targets ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+        }`}>
           {/* Header */}
           <div
             onClick={() => toggleBlock('targets')}
@@ -1110,7 +1286,15 @@ export const ProfilePage: React.FC = () => {
                 <Building2 className="w-4 h-4 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-slate-900 leading-tight">Target Industries & Businesses</h2>
+                <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                  <span>Target Industries & Businesses</span>
+                  {validationErrors.targets && (
+                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>At least 1 required</span>
+                    </span>
+                  )}
+                </h2>
                 <p className="text-[11px] text-slate-500 font-medium">Specify industries, company types, or business segments you want to connect with.</p>
               </div>
             </div>
@@ -1122,6 +1306,13 @@ export const ProfilePage: React.FC = () => {
           {/* Body */}
           {!collapsedBlocks['targets'] && (
             <div className="p-5 space-y-4 animate-fadeIn">
+              {validationErrors.targets && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{validationErrors.targets}</span>
+                </div>
+              )}
+
               <form onSubmit={handleAddTargetBusiness} className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -1173,7 +1364,9 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         {/* BLOCK 9: Connection Bridges (Collapsible) */}
-        <div className="md:col-span-4 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+        <div className={`md:col-span-4 bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+          validationErrors.bridges ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+        }`}>
           {/* Header */}
           <div
             onClick={() => toggleBlock('bridges')}
@@ -1184,9 +1377,17 @@ export const ProfilePage: React.FC = () => {
                 <Link2 className="w-4 h-4 text-indigo-600" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-sm font-bold text-slate-900 leading-tight">Connection Bridges</h2>
-                <p className="text-[11px] text-slate-500 font-medium">
-                  Who can you connect people to? Add key contacts, industries, and the reason for the connection.
+                <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                  <span>Connection Bridges</span>
+                  {validationErrors.bridges && (
+                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200 shrink-0">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>At least 1 required</span>
+                    </span>
+                  )}
+                </h2>
+                <p className="text-[11px] text-slate-500 font-medium truncate">
+                  Who can you connect people to? Add key contacts and domains.
                 </p>
               </div>
             </div>
@@ -1199,6 +1400,13 @@ export const ProfilePage: React.FC = () => {
           {/* Body */}
           {!collapsedBlocks['bridges'] && (
             <div className="p-5 space-y-4 animate-fadeIn">
+              {validationErrors.bridges && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{validationErrors.bridges}</span>
+                </div>
+              )}
+
               {/* Add Bridge Action Bar */}
               <div className="flex items-center justify-between pt-1">
                 <h3 className="text-xs font-bold text-slate-900">Your Bridges ({connectionsOffered.length})</h3>
@@ -1321,6 +1529,38 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* 5. BOTTOM PRIMARY SAVE ACTION CARD */}
+      <div className="mt-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl sm:rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-indigo-500/20">
+        <div className="space-y-1 text-center sm:text-left">
+          <h3 className="text-base font-bold tracking-tight text-white flex items-center justify-center sm:justify-start gap-2">
+            <span>Complete Profile & Save Changes</span>
+            <Sparkles className="w-4 h-4 text-amber-400" />
+          </h3>
+          <p className="text-xs text-slate-300 font-medium">
+            Once saved, your profile will be verified and you will be redirected to your CRM Dashboard.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSaveProfile}
+          disabled={loading}
+          className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all active:scale-95 shrink-0 disabled:opacity-50"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Saving Profile...</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              <span>Save Profile & Continue to Dashboard</span>
+            </>
+          )}
+        </button>
       </div>
 
     </div>
