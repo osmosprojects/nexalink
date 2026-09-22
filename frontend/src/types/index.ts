@@ -34,6 +34,8 @@ export interface UserProfile {
   networking_goals?: any;
   targetBusinesses?: string[];
   connectionsOffered?: ConnectablePerson[];
+  networkingTargetMeets?: number;
+  networkingTargetPeriod?: 'week' | 'month';
   socialLinks?: {
     linkedin?: string;
     twitter?: string;

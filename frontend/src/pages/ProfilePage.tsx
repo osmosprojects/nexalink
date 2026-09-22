@@ -84,13 +84,25 @@ export const ProfilePage: React.FC = () => {
   });
   const [interestInput, setInterestInput] = useState('');
 
-  // 4) Goals and Interests state & local input
+  // 4) Networking Objectives state & local input (formerly text goals)
   const [userGoals, setUserGoals] = useState<string[]>(() => {
     const raw = profile?.skills?.goals;
     if (Array.isArray(raw) && raw.length > 0) return raw;
     return [];
   });
   const [goalInput, setGoalInput] = useState('');
+
+  // 5) Networking Goals (Target Number & Period) state
+  const [networkingTargetMeets, setNetworkingTargetMeets] = useState<number>(() => {
+    const raw = profile?.skills?.networkingTargetMeets;
+    if (typeof raw === 'number' && raw > 0) return raw;
+    return 5;
+  });
+  const [networkingTargetPeriod, setNetworkingTargetPeriod] = useState<'week' | 'month'>(() => {
+    const raw = profile?.skills?.networkingTargetPeriod;
+    if (raw === 'month' || raw === 'week') return raw;
+    return 'week';
+  });
 
   // Section A: Which businesses do you want to meet?
   const [targetBusinesses, setTargetBusinesses] = useState<string[]>(() => {
@@ -157,6 +169,14 @@ export const ProfilePage: React.FC = () => {
 
       if (Array.isArray(profile?.skills?.goals) && profile.skills.goals.length > 0) {
         setUserGoals(profile.skills.goals);
+      }
+
+      if (typeof profile?.skills?.networkingTargetMeets === 'number' && profile.skills.networkingTargetMeets > 0) {
+        setNetworkingTargetMeets(profile.skills.networkingTargetMeets);
+      }
+
+      if (profile?.skills?.networkingTargetPeriod === 'week' || profile?.skills?.networkingTargetPeriod === 'month') {
+        setNetworkingTargetPeriod(profile.skills.networkingTargetPeriod);
       }
 
       if (Array.isArray(profile?.networking_goals) && profile.networking_goals.length > 0) {
@@ -236,7 +256,7 @@ export const ProfilePage: React.FC = () => {
     setUserInterests(userInterests.filter((_, i) => i !== index));
   };
 
-  // Goal Handlers
+  // Goal / Objective Handlers
   const handleAddGoal = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!goalInput.trim()) return;
@@ -305,6 +325,8 @@ export const ProfilePage: React.FC = () => {
         hobbies: cleanHobbies,
         userInterests: cleanInterests,
         goals: cleanGoals,
+        networkingTargetMeets,
+        networkingTargetPeriod,
         targetBusinesses: cleanTargets.length > 0 ? cleanTargets : ['General Business Networking'],
         connectionsOffered,
       });
@@ -593,15 +615,6 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List the networking groups, chapters, or clubs you belong to.</p>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={handleAddGroup}
-                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Group</span>
-              </button>
             </div>
 
             {/* Input Row */}
@@ -702,15 +715,6 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your favorite personal hobbies and activities.</p>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={handleAddHobby}
-                className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Hobby</span>
-              </button>
             </div>
 
             {/* Input Row */}
@@ -792,15 +796,6 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your professional focus areas and key domain interests.</p>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={handleAddInterest}
-                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Interest</span>
-              </button>
             </div>
 
             {/* Input Row */}
@@ -869,7 +864,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
 
-          {/* 4) Networking Goals Card (Mobile Responsive) */}
+          {/* 4) Networking Objectives Card (Mobile Responsive) */}
           <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -878,19 +873,10 @@ export const ProfilePage: React.FC = () => {
                   <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Networking Goals</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your key networking targets, growth aspirations, and professional objectives.</p>
+                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Networking Objectives</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your key networking objectives, growth aspirations, and strategic focus areas.</p>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={handleAddGoal}
-                className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Goal</span>
-              </button>
             </div>
 
             {/* Input Row */}
@@ -901,7 +887,7 @@ export const ProfilePage: React.FC = () => {
                   type="text"
                   value={goalInput}
                   onChange={(e) => setGoalInput(e.target.value)}
-                  placeholder="Enter networking goal..."
+                  placeholder="Enter networking objective..."
                   className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
                 />
               </div>
@@ -915,7 +901,7 @@ export const ProfilePage: React.FC = () => {
 
             {/* Goal Count Header */}
             <div className="flex items-center justify-between pt-1">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Goals ({userGoals.length})</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Objectives ({userGoals.length})</h3>
               <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
                 <span>A → Z</span>
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -926,7 +912,7 @@ export const ProfilePage: React.FC = () => {
             <div className="space-y-2.5">
               {userGoals.length === 0 ? (
                 <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
-                  No goals added yet. Type a goal above and click "Add".
+                  No objectives added yet. Type an objective above and click "Add".
                 </div>
               ) : (
                 userGoals.map((goal, idx) => (
@@ -940,7 +926,7 @@ export const ProfilePage: React.FC = () => {
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{goal}</h4>
-                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Networking Goal</p>
+                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Networking Objective</p>
                       </div>
                     </div>
 
@@ -948,7 +934,7 @@ export const ProfilePage: React.FC = () => {
                       type="button"
                       onClick={() => handleRemoveGoal(idx)}
                       className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
-                      title="Remove goal"
+                      title="Remove objective"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -963,8 +949,64 @@ export const ProfilePage: React.FC = () => {
                 <Lightbulb className="w-4 h-4 text-amber-700" />
               </div>
               <p className="text-xs font-medium text-amber-950 leading-relaxed">
-                <strong className="text-amber-800 font-bold">Tip:</strong> Setting clear networking goals helps NexaLink recommend high-value introductions!
+                <strong className="text-amber-800 font-bold">Tip:</strong> Setting clear networking objectives helps NexaLink recommend high-value introductions!
               </p>
+            </div>
+          </div>
+
+
+          {/* 5) Networking Goals Card (Target Number & Period) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <Target className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Networking Goals</h2>
+                <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">Set your target number of networking meets per week or month.</p>
+              </div>
+            </div>
+
+            {/* Interactive Target Form */}
+            <div className="bg-indigo-50/50 border border-indigo-100 p-4 sm:p-5 rounded-2xl space-y-3">
+              <label className="block text-xs font-bold text-indigo-900 uppercase tracking-wider">
+                Networking Target Goal
+              </label>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <span className="text-xs sm:text-sm font-bold text-slate-800 whitespace-nowrap">I want to do</span>
+                
+                <div className="relative w-full sm:w-28">
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={networkingTargetMeets}
+                    onChange={(e) => setNetworkingTargetMeets(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-extrabold text-sm text-center focus:ring-2 focus:ring-indigo-500 focus:outline-hidden shadow-xs"
+                  />
+                </div>
+
+                <span className="text-xs sm:text-sm font-bold text-slate-800 whitespace-nowrap">networking meets in a</span>
+
+                <select
+                  value={networkingTargetPeriod}
+                  onChange={(e) => setNetworkingTargetPeriod(e.target.value as 'week' | 'month')}
+                  className="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-hidden shadow-xs cursor-pointer"
+                >
+                  <option value="week">week</option>
+                  <option value="month">month</option>
+                </select>
+              </div>
+
+              {/* Summary display badge */}
+              <div className="pt-2 flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-600">Goal Statement:</span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  🎯 {networkingTargetMeets} networking meets per {networkingTargetPeriod}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -982,15 +1024,6 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">Specify target industry verticals, enterprise types, or niche sectors you want to meet.</p>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={handleAddTargetBusiness}
-                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Target</span>
-              </button>
             </div>
 
             {/* Input Row */}
