@@ -335,21 +335,56 @@ export const ProfilePage: React.FC = () => {
         return;
       }
       if (!formData.phone || !formData.phone.trim()) {
-        alert('Please enter your Phone Number to complete profile setup.');
+        alert('Please enter your Phone Number.');
         setLoading(false);
         return;
       }
       if (!formData.bio || !formData.bio.trim()) {
-        alert('Please enter your Professional Biography to complete profile setup.');
+        alert('Please enter your Professional Biography.');
+        setLoading(false);
+        return;
+      }
+
+      const cleanGroups = networkingGroups.map((g) => g.trim()).filter(Boolean);
+      if (cleanGroups.length === 0) {
+        alert('Please add at least 1 Networking Group.');
+        setLoading(false);
+        return;
+      }
+
+      const cleanHobbies = hobbies.map((h) => h.trim()).filter(Boolean);
+      if (cleanHobbies.length === 0) {
+        alert('Please add at least 1 Hobby.');
+        setLoading(false);
+        return;
+      }
+
+      const cleanInterests = userInterests.map((i) => i.trim()).filter(Boolean);
+      if (cleanInterests.length === 0) {
+        alert('Please add at least 1 Professional Interest.');
+        setLoading(false);
+        return;
+      }
+
+      const cleanGoals = userGoals.map((g) => g.trim()).filter(Boolean);
+      if (cleanGoals.length === 0) {
+        alert('Please add at least 1 Networking Objective.');
         setLoading(false);
         return;
       }
 
       const cleanTargets = targetBusinesses.map((t) => t.trim()).filter(Boolean);
-      const cleanHobbies = hobbies.map((h) => h.trim()).filter(Boolean);
-      const cleanInterests = userInterests.map((i) => i.trim()).filter(Boolean);
-      const cleanGoals = userGoals.map((g) => g.trim()).filter(Boolean);
-      const cleanGroups = networkingGroups.map((g) => g.trim()).filter(Boolean);
+      if (cleanTargets.length === 0) {
+        alert('Please add at least 1 Target Industry or Business.');
+        setLoading(false);
+        return;
+      }
+
+      if (connectionsOffered.length === 0) {
+        alert('Please add at least 1 Connection Bridge.');
+        setLoading(false);
+        return;
+      }
 
       await api.put('/profile', {
         name: formData.name,
@@ -372,7 +407,7 @@ export const ProfilePage: React.FC = () => {
         networkingTargetMeets,
         networkingTargetPeriod,
         networkingNewConnections,
-        targetBusinesses: cleanTargets.length > 0 ? cleanTargets : ['General Business Networking'],
+        targetBusinesses: cleanTargets,
         connectionsOffered,
       });
 
@@ -398,13 +433,14 @@ export const ProfilePage: React.FC = () => {
     let score = 0;
     if (formData.name) score += 10;
     if (formData.email) score += 10;
-    if (formData.phone) score += 15;
-    if (formData.bio) score += 15;
+    if (formData.phone) score += 10;
+    if (formData.bio) score += 10;
     if (avatarUrl) score += 10;
     if (networkingGroups.length > 0) score += 10;
-    if (hobbies.length > 0 || userInterests.length > 0) score += 10;
-    if (userGoals.length > 0 || targetBusinesses.length > 0) score += 10;
-    if (connectionsOffered.length > 0) score += 10;
+    if (hobbies.length > 0) score += 10;
+    if (userInterests.length > 0) score += 10;
+    if (userGoals.length > 0) score += 10;
+    if (targetBusinesses.length > 0 && connectionsOffered.length > 0) score += 10;
     return Math.min(100, score);
   };
   const completionPercentage = calcCompletionScore();
@@ -420,28 +456,17 @@ export const ProfilePage: React.FC = () => {
             <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold tracking-tight">Profile & AI Persona</h1>
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight">Networking Profile</h1>
             <p className="text-xs sm:text-sm text-blue-100 font-medium">Complete your identity to unlock all CRM modules</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto justify-end">
-          {savedSuccess && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 backdrop-blur-md text-white border border-emerald-400/40 rounded-xl text-xs font-semibold animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-              <span>Profile saved</span>
-            </div>
-          )}
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => handleSaveProfile()}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-60"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 text-blue-700" />}
-            <span>Save Profile</span>
-          </button>
-        </div>
+        {savedSuccess && (
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-500/20 backdrop-blur-md text-white border border-emerald-400/40 rounded-xl text-xs font-semibold animate-fadeIn">
+            <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+            <span>Profile saved</span>
+          </div>
+        )}
       </div>
 
       {/* 2. COMPLETION & QUICK TIPS ROW */}
@@ -501,9 +526,9 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-[11px] text-slate-500 font-medium">Add a clear photo of yourself.</p>
                 </div>
               </div>
-              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+              <div className="text-slate-400 hover:text-slate-600 p-1">
                 {collapsedBlocks['photo'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </button>
+              </div>
             </div>
 
             {/* Body */}
@@ -573,9 +598,9 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-[11px] text-slate-500 font-medium">Tell us about yourself and your professional background.</p>
                 </div>
               </div>
-              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+              <div className="text-slate-400 hover:text-slate-600 p-1">
                 {collapsedBlocks['identity'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </button>
+              </div>
             </div>
 
             {/* Body */}
@@ -725,9 +750,9 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-[11px] text-slate-500 font-medium">Manage your networking group memberships, chapters, or clubs.</p>
                 </div>
               </div>
-              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+              <div className="text-slate-400 hover:text-slate-600 p-1">
                 {collapsedBlocks['groups'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </button>
+              </div>
             </div>
 
             {/* Body */}
@@ -740,7 +765,7 @@ export const ProfilePage: React.FC = () => {
                       type="text"
                       value={groupInput}
                       onChange={(e) => setGroupInput(e.target.value)}
-                      placeholder="Search or enter networking group..."
+                      placeholder="enter group name..."
                       className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     />
                   </div>
@@ -799,9 +824,9 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-[11px] text-slate-500 font-medium">List your favorite personal hobbies and activities.</p>
                 </div>
               </div>
-              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+              <div className="text-slate-400 hover:text-slate-600 p-1">
                 {collapsedBlocks['hobbies'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </button>
+              </div>
             </div>
 
             {/* Body */}
@@ -814,7 +839,7 @@ export const ProfilePage: React.FC = () => {
                       type="text"
                       value={hobbyInput}
                       onChange={(e) => setHobbyInput(e.target.value)}
-                      placeholder="Search or enter hobby..."
+                      placeholder="enter hobby name..."
                       className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     />
                   </div>
@@ -873,9 +898,9 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-[11px] text-slate-500 font-medium">List your professional focus areas and key domain interests.</p>
                 </div>
               </div>
-              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+              <div className="text-slate-400 hover:text-slate-600 p-1">
                 {collapsedBlocks['interests'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </button>
+              </div>
             </div>
 
             {/* Body */}
@@ -888,7 +913,7 @@ export const ProfilePage: React.FC = () => {
                       type="text"
                       value={interestInput}
                       onChange={(e) => setInterestInput(e.target.value)}
-                      placeholder="Search or enter interest..."
+                      placeholder="enter interest name..."
                       className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     />
                   </div>
@@ -947,9 +972,9 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-[11px] text-slate-500 font-medium">What are you trying to achieve through networking?</p>
                 </div>
               </div>
-              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+              <div className="text-slate-400 hover:text-slate-600 p-1">
                 {collapsedBlocks['objectives'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </button>
+              </div>
             </div>
 
             {/* Body */}
@@ -962,7 +987,7 @@ export const ProfilePage: React.FC = () => {
                       type="text"
                       value={goalInput}
                       onChange={(e) => setGoalInput(e.target.value)}
-                      placeholder="Enter networking objective..."
+                      placeholder="enter objective..."
                       className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     />
                   </div>
@@ -1026,9 +1051,9 @@ export const ProfilePage: React.FC = () => {
                 <p className="text-[11px] text-slate-500 font-medium">Set your networking targets and frequency.</p>
               </div>
             </div>
-            <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+            <div className="text-slate-400 hover:text-slate-600 p-1">
               {collapsedBlocks['goals'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-            </button>
+            </div>
           </div>
 
           {/* Body */}
@@ -1089,9 +1114,9 @@ export const ProfilePage: React.FC = () => {
                 <p className="text-[11px] text-slate-500 font-medium">Specify industries, company types, or business segments you want to connect with.</p>
               </div>
             </div>
-            <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+            <div className="text-slate-400 hover:text-slate-600 p-1">
               {collapsedBlocks['targets'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-            </button>
+            </div>
           </div>
 
           {/* Body */}
@@ -1104,7 +1129,7 @@ export const ProfilePage: React.FC = () => {
                     type="text"
                     value={targetInput}
                     onChange={(e) => setTargetInput(e.target.value)}
-                    placeholder="Search industry or business type..."
+                    placeholder="enter target industry..."
                     className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   />
                 </div>
@@ -1166,9 +1191,9 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            <button type="button" onClick={() => toggleBlock('bridges')} className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
               {collapsedBlocks['bridges'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-            </button>
+            </div>
           </div>
 
           {/* Body */}

@@ -21,13 +21,26 @@ export const checkIsProfileComplete = (profile: UserProfile | null, _persona?: U
   if (!profile) return false;
   const hasBio = Boolean(profile.bio && profile.bio.trim().length > 0);
   const hasPhone = Boolean(profile.phone && profile.phone.trim().length > 0);
-  const goals = Array.isArray(profile.networking_goals)
+
+  const groups = Array.isArray(profile.skills?.networkingGroup) ? profile.skills.networkingGroup : [];
+  const hobbies = Array.isArray(profile.skills?.hobbies) ? profile.skills.hobbies : [];
+  const interests = Array.isArray(profile.skills?.interests) ? profile.skills.interests : [];
+  const objectives = Array.isArray(profile.skills?.goals) ? profile.skills.goals : [];
+  const targets = Array.isArray(profile.networking_goals)
     ? profile.networking_goals
     : Array.isArray(profile.targetBusinesses)
     ? profile.targetBusinesses
     : [];
-  const hasTargetBusiness = goals.some((g: any) => typeof g === 'string' && g.trim().length > 0);
-  return hasBio && hasPhone && hasTargetBusiness;
+  const bridges = Array.isArray(profile.interests) && typeof profile.interests[0] === 'object' ? profile.interests : [];
+
+  const hasGroup = groups.some((g: any) => typeof g === 'string' && g.trim().length > 0);
+  const hasHobby = hobbies.some((h: any) => typeof h === 'string' && h.trim().length > 0);
+  const hasInterest = interests.some((i: any) => typeof i === 'string' && i.trim().length > 0);
+  const hasObjective = objectives.some((o: any) => typeof o === 'string' && o.trim().length > 0);
+  const hasTarget = targets.some((t: any) => typeof t === 'string' && t.trim().length > 0);
+  const hasBridge = bridges.length > 0;
+
+  return hasBio && hasPhone && hasGroup && hasHobby && hasInterest && hasObjective && hasTarget && hasBridge;
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

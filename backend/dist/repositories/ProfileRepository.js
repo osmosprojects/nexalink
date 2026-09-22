@@ -4,18 +4,23 @@ exports.ProfileRepository = void 0;
 const db_1 = require("../config/db");
 class ProfileRepository {
     static async isProfileComplete(userId) {
-        const profileRows = await (0, db_1.query)(`SELECT bio, phone, networking_goals FROM user_profiles WHERE user_id = ? LIMIT 1`, [userId]);
+        const profileRows = await (0, db_1.query)(`SELECT bio, phone, networking_goals, skills, interests FROM user_profiles WHERE user_id = ? LIMIT 1`, [userId]);
         if (!profileRows[0])
             return false;
         const p = profileRows[0];
         if (!p.bio || !p.bio.trim() || !p.phone || !p.phone.trim()) {
             return false;
         }
+        const skills = typeof p.skills === 'string' ? JSON.parse(p.skills) : p.skills || {};
         const goals = typeof p.networking_goals === 'string' ? JSON.parse(p.networking_goals) : p.networking_goals;
-        if (!goals || !Array.isArray(goals) || goals.length === 0 || !goals.some((g) => typeof g === 'string' && g.trim().length > 0)) {
-            return false;
-        }
-        return true;
+        const bridges = typeof p.interests === 'string' ? JSON.parse(p.interests) : p.interests;
+        const hasGroup = Array.isArray(skills?.networkingGroup) && skills.networkingGroup.length > 0;
+        const hasHobby = Array.isArray(skills?.hobbies) && skills.hobbies.length > 0;
+        const hasInterest = Array.isArray(skills?.interests) && skills.interests.length > 0;
+        const hasObjective = Array.isArray(skills?.goals) && skills.goals.length > 0;
+        const hasTarget = Array.isArray(goals) && goals.length > 0;
+        const hasBridge = Array.isArray(bridges) && bridges.length > 0;
+        return hasGroup && hasHobby && hasInterest && hasObjective && hasTarget && hasBridge;
     }
     static async getProfileByUserId(userId) {
         const rows = await (0, db_1.query)(`SELECT * FROM user_profiles WHERE user_id = ? LIMIT 1`, [userId]);
