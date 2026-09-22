@@ -46,6 +46,18 @@ export const ProfilePage: React.FC = () => {
   const [validationSummary, setValidationSummary] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Global event listener for external save triggers (e.g. BottomNav / Sidebar "Complete Profile Setup" button)
+  const saveProfileRef = useRef<() => void>();
+  useEffect(() => {
+    const handleTrigger = () => {
+      if (saveProfileRef.current) {
+        saveProfileRef.current();
+      }
+    };
+    window.addEventListener('trigger-save-profile', handleTrigger);
+    return () => window.removeEventListener('trigger-save-profile', handleTrigger);
+  }, []);
+
   // Collapsible section state
   const [collapsedBlocks, setCollapsedBlocks] = useState<Record<string, boolean>>({});
 
@@ -437,6 +449,7 @@ export const ProfilePage: React.FC = () => {
       setLoading(false);
     }
   };
+  saveProfileRef.current = handleSaveProfile;
 
   // Helper calculation for profile completion
   const calcCompletionScore = () => {
@@ -1529,38 +1542,6 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* 5. BOTTOM PRIMARY SAVE ACTION CARD */}
-      <div className="mt-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl sm:rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-indigo-500/20">
-        <div className="space-y-1 text-center sm:text-left">
-          <h3 className="text-base font-bold tracking-tight text-white flex items-center justify-center sm:justify-start gap-2">
-            <span>Complete Profile & Save Changes</span>
-            <Sparkles className="w-4 h-4 text-amber-400" />
-          </h3>
-          <p className="text-xs text-slate-300 font-medium">
-            Once saved, your profile will be verified and you will be redirected to your CRM Dashboard.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSaveProfile}
-          disabled={loading}
-          className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all active:scale-95 shrink-0 disabled:opacity-50"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Saving Profile...</span>
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4" />
-              <span>Save Profile & Continue to Dashboard</span>
-            </>
-          )}
-        </button>
       </div>
 
     </div>

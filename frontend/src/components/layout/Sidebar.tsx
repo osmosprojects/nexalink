@@ -111,18 +111,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
         {!isProfileComplete ? (
           <div className="space-y-2">
             <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-brand-400">Required Setup</p>
-            <NavLink
-              to="/profile"
-              className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow-md shadow-brand-600/30"
+            <button
+              type="button"
+              onClick={() => {
+                if (window.location.pathname === '/profile') {
+                  window.dispatchEvent(new CustomEvent('trigger-save-profile'));
+                } else {
+                  navigate('/profile');
+                }
+              }}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow-md shadow-brand-600/30 cursor-pointer active:scale-95"
             >
               <div className="flex items-center gap-2.5">
                 <UserCheck className="w-4 h-4" />
-                <span>Profile & Persona Setup</span>
+                <span>Complete Profile Setup</span>
               </div>
               <span className="text-[9px] font-extrabold bg-white/20 text-white px-1.5 py-0.5 rounded">
-                Required
+                Save
               </span>
-            </NavLink>
+            </button>
 
             <div className="p-3.5 mt-4 rounded-xl bg-slate-800/40 border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
               <div className="flex items-center gap-1.5 text-slate-300 font-semibold">

@@ -66,13 +66,20 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 z-40 flex items-center justify-around shadow-lg">
         {!isProfileComplete ? (
           <>
-            <NavLink
-              to="/profile"
-              className="flex items-center justify-center gap-2 py-2 px-6 rounded-xl bg-brand-600 text-white font-semibold text-xs shadow-md shadow-brand-600/30"
+            <button
+              type="button"
+              onClick={() => {
+                if (window.location.pathname === '/profile') {
+                  window.dispatchEvent(new CustomEvent('trigger-save-profile'));
+                } else {
+                  navigate('/profile');
+                }
+              }}
+              className="flex items-center justify-center gap-2 py-2.5 px-6 rounded-xl bg-brand-600 text-white font-semibold text-xs shadow-md shadow-brand-600/30 active:scale-95 cursor-pointer"
             >
               <UserCheck className="w-4 h-4" />
               <span>Complete Profile Setup</span>
-            </NavLink>
+            </button>
             <button
               onClick={() => logout()}
               className="flex items-center gap-1.5 py-2 px-4 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-medium"
