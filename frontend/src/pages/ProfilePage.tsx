@@ -329,6 +329,22 @@ export const ProfilePage: React.FC = () => {
     setSavedSuccess(false);
 
     try {
+      if (!formData.name || !formData.name.trim()) {
+        alert('Please enter your Full Name.');
+        setLoading(false);
+        return;
+      }
+      if (!formData.phone || !formData.phone.trim()) {
+        alert('Please enter your Phone Number to complete profile setup.');
+        setLoading(false);
+        return;
+      }
+      if (!formData.bio || !formData.bio.trim()) {
+        alert('Please enter your Professional Biography to complete profile setup.');
+        setLoading(false);
+        return;
+      }
+
       const cleanTargets = targetBusinesses.map((t) => t.trim()).filter(Boolean);
       const cleanHobbies = hobbies.map((h) => h.trim()).filter(Boolean);
       const cleanInterests = userInterests.map((i) => i.trim()).filter(Boolean);
@@ -360,13 +376,13 @@ export const ProfilePage: React.FC = () => {
         connectionsOffered,
       });
 
-      await refreshProfile();
+      const { isComplete } = await refreshProfile();
       setSavedSuccess(true);
       confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
 
       setTimeout(() => {
         setSavedSuccess(false);
-        if (!isProfileComplete) {
+        if (isComplete) {
           navigate('/dashboard');
         }
       }, 1200);
