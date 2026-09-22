@@ -98,7 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
             <span>Step 1: Setup Profile</span>
           </div>
           <p className="text-[11px] text-slate-300 leading-relaxed mb-2.5">
-            Complete your profile and AI persona to unlock all CRM modules.
+            Complete your profile to unlock all CRM modules.
           </p>
           <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
             <div className="bg-brand-500 h-full w-2/5 animate-pulse" />
@@ -244,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
           >
             <div className="flex items-center gap-2.5">
               <UserCheck className="w-4 h-4 text-brand-400" />
-              <span>Profile & Persona</span>
+              <span>Networking Profile</span>
             </div>
             {!isProfileComplete && (
               <span className="text-[9px] font-extrabold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/40 animate-pulse">

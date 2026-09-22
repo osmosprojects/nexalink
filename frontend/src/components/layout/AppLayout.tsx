@@ -24,7 +24,7 @@ const routeTitleMap: Record<string, { title: string; subtitle: string }> = {
   '/feed': { title: 'Network Feed', subtitle: 'Recent activity, milestones, and community updates' },
   '/analytics': { title: 'Analytics & Growth', subtitle: 'Relationship health, network velocity, and engagement metrics' },
   '/notifications': { title: 'Alerts & Reminders', subtitle: 'Timely reminders for follow-ups and meetings' },
-  '/profile': { title: 'User Profile & AI Persona', subtitle: 'Complete your identity to unlock all CRM modules' },
+  '/profile': { title: 'Networking Profile', subtitle: 'Complete your identity to unlock all CRM modules' },
   '/settings': { title: 'Settings & Privacy', subtitle: 'System preferences, data export, and security audit logs' },
 };
 
@@ -48,7 +48,7 @@ export const AppLayout: React.FC = () => {
     subtitle: 'Relationship intelligence platform',
   };
 
-  // Enforce Mandatory Profile & Persona Completion Guard
+  // Enforce Mandatory Profile Completion Guard
   if (!isLoading && user && !isProfileComplete && path !== '/profile') {
     return <Navigate to="/profile" replace />;
   }
@@ -85,10 +85,10 @@ export const AppLayout: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-xs sm:text-sm font-bold tracking-tight">
-                    Step 1: Complete Your Profile & AI Persona
+                    Step 1: Complete Your Profile
                   </h4>
                   <p className="text-[11px] text-brand-100">
-                    Fill in your headline, company, industry, and networking persona below to unlock all CRM modules.
+                    Fill in your identity details below to unlock all CRM modules.
                   </p>
                 </div>
               </div>
