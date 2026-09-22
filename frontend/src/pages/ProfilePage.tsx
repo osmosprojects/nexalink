@@ -847,7 +847,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
 
-          {/* 4) Goals and Interests Card (Mobile Responsive) */}
+          {/* 4) Networking Goals Card (Mobile Responsive) */}
           <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -856,8 +856,8 @@ export const ProfilePage: React.FC = () => {
                   <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Goals and Interests</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your key networking goals, targets, and strategic aspirations.</p>
+                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Networking Goals</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your key networking targets, growth aspirations, and professional objectives.</p>
                 </div>
               </div>
 
@@ -879,7 +879,7 @@ export const ProfilePage: React.FC = () => {
                   type="text"
                   value={goalInput}
                   onChange={(e) => setGoalInput(e.target.value)}
-                  placeholder="Enter networking goal or interest..."
+                  placeholder="Enter networking goal..."
                   className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
                 />
               </div>
