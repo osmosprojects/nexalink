@@ -28,7 +28,6 @@ import {
   Search,
   Lightbulb,
   ChevronDown,
-  GraduationCap,
   Building2,
   Target
 } from 'lucide-react';
@@ -303,40 +302,40 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6 space-y-5 sm:space-y-6 overflow-x-hidden">
       {/* Onboarding Alert Banner if incomplete */}
       {!isProfileComplete && (
-        <div className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white p-5 rounded-3xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
               <h3 className="font-bold text-sm sm:text-base">Complete Your Profile Setup</h3>
             </div>
-            <p className="text-xs text-brand-100 max-w-xl">
+            <p className="text-xs text-brand-100 max-w-xl leading-relaxed">
               Please enter your Phone, Biography, and Target Businesses below to activate your CRM account.
             </p>
           </div>
-          <div className="shrink-0 px-3.5 py-1.5 bg-white/20 backdrop-blur-md rounded-xl text-xs font-extrabold border border-white/30">
+          <div className="shrink-0 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-xl text-xs font-extrabold border border-white/30">
             Setup Required
           </div>
         </div>
       )}
 
       {/* Page Action Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <UserCheck className="w-6 h-6 text-brand-600" />
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-brand-600 shrink-0" />
             <span>User Profile</span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Manage your personal identity, networking group memberships, hobbies, interests, and connection bridges.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 w-full sm:w-auto">
           {savedSuccess && (
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold animate-fadeIn">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold animate-fadeIn">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>Profile Saved!</span>
             </div>
@@ -346,7 +345,7 @@ export const ProfilePage: React.FC = () => {
             type="button"
             disabled={loading}
             onClick={() => handleSaveProfile()}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95 disabled:opacity-60"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95 disabled:opacity-60"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>Save Profile</span>
@@ -354,32 +353,32 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8">
         {/* Left Column: Profile Photo & Identity (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-5 sm:space-y-6">
           {/* Profile Photo Card */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Camera className="w-4 h-4 text-indigo-600" />
               <span>Profile Photo</span>
             </h2>
 
-            <div className="flex flex-col sm:flex-row items-center gap-5">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
               <div className="relative shrink-0">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt={formData.name || 'User Profile'}
-                    className="w-24 h-24 rounded-full object-cover border-2 border-slate-200 shadow-sm"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-slate-200 shadow-sm"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
-                    <User className="w-12 h-12 text-slate-400" />
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
+                    <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-400" />
                   </div>
                 )}
               </div>
 
-              <div className="space-y-2.5 text-center sm:text-left flex-1">
+              <div className="space-y-2 text-center sm:text-left flex-1 w-full">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -387,11 +386,11 @@ export const ProfilePage: React.FC = () => {
                   onChange={handleImageUpload}
                   className="hidden"
                 />
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                <div className="flex flex-row items-center justify-center sm:justify-start gap-2">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all shadow-xs"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all shadow-xs"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload Image</span>
@@ -399,7 +398,7 @@ export const ProfilePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleResetAvatar}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-semibold transition-all"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-semibold transition-all"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Reset</span>
@@ -411,7 +410,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* Personal Identity Form Card */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <User className="w-4 h-4 text-indigo-600" />
               <span>Personal & Professional Identity</span>
@@ -496,7 +495,7 @@ export const ProfilePage: React.FC = () => {
                       placeholder="https://linkedin.com/in/username"
                       value={formData.linkedin}
                       onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
                     />
                   </div>
 
@@ -509,7 +508,7 @@ export const ProfilePage: React.FC = () => {
                       placeholder="https://twitter.com/username"
                       value={formData.twitter}
                       onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
                     />
                   </div>
 
@@ -522,7 +521,7 @@ export const ProfilePage: React.FC = () => {
                       placeholder="https://yourwebsite.com"
                       value={formData.website}
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
                     />
                   </div>
                 </div>
@@ -532,26 +531,26 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         {/* Right Column: Groups, Hobbies, Interests, Target Businesses & Bridges (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-5 sm:space-y-6">
 
-          {/* 1) Networking Group Member Card (Matching Mockup Design) */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
+          {/* 1) Networking Group Member Card (Fully Mobile Responsive) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
             {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                  <Users2 className="w-6 h-6 text-indigo-600" />
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <Users2 className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Networking Group Member</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium">List the networking groups, chapters, or clubs you belong to.</p>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Networking Group Member</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List the networking groups, chapters, or clubs you belong to.</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleAddGroup}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Group</span>
@@ -559,20 +558,20 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Input Row */}
-            <form onSubmit={handleAddGroup} className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-2xl flex items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-500">
+            <form onSubmit={handleAddGroup} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-500 min-w-0">
                 <Search className="w-4 h-4 text-slate-400 shrink-0" />
                 <input
                   type="text"
                   value={groupInput}
                   onChange={(e) => setGroupInput(e.target.value)}
                   placeholder="Enter networking group name..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0"
+                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
               >
                 Add
               </button>
@@ -580,7 +579,7 @@ export const ProfilePage: React.FC = () => {
 
             {/* Group Count & Sort bar */}
             <div className="flex items-center justify-between pt-1">
-              <h3 className="text-sm font-bold text-slate-900">Your Groups ({networkingGroups.length})</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Groups ({networkingGroups.length})</h3>
               <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
                 <span>A → Z</span>
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -588,9 +587,9 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Item List */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {networkingGroups.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
                   No networking groups added yet. Type a group name above and click "Add".
                 </div>
               ) : (
@@ -605,22 +604,22 @@ export const ProfilePage: React.FC = () => {
                   return (
                     <div
                       key={idx}
-                      className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-indigo-200 transition-all gap-3"
+                      className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-indigo-200 transition-all gap-2.5"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-10 h-10 rounded-xl ${chosenColor} flex items-center justify-center shrink-0`}>
-                          <Users2 className="w-5 h-5" />
+                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${chosenColor} flex items-center justify-center shrink-0`}>
+                          <Users2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-sm font-bold text-slate-900 truncate">{grp}</h4>
-                          <p className="text-xs text-slate-500 font-medium truncate">Professional Network • Active Member</p>
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{grp}</h4>
+                          <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Professional Network • Member</p>
                         </div>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => handleRemoveGroup(idx)}
-                        className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                         title="Remove group"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -632,8 +631,8 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Bottom Tip Card */}
-            <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-3.5 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-3 sm:p-3.5 flex items-start gap-2.5">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
                 <Lightbulb className="w-4 h-4 text-indigo-600" />
               </div>
               <p className="text-xs font-medium text-indigo-950 leading-relaxed">
@@ -643,24 +642,24 @@ export const ProfilePage: React.FC = () => {
           </div>
 
 
-          {/* 2) 3 Hobbies Card (Matching Mockup Design) */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
+          {/* 2) 3 Hobbies Card (Mobile Responsive) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
             {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                  <Heart className="w-6 h-6 text-rose-600" />
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">3 Hobbies</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium">List your favorite personal hobbies and activities.</p>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">3 Hobbies</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your favorite personal hobbies and activities.</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleAddHobby}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
+                className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Hobby</span>
@@ -668,20 +667,20 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Input Row */}
-            <form onSubmit={handleAddHobby} className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-2xl flex items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-rose-500">
+            <form onSubmit={handleAddHobby} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-rose-500 min-w-0">
                 <Search className="w-4 h-4 text-slate-400 shrink-0" />
                 <input
                   type="text"
                   value={hobbyInput}
                   onChange={(e) => setHobbyInput(e.target.value)}
                   placeholder="Enter hobby name..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0"
+                className="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
               >
                 Add
               </button>
@@ -689,7 +688,7 @@ export const ProfilePage: React.FC = () => {
 
             {/* Hobby Count Header */}
             <div className="flex items-center justify-between pt-1">
-              <h3 className="text-sm font-bold text-slate-900">Your Hobbies ({hobbies.length})</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Hobbies ({hobbies.length})</h3>
               <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
                 <span>A → Z</span>
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -697,31 +696,31 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Item List */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {hobbies.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
                   No hobbies added yet. Type a hobby name above and click "Add".
                 </div>
               ) : (
                 hobbies.map((hb, idx) => (
                   <div
                     key={idx}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-rose-200 transition-all gap-3"
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-rose-200 transition-all gap-2.5"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                        <Heart className="w-5 h-5" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                        <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-slate-900 truncate">{hb}</h4>
-                        <p className="text-xs text-slate-500 font-medium truncate">Personal Interest</p>
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{hb}</h4>
+                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Personal Interest</p>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleRemoveHobby(idx)}
-                      className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                       title="Remove hobby"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -733,24 +732,24 @@ export const ProfilePage: React.FC = () => {
           </div>
 
 
-          {/* 3) 3 Interests Card (Matching Mockup Design) */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
+          {/* 3) 3 Interests Card (Mobile Responsive) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
             {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                  <Compass className="w-6 h-6 text-purple-600" />
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">3 Interests</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium">List your professional focus areas and key domain interests.</p>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">3 Interests</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your professional focus areas and key domain interests.</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleAddInterest}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
+                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Interest</span>
@@ -758,20 +757,20 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Input Row */}
-            <form onSubmit={handleAddInterest} className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-2xl flex items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-purple-500">
+            <form onSubmit={handleAddInterest} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-purple-500 min-w-0">
                 <Search className="w-4 h-4 text-slate-400 shrink-0" />
                 <input
                   type="text"
                   value={interestInput}
                   onChange={(e) => setInterestInput(e.target.value)}
                   placeholder="Enter interest name..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0"
+                className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
               >
                 Add
               </button>
@@ -779,7 +778,7 @@ export const ProfilePage: React.FC = () => {
 
             {/* Interest Count Header */}
             <div className="flex items-center justify-between pt-1">
-              <h3 className="text-sm font-bold text-slate-900">Your Interests ({userInterests.length})</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Interests ({userInterests.length})</h3>
               <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
                 <span>A → Z</span>
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -787,31 +786,31 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Item List */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {userInterests.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
                   No interests added yet. Type an interest above and click "Add".
                 </div>
               ) : (
                 userInterests.map((interest, idx) => (
                   <div
                     key={idx}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-purple-200 transition-all gap-3"
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-purple-200 transition-all gap-2.5"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                        <Compass className="w-5 h-5" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                        <Compass className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-slate-900 truncate">{interest}</h4>
-                        <p className="text-xs text-slate-500 font-medium truncate">Professional Domain</p>
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{interest}</h4>
+                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Professional Domain</p>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleRemoveInterest(idx)}
-                      className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                       title="Remove interest"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -823,24 +822,24 @@ export const ProfilePage: React.FC = () => {
           </div>
 
 
-          {/* Section A: Which businesses do you want to meet? (Matching Mockup Design) */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
+          {/* Section A: Which businesses do you want to meet? (Mobile Responsive) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
             {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                  <Target className="w-6 h-6 text-indigo-600" />
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <Target className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Target Businesses</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium">Specify target industry verticals, enterprise types, or niche sectors you want to meet.</p>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Target Businesses</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">Specify target industry verticals, enterprise types, or niche sectors you want to meet.</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleAddTargetBusiness}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Target</span>
@@ -848,20 +847,20 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Input Row */}
-            <form onSubmit={handleAddTargetBusiness} className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-2xl flex items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-500">
+            <form onSubmit={handleAddTargetBusiness} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-500 min-w-0">
                 <Search className="w-4 h-4 text-slate-400 shrink-0" />
                 <input
                   type="text"
                   value={targetInput}
                   onChange={(e) => setTargetInput(e.target.value)}
                   placeholder="Enter target business vertical or industry..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0"
+                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
               >
                 Add
               </button>
@@ -869,7 +868,7 @@ export const ProfilePage: React.FC = () => {
 
             {/* List Header */}
             <div className="flex items-center justify-between pt-1">
-              <h3 className="text-sm font-bold text-slate-900">Your Target Fields ({targetBusinesses.length})</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Target Fields ({targetBusinesses.length})</h3>
               <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
                 <span>A → Z</span>
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -877,31 +876,31 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Item List */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {targetBusinesses.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
                   No target business verticals added yet. Type a target industry above and click "Add".
                 </div>
               ) : (
                 targetBusinesses.map((target, idx) => (
                   <div
                     key={idx}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-indigo-200 transition-all gap-3"
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-indigo-200 transition-all gap-2.5"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                        <Building2 className="w-5 h-5" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-slate-900 truncate">{target}</h4>
-                        <p className="text-xs text-slate-500 font-medium truncate">Target Industry Vertical</p>
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{target}</h4>
+                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Target Industry Vertical</p>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleRemoveTargetBusiness(idx)}
-                      className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                       title="Remove field"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -912,16 +911,16 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Section B: Who can you connect people to? */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Building className="w-6 h-6 text-emerald-600" />
+          {/* Section B: Who can you connect people to? (Mobile Responsive) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Building className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Who can you connect people to?</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium">List key contacts, industry experts, and organizations you can introduce peers to.</p>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Who can you connect people to?</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List key contacts, industry experts, and organizations you can introduce peers to.</p>
                 </div>
               </div>
 
@@ -929,16 +928,16 @@ export const ProfilePage: React.FC = () => {
                 id="btn-add-connection-offered"
                 type="button"
                 onClick={() => setShowAddConnRow(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Connection Bridge</span>
+                <span>Add Bridge</span>
               </button>
             </div>
 
             {/* Inline Form to Add Connection Bridge */}
             {showAddConnRow && (
-              <form onSubmit={handleAddConnectionBridge} className="bg-emerald-50/40 border border-emerald-200 p-4 rounded-2xl space-y-3 animate-fadeIn">
+              <form onSubmit={handleAddConnectionBridge} className="bg-emerald-50/40 border border-emerald-200 p-3.5 sm:p-4 rounded-2xl space-y-3 animate-fadeIn">
                 <div className="flex items-center justify-between border-b border-emerald-200/70 pb-2">
                   <span className="text-xs font-bold text-emerald-800">New Connection Bridge</span>
                   <button
@@ -1001,7 +1000,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="flex justify-end pt-1">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm"
+                    className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm text-center"
                   >
                     Save Bridge
                   </button>
@@ -1011,7 +1010,7 @@ export const ProfilePage: React.FC = () => {
 
             {/* List Header */}
             <div className="flex items-center justify-between pt-1">
-              <h3 className="text-sm font-bold text-slate-900">Your Connection Bridges ({connectionsOffered.length})</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Connection Bridges ({connectionsOffered.length})</h3>
               <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
                 <span>A → Z</span>
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -1019,31 +1018,31 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* List of Connections Offered */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {connectionsOffered.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
-                  No connection bridges added yet. Click "+ Add Connection Bridge" above to specify who you can connect peers with.
+                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
+                  No connection bridges added yet. Click "+ Add Bridge" above to specify who you can connect peers with.
                 </div>
               ) : (
                 connectionsOffered.map((conn) => (
                   <div
                     key={conn.id}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-emerald-200 transition-all gap-3"
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-emerald-200 transition-all gap-2.5"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                        <UserCheck className="w-5 h-5" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900 truncate">{conn.personName}</h4>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{conn.personName}</h4>
                           {conn.businessDomain && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold shrink-0">
                               {conn.businessDomain}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
+                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate mt-0.5">
                           {conn.orgName ? `${conn.orgName}` : ''} {conn.orgName && conn.role ? '•' : ''} {conn.role ? `${conn.role}` : ''}
                         </p>
                       </div>
@@ -1052,7 +1051,7 @@ export const ProfilePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveConnectionOffered(conn.id)}
-                      className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
                       title="Delete bridge"
                     >
                       <Trash2 className="w-4 h-4" />
