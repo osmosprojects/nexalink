@@ -23,6 +23,15 @@ export async function runMigrations() {
     const schemaSql = fs.readFileSync(schemaPath, 'utf8');
 
     await connection.query(schemaSql);
+
+    // Apply column updates to existing databases
+    try {
+      await connection.query(`ALTER TABLE users MODIFY COLUMN avatar_url LONGTEXT NULL;`);
+      await connection.query(`ALTER TABLE user_profiles MODIFY COLUMN avatar_url LONGTEXT NULL;`);
+    } catch (e) {
+      // Ignore if table/column does not exist yet
+    }
+
     console.log('✅ Migrations applied successfully!');
   } catch (error) {
     console.error('❌ Migration failed:', error);
