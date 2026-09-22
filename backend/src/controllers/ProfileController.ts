@@ -53,6 +53,7 @@ export class ProfileController {
           goals: data.goals || data.userGoals || [],
           networkingTargetMeets: data.networkingTargetMeets ?? 5,
           networkingTargetPeriod: data.networkingTargetPeriod || 'week',
+          networkingNewConnections: data.networkingNewConnections ?? 10,
           socialLinks: data.socialLinks,
         },
         networking_goals: data.targetBusinesses || data.networking_goals || [],

@@ -36,6 +36,7 @@ export interface UserProfile {
   connectionsOffered?: ConnectablePerson[];
   networkingTargetMeets?: number;
   networkingTargetPeriod?: 'week' | 'month';
+  networkingNewConnections?: number;
   socialLinks?: {
     linkedin?: string;
     twitter?: string;

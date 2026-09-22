@@ -14,11 +14,9 @@ import {
   Trash2,
   Save,
   Building,
-  Briefcase,
   UserCheck,
   CheckCircle2,
   Loader2,
-  Zap,
   Camera,
   Heart,
   Compass,
@@ -28,8 +26,13 @@ import {
   Search,
   Lightbulb,
   ChevronDown,
+  ChevronUp,
   Building2,
-  Target
+  Target,
+  Zap,
+  X,
+  Link2,
+  Sparkles
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -39,6 +42,16 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Collapsible section state
+  const [collapsedBlocks, setCollapsedBlocks] = useState<Record<string, boolean>>({});
+
+  const toggleBlock = (blockKey: string) => {
+    setCollapsedBlocks((prev) => ({
+      ...prev,
+      [blockKey]: !prev[blockKey],
+    }));
+  };
 
   // Avatar state
   const [avatarUrl, setAvatarUrl] = useState<string>(
@@ -68,7 +81,7 @@ export const ProfilePage: React.FC = () => {
   });
   const [groupInput, setGroupInput] = useState('');
 
-  // 2) 3 Hobbies state & local input
+  // 2) Hobbies state & local input
   const [hobbies, setHobbies] = useState<string[]>(() => {
     const raw = profile?.skills?.hobbies;
     if (Array.isArray(raw) && raw.length > 0) return raw;
@@ -76,7 +89,7 @@ export const ProfilePage: React.FC = () => {
   });
   const [hobbyInput, setHobbyInput] = useState('');
 
-  // 3) 3 Interests state & local input
+  // 3) Interests state & local input
   const [userInterests, setUserInterests] = useState<string[]>(() => {
     const raw = profile?.skills?.interests;
     if (Array.isArray(raw) && raw.length > 0) return raw;
@@ -84,7 +97,7 @@ export const ProfilePage: React.FC = () => {
   });
   const [interestInput, setInterestInput] = useState('');
 
-  // 4) Networking Objectives state & local input (formerly text goals)
+  // 4) Networking Objectives state & local input
   const [userGoals, setUserGoals] = useState<string[]>(() => {
     const raw = profile?.skills?.goals;
     if (Array.isArray(raw) && raw.length > 0) return raw;
@@ -92,7 +105,7 @@ export const ProfilePage: React.FC = () => {
   });
   const [goalInput, setGoalInput] = useState('');
 
-  // 5) Networking Goals (Target Number & Period) state
+  // 5) Networking Goals Target state
   const [networkingTargetMeets, setNetworkingTargetMeets] = useState<number>(() => {
     const raw = profile?.skills?.networkingTargetMeets;
     if (typeof raw === 'number' && raw > 0) return raw;
@@ -103,8 +116,13 @@ export const ProfilePage: React.FC = () => {
     if (raw === 'month' || raw === 'week') return raw;
     return 'week';
   });
+  const [networkingNewConnections, setNetworkingNewConnections] = useState<number>(() => {
+    const raw = profile?.skills?.networkingNewConnections;
+    if (typeof raw === 'number' && raw > 0) return raw;
+    return 10;
+  });
 
-  // Section A: Which businesses do you want to meet?
+  // Target Businesses
   const [targetBusinesses, setTargetBusinesses] = useState<string[]>(() => {
     const raw = profile?.networking_goals;
     if (Array.isArray(raw) && raw.length > 0) return raw;
@@ -112,7 +130,7 @@ export const ProfilePage: React.FC = () => {
   });
   const [targetInput, setTargetInput] = useState('');
 
-  // Section B: Who can you connect people to?
+  // Connection Bridges (Who can you connect people to?)
   const [connectionsOffered, setConnectionsOffered] = useState<ConnectablePerson[]>(() => {
     const raw = profile?.interests;
     if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'object') {
@@ -179,6 +197,10 @@ export const ProfilePage: React.FC = () => {
         setNetworkingTargetPeriod(profile.skills.networkingTargetPeriod);
       }
 
+      if (typeof profile?.skills?.networkingNewConnections === 'number' && profile.skills.networkingNewConnections > 0) {
+        setNetworkingNewConnections(profile.skills.networkingNewConnections);
+      }
+
       if (Array.isArray(profile?.networking_goals) && profile.networking_goals.length > 0) {
         setTargetBusinesses(profile.networking_goals);
       }
@@ -227,6 +249,7 @@ export const ProfilePage: React.FC = () => {
   const handleAddGroup = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!groupInput.trim()) return;
+    if (networkingGroups.length >= 10) return;
     setNetworkingGroups([...networkingGroups, groupInput.trim()]);
     setGroupInput('');
   };
@@ -238,6 +261,7 @@ export const ProfilePage: React.FC = () => {
   const handleAddHobby = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!hobbyInput.trim()) return;
+    if (hobbies.length >= 5) return;
     setHobbies([...hobbies, hobbyInput.trim()]);
     setHobbyInput('');
   };
@@ -249,6 +273,7 @@ export const ProfilePage: React.FC = () => {
   const handleAddInterest = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!interestInput.trim()) return;
+    if (userInterests.length >= 10) return;
     setUserInterests([...userInterests, interestInput.trim()]);
     setInterestInput('');
   };
@@ -256,10 +281,11 @@ export const ProfilePage: React.FC = () => {
     setUserInterests(userInterests.filter((_, i) => i !== index));
   };
 
-  // Goal / Objective Handlers
+  // Objective Handlers
   const handleAddGoal = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!goalInput.trim()) return;
+    if (userGoals.length >= 5) return;
     setUserGoals([...userGoals, goalInput.trim()]);
     setGoalInput('');
   };
@@ -271,6 +297,7 @@ export const ProfilePage: React.FC = () => {
   const handleAddTargetBusiness = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!targetInput.trim()) return;
+    if (targetBusinesses.length >= 10) return;
     setTargetBusinesses([...targetBusinesses, targetInput.trim()]);
     setTargetInput('');
   };
@@ -282,6 +309,7 @@ export const ProfilePage: React.FC = () => {
   const handleAddConnectionBridge = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newConn.businessDomain.trim() || !newConn.personName.trim()) return;
+    if (connectionsOffered.length >= 10) return;
     const newEntry: ConnectablePerson = {
       ...newConn,
       id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -327,6 +355,7 @@ export const ProfilePage: React.FC = () => {
         goals: cleanGoals,
         networkingTargetMeets,
         networkingTargetPeriod,
+        networkingNewConnections,
         targetBusinesses: cleanTargets.length > 0 ? cleanTargets : ['General Business Networking'],
         connectionsOffered,
       });
@@ -348,902 +377,910 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
+  // Helper calculation for profile completion
+  const calcCompletionScore = () => {
+    let score = 0;
+    if (formData.name) score += 10;
+    if (formData.email) score += 10;
+    if (formData.phone) score += 15;
+    if (formData.bio) score += 15;
+    if (avatarUrl) score += 10;
+    if (networkingGroups.length > 0) score += 10;
+    if (hobbies.length > 0 || userInterests.length > 0) score += 10;
+    if (userGoals.length > 0 || targetBusinesses.length > 0) score += 10;
+    if (connectionsOffered.length > 0) score += 10;
+    return Math.min(100, score);
+  };
+  const completionPercentage = calcCompletionScore();
+  const completionScoreText = `${Math.round(completionPercentage / 10)}/10`;
+
   return (
-    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6 space-y-5 sm:space-y-6 overflow-x-hidden">
-      {/* Onboarding Alert Banner if incomplete */}
-      {!isProfileComplete && (
-        <div className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-300 fill-amber-300 shrink-0" />
-              <h3 className="font-bold text-sm sm:text-base">Complete Your Profile Setup</h3>
-            </div>
-            <p className="text-xs text-brand-100 max-w-xl leading-relaxed">
-              Please enter your Phone, Biography, and Target Businesses below to activate your CRM account.
-            </p>
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 overflow-x-hidden">
+      
+      {/* 1. TOP BLUE GRADIENT BANNER */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div className="shrink-0 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-xl text-xs font-extrabold border border-white/30">
-            Setup Required
+          <div>
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight">Profile & AI Persona</h1>
+            <p className="text-xs sm:text-sm text-blue-100 font-medium">Complete your identity to unlock all CRM modules</p>
           </div>
         </div>
-      )}
 
-      {/* Page Action Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
-        <div>
-          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-brand-600 shrink-0" />
-            <span>User Profile</span>
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Manage your personal identity, networking group memberships, hobbies, interests, and connection bridges.
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 w-full sm:w-auto">
+        <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto justify-end">
           {savedSuccess && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Profile Saved!</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 backdrop-blur-md text-white border border-emerald-400/40 rounded-xl text-xs font-semibold animate-fadeIn">
+              <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+              <span>Profile saved</span>
             </div>
           )}
           <button
-            id="btn-save-profile-top"
             type="button"
             disabled={loading}
             onClick={() => handleSaveProfile()}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95 disabled:opacity-60"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-60"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 text-blue-700" />}
             <span>Save Profile</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8">
-        {/* Left Column: Profile Photo & Identity (5 cols) */}
-        <div className="lg:col-span-5 space-y-5 sm:space-y-6">
-          {/* Profile Photo Card */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                <Camera className="w-5 h-5 text-indigo-600" />
-              </div>
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">Profile Photo</h2>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">Add a clear photo of yourself.</p>
-              </div>
-            </div>
-
-            {/* Avatar Preview with Outer Dashed Circle & Camera Badge */}
-            <div className="flex justify-center my-4 sm:my-6">
-              <div className="relative p-2.5 rounded-full border-2 border-dashed border-indigo-200/90 flex items-center justify-center">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt={formData.name || 'User Profile'}
-                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover shadow-xs"
-                  />
-                ) : (
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-indigo-50/70 flex items-center justify-center text-indigo-400">
-                    <User className="w-14 h-14 sm:w-16 sm:h-16 text-indigo-400" />
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-1 right-1 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md transition-all active:scale-95 border-2 border-white"
-                  title="Upload Image"
-                >
-                  <Camera className="w-4 h-4 text-white" />
-                </button>
-              </div>
-            </div>
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-
-            {/* Action Buttons Row */}
-            <div className="flex items-center gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-sm shadow-indigo-600/20 active:scale-95"
-              >
-                <Upload className="w-4 h-4" />
-                <span>Upload Image</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleResetAvatar}
-                className="flex items-center justify-center gap-2 py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 rounded-2xl text-xs sm:text-sm font-bold transition-all active:scale-95"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>Reset</span>
-              </button>
-            </div>
-
-            {/* Subtext Guidelines */}
-            <div className="text-center space-y-0.5 pt-1">
-              <p className="text-xs text-slate-400 font-medium">Upload a JPG, PNG or WebP image from your device.</p>
-              <p className="text-xs text-slate-400 font-medium">Recommended size: 400 × 400 px (max 5MB).</p>
-            </div>
+      {/* 2. COMPLETION & QUICK TIPS ROW */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+        {/* Profile Completion Card */}
+        <div className="md:col-span-6 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm flex items-center gap-4">
+          <div className="relative w-14 h-14 rounded-full border-4 border-blue-600 flex items-center justify-center font-black text-sm text-blue-700 bg-blue-50 shrink-0">
+            {completionScoreText}
           </div>
-
-          {/* Personal Identity Form Card */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
-            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <User className="w-4 h-4 text-indigo-600" />
-              <span>Personal & Professional Identity</span>
-            </h2>
-
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Full Name <span className="text-indigo-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter full name"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                    <input
-                      type="email"
-                      value={formData.email}
-                      disabled
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 text-sm cursor-not-allowed font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Phone Number <span className="text-indigo-600">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Professional Biography <span className="text-indigo-600">*</span>
-                </label>
-                <textarea
-                  rows={4}
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  placeholder="Brief summary of your background, experience, and leadership focus..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed font-normal"
-                  required
-                />
-              </div>
-
-              {/* Social Media Links */}
-              <div className="pt-3 border-t border-slate-100 space-y-3">
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  Social & Web Profiles
-                </label>
-
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-sky-50 text-sky-600 border border-sky-100 rounded-xl shrink-0">
-                      <Linkedin className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="url"
-                      placeholder="https://linkedin.com/in/username"
-                      value={formData.linkedin}
-                      onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-cyan-50 text-cyan-600 border border-cyan-100 rounded-xl shrink-0">
-                      <Twitter className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="url"
-                      placeholder="https://twitter.com/username"
-                      value={formData.twitter}
-                      onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl shrink-0">
-                      <Globe className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="url"
-                      placeholder="https://yourwebsite.com"
-                      value={formData.website}
-                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50/70 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
-                    />
-                  </div>
-                </div>
-              </div>
-            </form>
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs sm:text-sm font-bold text-slate-900">Profile Completion</span>
+              <span className="text-xs font-bold text-slate-500">{completionPercentage}%</span>
+            </div>
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Right Column: Groups, Hobbies, Interests, Target Businesses & Bridges (7 cols) */}
-        <div className="lg:col-span-7 space-y-5 sm:space-y-6">
+        {/* Quick Tips Card */}
+        <div className="md:col-span-6 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <Lightbulb className="w-5 h-5 text-indigo-600" />
+          </div>
+          <div>
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900">Quick Tips</h3>
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              A complete profile helps you get better matches, recommendations and more relevant networking opportunities.
+            </p>
+          </div>
+        </div>
+      </div>
 
-          {/* 1) Networking Group Member Card (Fully Mobile Responsive) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
+      {/* 3. MAIN CONTENT 2-COLUMN GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* LEFT COLUMN: Profile Photo & Identity */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* BLOCK 1: Profile Photo (Collapsible) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                  <Users2 className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+            <div
+              onClick={() => toggleBlock('photo')}
+              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <Camera className="w-4 h-4 text-blue-600" />
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Networking Group Member</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List the networking groups, chapters, or clubs you belong to.</p>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Profile Photo</h2>
+                  <p className="text-[11px] text-slate-500 font-medium">Add a clear photo of yourself.</p>
                 </div>
               </div>
-            </div>
-
-            {/* Input Row */}
-            <form onSubmit={handleAddGroup} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-500 min-w-0">
-                <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={groupInput}
-                  onChange={(e) => setGroupInput(e.target.value)}
-                  placeholder="Enter networking group name..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
-              >
-                Add
+              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+                {collapsedBlocks['photo'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </button>
-            </form>
-
-            {/* Group Count & Sort bar */}
-            <div className="flex items-center justify-between pt-1">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Groups ({networkingGroups.length})</h3>
-              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
-                <span>A → Z</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </div>
             </div>
 
-            {/* Item List */}
-            <div className="space-y-2.5">
-              {networkingGroups.length === 0 ? (
-                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
-                  No networking groups added yet. Type a group name above and click "Add".
-                </div>
-              ) : (
-                networkingGroups.map((grp, idx) => {
-                  const iconColors = [
-                    'bg-indigo-50 text-indigo-600',
-                    'bg-emerald-50 text-emerald-600',
-                    'bg-purple-50 text-purple-600',
-                    'bg-amber-50 text-amber-600',
-                  ];
-                  const chosenColor = iconColors[idx % iconColors.length];
-                  return (
-                    <div
-                      key={idx}
-                      className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-indigo-200 transition-all gap-2.5"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${chosenColor} flex items-center justify-center shrink-0`}>
-                          <Users2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{grp}</h4>
-                          <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Professional Network • Member</p>
-                        </div>
-                      </div>
+            {/* Body */}
+            {!collapsedBlocks['photo'] && (
+              <div className="p-5 space-y-4 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row items-center gap-5">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={formData.name || 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-12 h-12 text-slate-300" />
+                    )}
+                  </div>
 
+                  <div className="flex-1 space-y-2.5 text-center sm:text-left">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                       <button
                         type="button"
-                        onClick={() => handleRemoveGroup(idx)}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
-                        title="Remove group"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Photo</span>
                       </button>
+
+                      {avatarUrl && (
+                        <button
+                          type="button"
+                          onClick={handleResetAvatar}
+                          className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Reset</span>
+                        </button>
+                      )}
                     </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Bottom Tip Card */}
-            <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-3 sm:p-3.5 flex items-start gap-2.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
-                <Lightbulb className="w-4 h-4 text-indigo-600" />
-              </div>
-              <p className="text-xs font-medium text-indigo-950 leading-relaxed">
-                <strong className="text-indigo-700 font-bold">Tip:</strong> Join relevant groups to expand your network and get better opportunities!
-              </p>
-            </div>
-          </div>
-
-
-          {/* 2) 3 Hobbies Card (Mobile Responsive) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
+                    <p className="text-[11px] text-slate-400 font-medium">
+                      JPG, PNG or WEBP • Max 5 MB • 300x300px (min)
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">3 Hobbies</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your favorite personal hobbies and activities.</p>
-                </div>
-              </div>
-            </div>
 
-            {/* Input Row */}
-            <form onSubmit={handleAddHobby} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-rose-500 min-w-0">
-                <Search className="w-4 h-4 text-slate-400 shrink-0" />
                 <input
-                  type="text"
-                  value={hobbyInput}
-                  onChange={(e) => setHobbyInput(e.target.value)}
-                  placeholder="Enter hobby name..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
                 />
               </div>
-              <button
-                type="submit"
-                className="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
-              >
-                Add
-              </button>
-            </form>
-
-            {/* Hobby Count Header */}
-            <div className="flex items-center justify-between pt-1">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Hobbies ({hobbies.length})</h3>
-              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
-                <span>A → Z</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Item List */}
-            <div className="space-y-2.5">
-              {hobbies.length === 0 ? (
-                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
-                  No hobbies added yet. Type a hobby name above and click "Add".
-                </div>
-              ) : (
-                hobbies.map((hb, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-rose-200 transition-all gap-2.5"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                        <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{hb}</h4>
-                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Personal Interest</p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveHobby(idx)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
-                      title="Remove hobby"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+            )}
           </div>
 
-
-          {/* 3) 3 Interests Card (Mobile Responsive) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
+          {/* BLOCK 2: Personal & Professional Identity (Collapsible) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                  <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+            <div
+              onClick={() => toggleBlock('identity')}
+              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <User className="w-4 h-4 text-blue-600" />
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">3 Interests</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your professional focus areas and key domain interests.</p>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Personal & Professional Identity</h2>
+                  <p className="text-[11px] text-slate-500 font-medium">Tell us about yourself and your professional background.</p>
                 </div>
               </div>
-            </div>
-
-            {/* Input Row */}
-            <form onSubmit={handleAddInterest} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-purple-500 min-w-0">
-                <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={interestInput}
-                  onChange={(e) => setInterestInput(e.target.value)}
-                  placeholder="Enter interest name..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
-              >
-                Add
+              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+                {collapsedBlocks['identity'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </button>
-            </form>
-
-            {/* Interest Count Header */}
-            <div className="flex items-center justify-between pt-1">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Interests ({userInterests.length})</h3>
-              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
-                <span>A → Z</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </div>
             </div>
 
-            {/* Item List */}
-            <div className="space-y-2.5">
-              {userInterests.length === 0 ? (
-                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
-                  No interests added yet. Type an interest above and click "Add".
-                </div>
-              ) : (
-                userInterests.map((interest, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-purple-200 transition-all gap-2.5"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                        <Compass className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{interest}</h4>
-                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Professional Domain</p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveInterest(idx)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
-                      title="Remove interest"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-
-          {/* 4) Networking Objectives Card (Mobile Responsive) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                  <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Networking Objectives</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your key networking objectives, growth aspirations, and strategic focus areas.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Input Row */}
-            <form onSubmit={handleAddGoal} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-amber-500 min-w-0">
-                <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={goalInput}
-                  onChange={(e) => setGoalInput(e.target.value)}
-                  placeholder="Enter networking objective..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
-              >
-                Add
-              </button>
-            </form>
-
-            {/* Goal Count Header */}
-            <div className="flex items-center justify-between pt-1">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Objectives ({userGoals.length})</h3>
-              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
-                <span>A → Z</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Item List */}
-            <div className="space-y-2.5">
-              {userGoals.length === 0 ? (
-                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
-                  No objectives added yet. Type an objective above and click "Add".
-                </div>
-              ) : (
-                userGoals.map((goal, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-amber-200 transition-all gap-2.5"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                        <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{goal}</h4>
-                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Networking Objective</p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveGoal(idx)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
-                      title="Remove objective"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Bottom Tip Banner */}
-            <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-3 sm:p-3.5 flex items-start gap-2.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-                <Lightbulb className="w-4 h-4 text-amber-700" />
-              </div>
-              <p className="text-xs font-medium text-amber-950 leading-relaxed">
-                <strong className="text-amber-800 font-bold">Tip:</strong> Setting clear networking objectives helps NexaLink recommend high-value introductions!
-              </p>
-            </div>
-          </div>
-
-
-          {/* 5) Networking Goals Card (Target Number & Period) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                <Target className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Networking Goals</h2>
-                <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">Set your target number of networking meets per week or month.</p>
-              </div>
-            </div>
-
-            {/* Interactive Target Form */}
-            <div className="bg-indigo-50/50 border border-indigo-100 p-4 sm:p-5 rounded-2xl space-y-3">
-              <label className="block text-xs font-bold text-indigo-900 uppercase tracking-wider">
-                Networking Target Goal
-              </label>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <span className="text-xs sm:text-sm font-bold text-slate-800 whitespace-nowrap">I want to do</span>
-                
-                <div className="relative w-full sm:w-28">
+            {/* Body */}
+            {!collapsedBlocks['identity'] && (
+              <form onSubmit={handleSaveProfile} className="p-5 space-y-4 animate-fadeIn">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Full Name <span className="text-blue-600">*</span>
+                  </label>
                   <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={networkingTargetMeets}
-                    onChange={(e) => setNetworkingTargetMeets(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                    className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-extrabold text-sm text-center focus:ring-2 focus:ring-indigo-500 focus:outline-hidden shadow-xs"
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Abhishek Tiwari"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   />
-                </div>
-
-                <span className="text-xs sm:text-sm font-bold text-slate-800 whitespace-nowrap">networking meets in a</span>
-
-                <select
-                  value={networkingTargetPeriod}
-                  onChange={(e) => setNetworkingTargetPeriod(e.target.value as 'week' | 'month')}
-                  className="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-hidden shadow-xs cursor-pointer"
-                >
-                  <option value="week">week</option>
-                  <option value="month">month</option>
-                </select>
-              </div>
-
-              {/* Summary display badge */}
-              <div className="pt-2 flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-600">Goal Statement:</span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
-                  🎯 {networkingTargetMeets} networking meets per {networkingTargetPeriod}
-                </span>
-              </div>
-            </div>
-          </div>
-
-
-          {/* Section A: Which businesses do you want to meet? (Mobile Responsive) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                  <Target className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Target Businesses</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">Specify target industry verticals, enterprise types, or niche sectors you want to meet.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Input Row */}
-            <form onSubmit={handleAddTargetBusiness} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-500 min-w-0">
-                <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={targetInput}
-                  onChange={(e) => setTargetInput(e.target.value)}
-                  placeholder="Enter target business vertical or industry..."
-                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
-              >
-                Add
-              </button>
-            </form>
-
-            {/* List Header */}
-            <div className="flex items-center justify-between pt-1">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Target Fields ({targetBusinesses.length})</h3>
-              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
-                <span>A → Z</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Item List */}
-            <div className="space-y-2.5">
-              {targetBusinesses.length === 0 ? (
-                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
-                  No target business verticals added yet. Type a target industry above and click "Add".
-                </div>
-              ) : (
-                targetBusinesses.map((target, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-indigo-200 transition-all gap-2.5"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                        <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{target}</h4>
-                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Target Industry Vertical</p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTargetBusiness(idx)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
-                      title="Remove field"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Section B: Who can you connect people to? (Mobile Responsive) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Building className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Who can you connect people to?</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List key contacts, industry experts, and organizations you can introduce peers to.</p>
-                </div>
-              </div>
-
-              <button
-                id="btn-add-connection-offered"
-                type="button"
-                onClick={() => setShowAddConnRow(true)}
-                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Bridge</span>
-              </button>
-            </div>
-
-            {/* Inline Form to Add Connection Bridge */}
-            {showAddConnRow && (
-              <form onSubmit={handleAddConnectionBridge} className="bg-emerald-50/40 border border-emerald-200 p-3.5 sm:p-4 rounded-2xl space-y-3 animate-fadeIn">
-                <div className="flex items-center justify-between border-b border-emerald-200/70 pb-2">
-                  <span className="text-xs font-bold text-emerald-800">New Connection Bridge</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddConnRow(false)}
-                    className="text-xs text-slate-500 hover:text-slate-800"
-                  >
-                    Cancel
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Business Domain / Industry</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Industry vertical"
-                      value={newConn.businessDomain}
-                      onChange={(e) => setNewConn({ ...newConn, businessDomain: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500"
-                      required
-                    />
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Email Address <span className="text-blue-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="email"
+                        disabled
+                        value={formData.email}
+                        className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-medium text-slate-500 cursor-not-allowed"
+                      />
+                      {formData.email && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Person Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Full Name"
-                      value={newConn.personName}
-                      onChange={(e) => setNewConn({ ...newConn, personName: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Organization / Company</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Company Name"
-                      value={newConn.orgName}
-                      onChange={(e) => setNewConn({ ...newConn, orgName: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Role / Designation</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Role or Designation"
-                      value={newConn.role}
-                      onChange={(e) => setNewConn({ ...newConn, role: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500"
-                    />
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Phone Number <span className="text-blue-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="84544986"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                      />
+                      {formData.phone && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-1">
-                  <button
-                    type="submit"
-                    className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm text-center"
-                  >
-                    Save Bridge
-                  </button>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Professional Biography <span className="text-blue-600">*</span>
+                    </label>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      {formData.bio.length} / 500
+                    </span>
+                  </div>
+                  <textarea
+                    rows={4}
+                    maxLength={500}
+                    required
+                    value={formData.bio}
+                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    placeholder="Experienced technology professional with a passion for building innovative solutions and creating meaningful connections in the industry."
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden leading-relaxed"
+                  />
+                </div>
+
+                {/* Social Links */}
+                <div className="pt-2 space-y-2.5 border-t border-slate-100">
+                  <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                    SOCIAL & WEB PROFILES
+                  </label>
+
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <div className="absolute left-3 top-2.5 text-blue-600">
+                        <Linkedin className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="url"
+                        placeholder="https://linkedin.com/in/abhishek-tiwari"
+                        value={formData.linkedin}
+                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                        className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                      />
+                      {formData.linkedin && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute left-3 top-2.5 text-sky-500">
+                        <Twitter className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="url"
+                        placeholder="https://twitter.com/abhishek_tiwari"
+                        value={formData.twitter}
+                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                        className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                      />
+                      {formData.twitter && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute left-3 top-2.5 text-emerald-600">
+                        <Globe className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="url"
+                        placeholder="https://nexalink.com"
+                        value={formData.website}
+                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                      />
+                      {formData.website && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                    </div>
+                  </div>
                 </div>
               </form>
             )}
+          </div>
+        </div>
 
-            {/* List Header */}
-            <div className="flex items-center justify-between pt-1">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Connection Bridges ({connectionsOffered.length})</h3>
-              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
-                <span>A → Z</span>
-                <ChevronDown className="w-3.5 h-3.5" />
+        {/* RIGHT COLUMN: Groups, Hobbies, Interests, Objectives */}
+        <div className="lg:col-span-7 space-y-6">
+
+          {/* BLOCK 3: Networking Groups (Collapsible) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+            {/* Header */}
+            <div
+              onClick={() => toggleBlock('groups')}
+              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <Users2 className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Groups</h2>
+                  <p className="text-[11px] text-slate-500 font-medium">Manage your networking group memberships, chapters, or clubs.</p>
+                </div>
               </div>
+              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+                {collapsedBlocks['groups'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
             </div>
 
-            {/* List of Connections Offered */}
-            <div className="space-y-2.5">
-              {connectionsOffered.length === 0 ? (
-                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
-                  No connection bridges added yet. Click "+ Add Bridge" above to specify who you can connect peers with.
-                </div>
-              ) : (
-                connectionsOffered.map((conn) => (
-                  <div
-                    key={conn.id}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-emerald-200 transition-all gap-2.5"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                        <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{conn.personName}</h4>
-                          {conn.businessDomain && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold shrink-0">
-                              {conn.businessDomain}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate mt-0.5">
-                          {conn.orgName ? `${conn.orgName}` : ''} {conn.orgName && conn.role ? '•' : ''} {conn.role ? `${conn.role}` : ''}
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveConnectionOffered(conn.id)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
-                      title="Delete bridge"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            {/* Body */}
+            {!collapsedBlocks['groups'] && (
+              <div className="p-5 space-y-4 animate-fadeIn">
+                <form onSubmit={handleAddGroup} className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={groupInput}
+                      onChange={(e) => setGroupInput(e.target.value)}
+                      placeholder="Search or enter networking group..."
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    />
                   </div>
-                ))
-              )}
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                  >
+                    Add
+                  </button>
+                </form>
+
+                <div className="flex items-center justify-between pt-1">
+                  <h3 className="text-xs font-bold text-slate-900">Your Networking Groups ({networkingGroups.length})</h3>
+                  <span className="text-[10px] font-bold text-slate-400">Max 10</span>
+                </div>
+
+                {/* Tag Pills */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {networkingGroups.length === 0 ? (
+                    <div className="text-xs text-slate-400 italic">No networking groups added yet.</div>
+                  ) : (
+                    networkingGroups.map((grp, idx) => (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                      >
+                        <span>{grp}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveGroup(idx)}
+                          className="hover:text-blue-900 transition-colors p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* BLOCK 4: Hobbies (Collapsible) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+            {/* Header */}
+            <div
+              onClick={() => toggleBlock('hobbies')}
+              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+                  <Heart className="w-4 h-4 text-rose-500" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Hobbies</h2>
+                  <p className="text-[11px] text-slate-500 font-medium">List your favorite personal hobbies and activities.</p>
+                </div>
+              </div>
+              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+                {collapsedBlocks['hobbies'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Body */}
+            {!collapsedBlocks['hobbies'] && (
+              <div className="p-5 space-y-4 animate-fadeIn">
+                <form onSubmit={handleAddHobby} className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={hobbyInput}
+                      onChange={(e) => setHobbyInput(e.target.value)}
+                      placeholder="Search or enter hobby..."
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                  >
+                    Add
+                  </button>
+                </form>
+
+                <div className="flex items-center justify-between pt-1">
+                  <h3 className="text-xs font-bold text-slate-900">Your Hobbies ({hobbies.length})</h3>
+                  <span className="text-[10px] font-bold text-slate-400">Max 5</span>
+                </div>
+
+                {/* Tag Pills */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {hobbies.length === 0 ? (
+                    <div className="text-xs text-slate-400 italic">No hobbies added yet.</div>
+                  ) : (
+                    hobbies.map((hb, idx) => (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                      >
+                        <span>{hb}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveHobby(idx)}
+                          className="hover:text-blue-900 transition-colors p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* BLOCK 5: Professional Interests (Collapsible) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+            {/* Header */}
+            <div
+              onClick={() => toggleBlock('interests')}
+              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <Compass className="w-4 h-4 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Professional Interests</h2>
+                  <p className="text-[11px] text-slate-500 font-medium">List your professional focus areas and key domain interests.</p>
+                </div>
+              </div>
+              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+                {collapsedBlocks['interests'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Body */}
+            {!collapsedBlocks['interests'] && (
+              <div className="p-5 space-y-4 animate-fadeIn">
+                <form onSubmit={handleAddInterest} className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={interestInput}
+                      onChange={(e) => setInterestInput(e.target.value)}
+                      placeholder="Search or enter interest..."
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                  >
+                    Add
+                  </button>
+                </form>
+
+                <div className="flex items-center justify-between pt-1">
+                  <h3 className="text-xs font-bold text-slate-900">Your Interests ({userInterests.length})</h3>
+                  <span className="text-[10px] font-bold text-slate-400">Max 10</span>
+                </div>
+
+                {/* Tag Pills */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {userInterests.length === 0 ? (
+                    <div className="text-xs text-slate-400 italic">No interests added yet.</div>
+                  ) : (
+                    userInterests.map((interest, idx) => (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                      >
+                        <span>{interest}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveInterest(idx)}
+                          className="hover:text-blue-900 transition-colors p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* BLOCK 6: Networking Objectives (Collapsible) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+            {/* Header */}
+            <div
+              onClick={() => toggleBlock('objectives')}
+              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Zap className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Objectives</h2>
+                  <p className="text-[11px] text-slate-500 font-medium">What are you trying to achieve through networking?</p>
+                </div>
+              </div>
+              <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+                {collapsedBlocks['objectives'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Body */}
+            {!collapsedBlocks['objectives'] && (
+              <div className="p-5 space-y-4 animate-fadeIn">
+                <form onSubmit={handleAddGoal} className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={goalInput}
+                      onChange={(e) => setGoalInput(e.target.value)}
+                      placeholder="Enter networking objective..."
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                  >
+                    Add
+                  </button>
+                </form>
+
+                <div className="flex items-center justify-between pt-1">
+                  <h3 className="text-xs font-bold text-slate-900">Your Objectives ({userGoals.length})</h3>
+                  <span className="text-[10px] font-bold text-slate-400">Max 5</span>
+                </div>
+
+                {/* Tag Pills */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {userGoals.length === 0 ? (
+                    <div className="text-xs text-slate-400 italic">No objectives added yet.</div>
+                  ) : (
+                    userGoals.map((goal, idx) => (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                      >
+                        <span>{goal}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveGoal(idx)}
+                          className="hover:text-blue-900 transition-colors p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. BOTTOM 3-COLUMN SECTION */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        
+        {/* BLOCK 7: Networking Goals (Collapsible) */}
+        <div className="md:col-span-4 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('goals')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Target className="w-4 h-4 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Goals</h2>
+                <p className="text-[11px] text-slate-500 font-medium">Set your networking targets and frequency.</p>
+              </div>
+            </div>
+            <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+              {collapsedBlocks['goals'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Body */}
+          {!collapsedBlocks['goals'] && (
+            <div className="p-5 space-y-3.5 animate-fadeIn">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Frequency</label>
+                <select
+                  value={networkingTargetPeriod}
+                  onChange={(e) => setNetworkingTargetPeriod(e.target.value as 'week' | 'month')}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                >
+                  <option value="week">Weekly</option>
+                  <option value="month">Monthly</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Meetings per week</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={networkingTargetMeets}
+                  onChange={(e) => setNetworkingTargetMeets(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">New connections per month</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="500"
+                  value={networkingNewConnections}
+                  onChange={(e) => setNetworkingNewConnections(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* BLOCK 8: Target Industries & Businesses (Collapsible) */}
+        <div className="md:col-span-4 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('targets')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4 text-purple-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 leading-tight">Target Industries & Businesses</h2>
+                <p className="text-[11px] text-slate-500 font-medium">Specify industries, company types, or business segments you want to connect with.</p>
+              </div>
+            </div>
+            <button type="button" className="text-slate-400 hover:text-slate-600 p-1">
+              {collapsedBlocks['targets'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Body */}
+          {!collapsedBlocks['targets'] && (
+            <div className="p-5 space-y-4 animate-fadeIn">
+              <form onSubmit={handleAddTargetBusiness} className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={targetInput}
+                    onChange={(e) => setTargetInput(e.target.value)}
+                    placeholder="Search industry or business type..."
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                >
+                  Add
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between pt-1">
+                <h3 className="text-xs font-bold text-slate-900">Your Target Fields ({targetBusinesses.length})</h3>
+                <span className="text-[10px] font-bold text-slate-400">Max 10</span>
+              </div>
+
+              {/* Tag Pills */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {targetBusinesses.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic">No target fields added yet.</div>
+                ) : (
+                  targetBusinesses.map((target, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                    >
+                      <span>{target}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTargetBusiness(idx)}
+                        className="hover:text-blue-900 transition-colors p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* BLOCK 9: Connection Bridges (Collapsible) */}
+        <div className="md:col-span-4 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('bridges')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <Link2 className="w-4 h-4 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 leading-tight">Connection Bridges</h2>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Who can you connect people to? Add key contacts, industries, and the reason for the connection.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setShowAddConnRow(true)}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Bridge</span>
+              </button>
+              <button type="button" onClick={() => toggleBlock('bridges')} className="text-slate-400 hover:text-slate-600 p-1">
+                {collapsedBlocks['bridges'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
+          {/* Body */}
+          {!collapsedBlocks['bridges'] && (
+            <div className="p-5 space-y-4 animate-fadeIn">
+              {/* Inline Add Bridge Form */}
+              {showAddConnRow && (
+                <form onSubmit={handleAddConnectionBridge} className="bg-indigo-50/50 border border-indigo-200 p-3.5 rounded-2xl space-y-2.5 animate-fadeIn">
+                  <div className="flex items-center justify-between pb-1 border-b border-indigo-100">
+                    <span className="text-xs font-bold text-indigo-900">New Connection Bridge</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddConnRow(false)}
+                      className="text-xs text-slate-400 hover:text-slate-600 font-semibold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Person Name (e.g. John Doe)"
+                      value={newConn.personName}
+                      onChange={(e) => setNewConn({ ...newConn, personName: e.target.value })}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
+                      required
+                    />
+                    <input
+                      type="text"
+                      placeholder="Role & Company (e.g. CTO • TechCorp)"
+                      value={newConn.role}
+                      onChange={(e) => setNewConn({ ...newConn, role: e.target.value })}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Business Domain (e.g. AI / SaaS)"
+                      value={newConn.businessDomain}
+                      onChange={(e) => setNewConn({ ...newConn, businessDomain: e.target.value })}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
+                      required
+                    />
+                    <input
+                      type="text"
+                      placeholder="Reason for connection / Notes"
+                      value={newConn.orgName}
+                      onChange={(e) => setNewConn({ ...newConn, orgName: e.target.value })}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs text-center"
+                  >
+                    Save Bridge
+                  </button>
+                </form>
+              )}
+
+              <div className="flex items-center justify-between pt-1">
+                <h3 className="text-xs font-bold text-slate-900">Your Bridges ({connectionsOffered.length})</h3>
+                <span className="text-[10px] font-bold text-slate-400">Max 10</span>
+              </div>
+
+              {/* Bridges List Cards */}
+              <div className="space-y-2.5">
+                {connectionsOffered.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic">No bridges added yet. Click "+ Add Bridge" to add one.</div>
+                ) : (
+                  connectionsOffered.map((conn) => {
+                    const initials = conn.personName
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2) || 'JD';
+                    return (
+                      <div
+                        key={conn.id}
+                        className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3 flex items-start justify-between gap-3 animate-fadeIn"
+                      >
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
+                            {initials}
+                          </div>
+                          <div className="min-w-0 space-y-0.5">
+                            <h4 className="text-xs font-bold text-slate-900 truncate">{conn.personName}</h4>
+                            <p className="text-[11px] font-medium text-slate-500 truncate">
+                              {conn.role || 'Contact'} {conn.businessDomain ? `• ${conn.businessDomain}` : ''}
+                            </p>
+                            {conn.orgName && (
+                              <p className="text-[10px] font-normal text-slate-400 leading-tight">
+                                {conn.orgName}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveConnectionOffered(conn.id)}
+                          className="text-rose-400 hover:text-rose-600 p-1 shrink-0 transition-colors"
+                          title="Remove bridge"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
     </div>
   );
 };
