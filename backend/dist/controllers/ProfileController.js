@@ -48,6 +48,7 @@ class ProfileController {
                     networkingGroup: data.networkingGroup,
                     hobbies: data.hobbies || [],
                     interests: data.userInterests || data.interestsList || [],
+                    goals: data.goals || data.userGoals || [],
                     socialLinks: data.socialLinks,
                 },
                 networking_goals: data.targetBusinesses || data.networking_goals || [],

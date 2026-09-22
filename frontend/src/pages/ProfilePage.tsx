@@ -84,6 +84,14 @@ export const ProfilePage: React.FC = () => {
   });
   const [interestInput, setInterestInput] = useState('');
 
+  // 4) Goals and Interests state & local input
+  const [userGoals, setUserGoals] = useState<string[]>(() => {
+    const raw = profile?.skills?.goals;
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return [];
+  });
+  const [goalInput, setGoalInput] = useState('');
+
   // Section A: Which businesses do you want to meet?
   const [targetBusinesses, setTargetBusinesses] = useState<string[]>(() => {
     const raw = profile?.networking_goals;
@@ -145,6 +153,10 @@ export const ProfilePage: React.FC = () => {
 
       if (Array.isArray(profile?.skills?.interests) && profile.skills.interests.length > 0) {
         setUserInterests(profile.skills.interests);
+      }
+
+      if (Array.isArray(profile?.skills?.goals) && profile.skills.goals.length > 0) {
+        setUserGoals(profile.skills.goals);
       }
 
       if (Array.isArray(profile?.networking_goals) && profile.networking_goals.length > 0) {
@@ -224,6 +236,17 @@ export const ProfilePage: React.FC = () => {
     setUserInterests(userInterests.filter((_, i) => i !== index));
   };
 
+  // Goal Handlers
+  const handleAddGoal = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!goalInput.trim()) return;
+    setUserGoals([...userGoals, goalInput.trim()]);
+    setGoalInput('');
+  };
+  const handleRemoveGoal = (index: number) => {
+    setUserGoals(userGoals.filter((_, i) => i !== index));
+  };
+
   // Target Business Handlers
   const handleAddTargetBusiness = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -261,6 +284,7 @@ export const ProfilePage: React.FC = () => {
       const cleanTargets = targetBusinesses.map((t) => t.trim()).filter(Boolean);
       const cleanHobbies = hobbies.map((h) => h.trim()).filter(Boolean);
       const cleanInterests = userInterests.map((i) => i.trim()).filter(Boolean);
+      const cleanGoals = userGoals.map((g) => g.trim()).filter(Boolean);
       const cleanGroups = networkingGroups.map((g) => g.trim()).filter(Boolean);
 
       await api.put('/profile', {
@@ -280,6 +304,7 @@ export const ProfilePage: React.FC = () => {
         networkingGroup: cleanGroups,
         hobbies: cleanHobbies,
         userInterests: cleanInterests,
+        goals: cleanGoals,
         targetBusinesses: cleanTargets.length > 0 ? cleanTargets : ['General Business Networking'],
         connectionsOffered,
       });
@@ -818,6 +843,106 @@ export const ProfilePage: React.FC = () => {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+
+
+          {/* 4) Goals and Interests Card (Mobile Responsive) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">Goals and Interests</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">List your key networking goals, targets, and strategic aspirations.</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddGoal}
+                className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Goal</span>
+              </button>
+            </div>
+
+            {/* Input Row */}
+            <form onSubmit={handleAddGoal} className="bg-slate-50/80 border border-slate-100 p-2 sm:p-2.5 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="bg-white border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-900 flex-1 flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-amber-500 min-w-0">
+                <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={goalInput}
+                  onChange={(e) => setGoalInput(e.target.value)}
+                  placeholder="Enter networking goal or interest..."
+                  className="w-full bg-transparent border-none outline-none focus:outline-none placeholder:text-slate-400 text-xs font-medium min-w-0"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shrink-0 w-full sm:w-auto text-center"
+              >
+                Add
+              </button>
+            </form>
+
+            {/* Goal Count Header */}
+            <div className="flex items-center justify-between pt-1">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Your Goals ({userGoals.length})</h3>
+              <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 cursor-pointer hover:text-slate-600">
+                <span>A → Z</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* Item List */}
+            <div className="space-y-2.5">
+              {userGoals.length === 0 ? (
+                <div className="text-center py-5 px-3 text-slate-400 text-xs bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 leading-relaxed">
+                  No goals added yet. Type a goal above and click "Add".
+                </div>
+              ) : (
+                userGoals.map((goal, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-xs hover:border-amber-200 transition-all gap-2.5"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                        <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{goal}</h4>
+                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Networking Goal</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveGoal(idx)}
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center transition-colors shrink-0"
+                      title="Remove goal"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Bottom Tip Banner */}
+            <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-3 sm:p-3.5 flex items-start gap-2.5">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                <Lightbulb className="w-4 h-4 text-amber-700" />
+              </div>
+              <p className="text-xs font-medium text-amber-950 leading-relaxed">
+                <strong className="text-amber-800 font-bold">Tip:</strong> Setting clear networking goals helps NexaLink recommend high-value introductions!
+              </p>
             </div>
           </div>
 
