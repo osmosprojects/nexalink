@@ -30,11 +30,16 @@ apiRouter.post('/auth/login', AuthController.login);
 apiRouter.post('/auth/demo-login', AuthController.demoLogin);
 apiRouter.post('/auth/logout', AuthController.logout);
 
+import { UploadController } from '../controllers/UploadController';
+
 // Protected Routes (Require Auth Middleware)
 apiRouter.use(authMiddleware);
 
 // Auth Me (Allowed during onboarding)
 apiRouter.get('/auth/me', AuthController.me);
+
+// File Uploads
+apiRouter.post('/upload/avatar', UploadController.uploadAvatar);
 
 // Profile & Persona (Allowed during onboarding to complete profile)
 apiRouter.get('/profile', ProfileController.getProfile);

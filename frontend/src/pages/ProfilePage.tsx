@@ -262,9 +262,19 @@ export const ProfilePage: React.FC = () => {
     }
 
     const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
+    reader.onload = async (uploadEvent) => {
       if (uploadEvent.target?.result) {
-        setAvatarUrl(uploadEvent.target.result as string);
+        const rawBase64 = uploadEvent.target.result as string;
+        try {
+          const res = await api.post<{ avatarUrl: string }>('/upload/avatar', { imageBase64: rawBase64 });
+          if (res.avatarUrl) {
+            setAvatarUrl(res.avatarUrl);
+          } else {
+            setAvatarUrl(rawBase64);
+          }
+        } catch {
+          setAvatarUrl(rawBase64);
+        }
       }
     };
     reader.readAsDataURL(file);

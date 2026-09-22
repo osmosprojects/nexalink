@@ -29,6 +29,10 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Serve uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Rate Limiter for API
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,

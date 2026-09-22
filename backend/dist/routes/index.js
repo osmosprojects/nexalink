@@ -29,10 +29,13 @@ exports.apiRouter.post('/auth/register', AuthController_1.AuthController.registe
 exports.apiRouter.post('/auth/login', AuthController_1.AuthController.login);
 exports.apiRouter.post('/auth/demo-login', AuthController_1.AuthController.demoLogin);
 exports.apiRouter.post('/auth/logout', AuthController_1.AuthController.logout);
+const UploadController_1 = require("../controllers/UploadController");
 // Protected Routes (Require Auth Middleware)
 exports.apiRouter.use(auth_1.authMiddleware);
 // Auth Me (Allowed during onboarding)
 exports.apiRouter.get('/auth/me', AuthController_1.AuthController.me);
+// File Uploads
+exports.apiRouter.post('/upload/avatar', UploadController_1.UploadController.uploadAvatar);
 // Profile & Persona (Allowed during onboarding to complete profile)
 exports.apiRouter.get('/profile', ProfileController_1.ProfileController.getProfile);
 exports.apiRouter.put('/profile', ProfileController_1.ProfileController.updateProfile);
