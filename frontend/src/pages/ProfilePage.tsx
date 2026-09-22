@@ -1138,36 +1138,42 @@ export const ProfilePage: React.FC = () => {
             onClick={() => toggleBlock('bridges')}
             className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                 <Link2 className="w-4 h-4 text-indigo-600" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-sm font-bold text-slate-900 leading-tight">Connection Bridges</h2>
                 <p className="text-[11px] text-slate-500 font-medium">
                   Who can you connect people to? Add key contacts, industries, and the reason for the connection.
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={() => setShowAddConnRow(true)}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 shrink-0"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Bridge</span>
-              </button>
-              <button type="button" onClick={() => toggleBlock('bridges')} className="text-slate-400 hover:text-slate-600 p-1">
-                {collapsedBlocks['bridges'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </button>
-            </div>
+
+            <button type="button" onClick={() => toggleBlock('bridges')} className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+              {collapsedBlocks['bridges'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </button>
           </div>
 
           {/* Body */}
           {!collapsedBlocks['bridges'] && (
             <div className="p-5 space-y-4 animate-fadeIn">
+              {/* Add Bridge Action Bar */}
+              <div className="flex items-center justify-between pt-1">
+                <h3 className="text-xs font-bold text-slate-900">Your Bridges ({connectionsOffered.length})</h3>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-[10px] font-bold text-slate-400">Max 10</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddConnRow(true)}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 shrink-0 active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Bridge</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Inline Add Bridge Form */}
               {showAddConnRow && (
                 <form onSubmit={handleAddConnectionBridge} className="bg-indigo-50/50 border border-indigo-200 p-3.5 rounded-2xl space-y-2.5 animate-fadeIn">
@@ -1223,11 +1229,6 @@ export const ProfilePage: React.FC = () => {
                   </button>
                 </form>
               )}
-
-              <div className="flex items-center justify-between pt-1">
-                <h3 className="text-xs font-bold text-slate-900">Your Bridges ({connectionsOffered.length})</h3>
-                <span className="text-[10px] font-bold text-slate-400">Max 10</span>
-              </div>
 
               {/* Bridges List Cards */}
               <div className="space-y-2.5">
