@@ -383,54 +383,76 @@ export const ProfilePage: React.FC = () => {
         <div className="lg:col-span-5 space-y-5 sm:space-y-6">
           {/* Profile Photo Card */}
           <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 overflow-hidden">
-            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Camera className="w-4 h-4 text-indigo-600" />
-              <span>Profile Photo</span>
-            </h2>
+            {/* Header */}
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <Camera className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">Profile Photo</h2>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">Add a clear photo of yourself.</p>
+              </div>
+            </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
-              <div className="relative shrink-0">
+            {/* Avatar Preview with Outer Dashed Circle & Camera Badge */}
+            <div className="flex justify-center my-4 sm:my-6">
+              <div className="relative p-2.5 rounded-full border-2 border-dashed border-indigo-200/90 flex items-center justify-center">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt={formData.name || 'User Profile'}
-                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-slate-200 shadow-sm"
+                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover shadow-xs"
                   />
                 ) : (
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
-                    <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-400" />
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-indigo-50/70 flex items-center justify-center text-indigo-400">
+                    <User className="w-14 h-14 sm:w-16 sm:h-16 text-indigo-400" />
                   </div>
                 )}
-              </div>
 
-              <div className="space-y-2 text-center sm:text-left flex-1 w-full">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <div className="flex flex-row items-center justify-center sm:justify-start gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold transition-all shadow-xs"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Upload Image</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleResetAvatar}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-semibold transition-all"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Reset</span>
-                  </button>
-                </div>
-                <p className="text-[11px] text-slate-400">Upload a JPG, PNG or WebP image from your device.</p>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-1 right-1 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md transition-all active:scale-95 border-2 border-white"
+                  title="Upload Image"
+                >
+                  <Camera className="w-4 h-4 text-white" />
+                </button>
               </div>
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+
+            {/* Action Buttons Row */}
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-sm shadow-indigo-600/20 active:scale-95"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Upload Image</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetAvatar}
+                className="flex items-center justify-center gap-2 py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 rounded-2xl text-xs sm:text-sm font-bold transition-all active:scale-95"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Reset</span>
+              </button>
+            </div>
+
+            {/* Subtext Guidelines */}
+            <div className="text-center space-y-0.5 pt-1">
+              <p className="text-xs text-slate-400 font-medium">Upload a JPG, PNG or WebP image from your device.</p>
+              <p className="text-xs text-slate-400 font-medium">Recommended size: 400 × 400 px (max 5MB).</p>
             </div>
           </div>
 
