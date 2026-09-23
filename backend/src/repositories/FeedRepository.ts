@@ -15,8 +15,8 @@ export interface PostRow {
 export class FeedRepository {
   static async list(userId: number, limit = 20): Promise<PostRow[]> {
     const rows = await query<any[]>(
-      `SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT ?`,
-      [userId, limit]
+      `SELECT * FROM posts ORDER BY created_at DESC LIMIT ?`,
+      [limit]
     );
 
     return rows.map((p) => ({

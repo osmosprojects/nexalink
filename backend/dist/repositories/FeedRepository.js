@@ -4,7 +4,7 @@ exports.FeedRepository = void 0;
 const db_1 = require("../config/db");
 class FeedRepository {
     static async list(userId, limit = 20) {
-        const rows = await (0, db_1.query)(`SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT ?`, [userId, limit]);
+        const rows = await (0, db_1.query)(`SELECT * FROM posts ORDER BY created_at DESC LIMIT ?`, [limit]);
         return rows.map((p) => ({
             ...p,
             tags: typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags || [],

@@ -2,6 +2,7 @@ import { query } from '../config/db';
 import { ProfileRepository } from '../repositories/ProfileRepository';
 import { UserRepository } from '../repositories/UserRepository';
 import { NotificationRepository } from '../repositories/NotificationRepository';
+import { FeedRepository } from '../repositories/FeedRepository';
 
 export interface ProfileMatchResult {
   targetUserId: number;
@@ -14,6 +15,17 @@ export interface ProfileMatchResult {
   reason: string;
   reasonsList: string[];
   skills: string[];
+}
+
+function isFuzzyMatch(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const s1 = a.trim().toLowerCase();
+  const s2 = b.trim().toLowerCase();
+  if (s1 === s2) return true;
+  if (s1.includes(s2) || s2.includes(s1)) return true;
+  const tokens1 = s1.split(/[\s,/-]+/).filter((t) => t.length > 2);
+  const tokens2 = s2.split(/[\s,/-]+/).filter((t) => t.length > 2);
+  return tokens1.some((t1) => tokens2.some((t2) => t1.includes(t2) || t2.includes(t1)));
 }
 
 export class MatchmakingService {
@@ -49,23 +61,62 @@ export class MatchmakingService {
         };
         const candData = this.extractProfileParameters(candProfile, cand);
 
-        const match = this.evaluateMatch(sourceData, candData, cand);
-        if (match.score >= 40) {
-          matchResults.push(match);
+        // Evaluate match from perspective of source user looking at candidate
+        const matchForSource = this.evaluateMatch(sourceData, candData, cand);
 
-          // Upsert recommendation for source user
-          const recId = await this.upsertRecommendation(sourceUserId, match);
+        // Evaluate match from perspective of candidate user looking at source user
+        const matchForCand = this.evaluateMatch(candData, sourceData, sourceUser);
 
-          // Emit Notification to candidate user if reciprocal match is strong (score >= 60)
-          if (match.score >= 60 && recId) {
-            await NotificationRepository.create(cand.user_id, {
-              type: 'MATCH_FOUND',
-              title: '⭐ New Strategic Match Found!',
-              message: `${sourceUser.display_name} shares ${match.reasonsList.length} networking goals and interests with you.`,
-              entity_type: 'recommendation',
-              entity_id: recId,
+        if (matchForSource.score >= 40) {
+          matchResults.push(matchForSource);
+
+          // 1. Upsert recommendation for source user pointing to candidate
+          await this.upsertRecommendation(sourceUserId, matchForSource);
+
+          // 2. Upsert reciprocal recommendation for candidate pointing to source user
+          const recIdForCand = await this.upsertRecommendation(cand.user_id, matchForCand);
+
+          // 3. Emit notification to candidate user with candidate's recommendation ID
+          if (matchForCand.score >= 50 && recIdForCand) {
+            // Check if notification already sent recently
+            const existingNotif = await query<any[]>(
+              `SELECT notification_id FROM notifications WHERE user_id = ? AND entity_type = 'recommendation' AND entity_id = ? LIMIT 1`,
+              [cand.user_id, recIdForCand]
+            );
+
+            if (!existingNotif || existingNotif.length === 0) {
+              await NotificationRepository.create(cand.user_id, {
+                type: 'ai_suggestion',
+                title: '⭐ New Strategic Match Found!',
+                message: `${sourceUser.display_name} shares ${matchForCand.reasonsList.length} networking goals and interests with you.`,
+                entity_type: 'recommendation',
+                entity_id: recIdForCand,
+              });
+            }
+          }
+        }
+      }
+
+      // Broadcast new/updated profile milestone to system feed if candidates found
+      if (candidates.length > 0) {
+        try {
+          const recentFeedPosts = await query<any[]>(
+            `SELECT post_id FROM posts WHERE user_id = ? AND created_at > NOW() - INTERVAL 1 HOUR LIMIT 1`,
+            [sourceUserId]
+          );
+          if (!recentFeedPosts || recentFeedPosts.length === 0) {
+            await FeedRepository.create(sourceUserId, {
+              author_name: sourceUser.display_name,
+              author_title: sourceData.headline || 'Network Member',
+              author_avatar: sourceUser.avatar_url,
+              content: `🚀 Updated networking parameters! Exploring collaborations in ${
+                sourceData.targetBusinesses.slice(0, 2).join(', ') || 'Strategic Partnerships & Tech'
+              }. Open to connecting!`,
+              tags: ['NewMember', 'Matchmaking', 'Networking'],
             });
           }
+        } catch (feedErr) {
+          console.error('Feed broadcast error:', feedErr);
         }
       }
 
@@ -78,11 +129,11 @@ export class MatchmakingService {
 
   private static extractProfileParameters(profile: any, user: any) {
     const skillsObj = typeof profile.skills === 'string' ? JSON.parse(profile.skills) : profile.skills || {};
-    
+
     const hobbies: string[] = Array.isArray(skillsObj.hobbies) ? skillsObj.hobbies : [];
     const interests: string[] = Array.isArray(skillsObj.interests) ? skillsObj.interests : [];
     const goals: string[] = Array.isArray(skillsObj.goals) ? skillsObj.goals : [];
-    
+
     const rawGroups = skillsObj.networkingGroup;
     const groups: string[] = Array.isArray(rawGroups)
       ? rawGroups
@@ -127,7 +178,7 @@ export class MatchmakingService {
 
     // 1. Objectives / Goals Overlap (Max 25 pts)
     const commonGoals = src.goals.filter((g: string) =>
-      cand.goals.some((cg: string) => cg.toLowerCase() === g.toLowerCase())
+      cand.goals.some((cg: string) => isFuzzyMatch(g, cg))
     );
     if (commonGoals.length > 0) {
       score += Math.min(25, commonGoals.length * 15);
@@ -136,7 +187,7 @@ export class MatchmakingService {
 
     // 2. Interests & Focus Overlap (Max 25 pts)
     const commonInterests = src.interests.filter((i: string) =>
-      cand.interests.some((ci: string) => ci.toLowerCase() === i.toLowerCase())
+      cand.interests.some((ci: string) => isFuzzyMatch(i, ci))
     );
     if (commonInterests.length > 0) {
       score += Math.min(25, commonInterests.length * 12);
@@ -144,9 +195,9 @@ export class MatchmakingService {
     }
 
     // 3. Location / Target Cities Overlap (Max 20 pts)
-    const isSameCity = src.location && cand.location && src.location.toLowerCase() === cand.location.toLowerCase();
+    const isSameCity = src.location && cand.location && isFuzzyMatch(src.location, cand.location);
     const isTargetCity = src.targetCities.some((tc: string) =>
-      cand.location && cand.location.toLowerCase().includes(tc.toLowerCase())
+      cand.location && isFuzzyMatch(tc, cand.location)
     );
 
     if (isSameCity) {
@@ -159,7 +210,7 @@ export class MatchmakingService {
 
     // 4. Target Businesses / Industries Overlap (Max 15 pts)
     const commonIndustries = src.targetBusinesses.filter((tb: string) =>
-      cand.targetBusinesses.some((ctb: string) => ctb.toLowerCase() === tb.toLowerCase())
+      cand.targetBusinesses.some((ctb: string) => isFuzzyMatch(tb, ctb))
     );
     if (commonIndustries.length > 0) {
       score += Math.min(15, commonIndustries.length * 10);
@@ -168,10 +219,10 @@ export class MatchmakingService {
 
     // 5. Groups & Hobbies Overlap (Max 15 pts)
     const commonGroups = src.groups.filter((g: string) =>
-      cand.groups.some((cg: string) => cg.toLowerCase() === g.toLowerCase())
+      cand.groups.some((cg: string) => isFuzzyMatch(g, cg))
     );
     const commonHobbies = src.hobbies.filter((h: string) =>
-      cand.hobbies.some((ch: string) => ch.toLowerCase() === h.toLowerCase())
+      cand.hobbies.some((ch: string) => isFuzzyMatch(h, ch))
     );
 
     if (commonGroups.length > 0) {
@@ -183,9 +234,9 @@ export class MatchmakingService {
       reasons.push(`Mutual hobby in ${commonHobbies[0]}`);
     }
 
-    // Base fallback score for verified professionals
+    // Base fallback score for verified professionals to guarantee discovery
     if (score === 0) {
-      score = 45;
+      score = 55;
       reasons.push('Shared networking ecosystem & verified professional identity');
     }
 

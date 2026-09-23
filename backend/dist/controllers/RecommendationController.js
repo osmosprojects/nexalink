@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RecommendationController = void 0;
 const RecommendationRepository_1 = require("../repositories/RecommendationRepository");
 const ContactRepository_1 = require("../repositories/ContactRepository");
+const MatchmakingService_1 = require("../services/MatchmakingService");
 const response_1 = require("../helpers/response");
 const audit_1 = require("../middleware/audit");
 class RecommendationController {
@@ -10,7 +11,11 @@ class RecommendationController {
         try {
             const userId = req.user.userId;
             const { status } = req.query;
-            const recommendations = await RecommendationRepository_1.RecommendationRepository.list(userId, status || 'pending');
+            let recommendations = await RecommendationRepository_1.RecommendationRepository.list(userId, status || 'pending');
+            if (recommendations.length === 0) {
+                await MatchmakingService_1.MatchmakingService.processProfileMatches(userId);
+                recommendations = await RecommendationRepository_1.RecommendationRepository.list(userId, status || 'pending');
+            }
             return (0, response_1.sendSuccess)(res, recommendations);
         }
         catch (err) {
