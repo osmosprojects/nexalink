@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { GoogleAuthButton } from '../components/auth/GoogleAuthButton';
 import { Sparkles, ArrowRight, Lock, Mail, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
@@ -81,26 +80,6 @@ export const LoginPage: React.FC = () => {
             >
               1-Click Demo
             </button>
-          </div>
-
-          <div className="mb-4">
-            <GoogleAuthButton
-              buttonText="Continue with Google"
-              onSuccess={(isComplete) => {
-                if (isComplete) navigate('/dashboard');
-                else navigate('/profile');
-              }}
-              onError={(err) => setError(err)}
-            />
-          </div>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-400 font-semibold tracking-wider">Or sign in with email</span>
-            </div>
           </div>
 
           {error && (
