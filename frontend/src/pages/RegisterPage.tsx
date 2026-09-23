@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { GoogleOAuthButton } from '../components/auth/GoogleOAuthButton';
 import { ArrowRight, Lock, Mail, User, ShieldCheck } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
@@ -47,6 +48,26 @@ export const RegisterPage: React.FC = () => {
 
       <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md px-1 sm:px-0">
         <div className="bg-white text-slate-900 py-6 sm:py-8 px-4 sm:px-10 shadow-2xl rounded-2xl sm:rounded-3xl border border-slate-100/10 backdrop-blur-md">
+          <div className="mb-4">
+            <GoogleOAuthButton
+              buttonText="Sign up with Google"
+              onSuccess={(isComplete) => {
+                if (isComplete) navigate('/dashboard');
+                else navigate('/profile');
+              }}
+              onError={(err) => setError(err)}
+            />
+          </div>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-slate-400 font-semibold tracking-wider">Or register with email</span>
+            </div>
+          </div>
+
           {error && (
             <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium">
               {error}
