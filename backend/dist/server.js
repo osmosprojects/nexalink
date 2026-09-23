@@ -28,9 +28,18 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
-// Serve uploads directory
-app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
-app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, 'uploads')));
+// Serve uploads directory from all possible build/runtime candidate paths
+const possibleUploadDirs = [
+    path_1.default.join(process.cwd(), 'uploads'),
+    path_1.default.join(process.cwd(), 'public/uploads'),
+    path_1.default.join(__dirname, '../uploads'),
+    path_1.default.join(__dirname, '../../uploads'),
+    path_1.default.join(__dirname, '../public/uploads'),
+    path_1.default.join(__dirname, '../../public/uploads'),
+];
+for (const dir of possibleUploadDirs) {
+    app.use('/uploads', express_1.default.static(dir));
+}
 // Cache Control Middleware for API routes to prevent stale API responses
 app.use('/api', (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

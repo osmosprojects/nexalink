@@ -25,15 +25,27 @@ export class UploadController {
       }
 
       const filename = `avatar-${userId}-${Date.now()}.${ext}`;
-      const uploadsDir = path.join(__dirname, '../../uploads/avatars');
 
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
+      const targetDirs = [
+        path.join(process.cwd(), 'uploads/avatars'),
+        path.join(process.cwd(), 'public/uploads/avatars'),
+        path.join(__dirname, '../../uploads/avatars'),
+        path.join(__dirname, '../public/uploads/avatars'),
+        path.join(__dirname, '../../public/uploads/avatars'),
+      ];
 
-      const filePath = path.join(uploadsDir, filename);
       const buffer = Buffer.from(base64Data, 'base64');
-      await fs.promises.writeFile(filePath, buffer);
+
+      for (const dir of targetDirs) {
+        try {
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
+          await fs.promises.writeFile(path.join(dir, filename), buffer);
+        } catch {
+          // ignore error for secondary directory targets
+        }
+      }
 
       const avatarUrl = `/uploads/avatars/${filename}`;
 
