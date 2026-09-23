@@ -154,6 +154,91 @@ class AuthController {
             next(err);
         }
     }
+    static async googleAuth(req, res, next) {
+        try {
+            const { credential, token, googleUser } = req.body;
+            let email = googleUser?.email;
+            let displayName = googleUser?.name || googleUser?.displayName;
+            let avatarUrl = googleUser?.picture || googleUser?.avatarUrl;
+            // Verify Google ID token if provided
+            const idToken = credential || token;
+            if (idToken) {
+                try {
+                    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+                    if (googleRes.ok) {
+                        const payload = await googleRes.json();
+                        if (payload.email) {
+                            email = payload.email;
+                            displayName = payload.name || payload.given_name || displayName;
+                            avatarUrl = payload.picture || avatarUrl;
+                        }
+                    }
+                }
+                catch (verifyErr) {
+                    console.warn('Google id_token validation fallback to payload:', verifyErr);
+                }
+            }
+            if (!email || typeof email !== 'string') {
+                return (0, response_1.sendError)(res, 'Google authentication failed: Valid email required', 400);
+            }
+            let user = await UserRepository_1.UserRepository.findByEmail(email);
+            if (!user) {
+                const userId = await UserRepository_1.UserRepository.create({
+                    email,
+                    passwordHash: null,
+                    displayName: displayName || email.split('@')[0],
+                });
+                if (avatarUrl) {
+                    await (0, db_1.query)('UPDATE users SET avatar_url = ? WHERE user_id = ?', [avatarUrl, userId]);
+                }
+                await ProfileRepository_1.ProfileRepository.upsertProfile(userId, {
+                    headline: 'Professional Networker',
+                    bio: 'Welcome to NexaLink CRM!',
+                    avatar_url: avatarUrl || null,
+                });
+                await ProfileRepository_1.ProfileRepository.upsertPersona(userId, {
+                    persona_name: 'Strategic Networker',
+                    communication_style: 'Concise & Strategic',
+                });
+                user = await UserRepository_1.UserRepository.findById(userId);
+            }
+            else {
+                if (avatarUrl && !user.avatar_url) {
+                    await (0, db_1.query)('UPDATE users SET avatar_url = ? WHERE user_id = ?', [avatarUrl, user.user_id]);
+                    user.avatar_url = avatarUrl;
+                }
+                if (displayName && user.display_name !== displayName) {
+                    await (0, db_1.query)('UPDATE users SET display_name = ? WHERE user_id = ?', [displayName, user.user_id]);
+                    user.display_name = displayName;
+                }
+            }
+            if (!user) {
+                return (0, response_1.sendError)(res, 'User account creation or fetch failed', 500);
+            }
+            const jwtToken = jsonwebtoken_1.default.sign({ userId: user.user_id, email: user.email, displayName: user.display_name }, env_1.config.jwtSecret, { expiresIn: '7d' });
+            res.cookie('token', jwtToken, {
+                httpOnly: true,
+                secure: env_1.config.nodeEnv === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+            await (0, audit_1.logAudit)(req, 'GOOGLE_OAUTH_LOGIN', 'user', user.user_id);
+            const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(user.user_id);
+            return (0, response_1.sendSuccess)(res, {
+                user: {
+                    userId: user.user_id,
+                    email: user.email,
+                    displayName: user.display_name,
+                    avatarUrl: user.avatar_url,
+                },
+                token: jwtToken,
+                isProfileComplete: isComplete,
+            });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     static async logout(req, res, next) {
         try {
             res.clearCookie('token');

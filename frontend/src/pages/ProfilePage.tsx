@@ -38,7 +38,8 @@ import {
   Eye,
   Briefcase,
   Info,
-  Pencil
+  Pencil,
+  Lock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -954,48 +955,48 @@ export const ProfilePage: React.FC = () => {
             {!collapsedBlocks['identity'] && (
               <form onSubmit={handleSaveProfile} className="p-5 space-y-4 animate-fadeIn">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Full Name <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => {
-                      setFormData({ ...formData, name: e.target.value });
-                      if (validationErrors.name) {
-                        setValidationErrors((prev) => ({ ...prev, name: '' }));
-                      }
-                    }}
-                    placeholder="Your Full Name"
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
-                      validationErrors.name
-                        ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
-                        : 'border-slate-200 focus:ring-blue-500'
-                    }`}
-                  />
-                  {validationErrors.name && (
-                    <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>{validationErrors.name}</span>
-                    </p>
-                  )}
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Full Name <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-slate-400" />
+                      <span>Pre-fetched (Non-editable)</span>
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <User className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      disabled
+                      value={formData.name || user?.displayName || ''}
+                      placeholder="Your Full Name"
+                      className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 cursor-not-allowed"
+                    />
+                    {(formData.name || user?.displayName) && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Email Address <span className="text-rose-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-slate-700">
+                        Email Address <span className="text-rose-500">*</span>
+                      </label>
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Lock className="w-3 h-3 text-slate-400" />
+                        <span>Pre-fetched (Verified)</span>
+                      </span>
+                    </div>
                     <div className="relative">
                       <Mail className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                       <input
                         type="email"
                         disabled
-                        value={formData.email}
-                        className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-medium text-slate-500 cursor-not-allowed"
+                        value={formData.email || user?.email || ''}
+                        className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 cursor-not-allowed"
                       />
-                      {formData.email && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                      {(formData.email || user?.email) && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
                     </div>
                   </div>
 

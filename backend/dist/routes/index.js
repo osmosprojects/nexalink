@@ -27,6 +27,7 @@ exports.apiRouter.get('/health', (req, res) => {
 // Auth Routes (Public)
 exports.apiRouter.post('/auth/register', AuthController_1.AuthController.register);
 exports.apiRouter.post('/auth/login', AuthController_1.AuthController.login);
+exports.apiRouter.post('/auth/google', AuthController_1.AuthController.googleAuth);
 exports.apiRouter.post('/auth/demo-login', AuthController_1.AuthController.demoLogin);
 exports.apiRouter.post('/auth/logout', AuthController_1.AuthController.logout);
 const UploadController_1 = require("../controllers/UploadController");

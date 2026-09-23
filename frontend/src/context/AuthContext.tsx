@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ isComplete: boolean }>;
   register: (email: string, password: string, displayName: string) => Promise<{ isComplete: boolean }>;
   demoLogin: () => Promise<{ isComplete: boolean }>;
+  googleLogin: (googleData: { token?: string; credential?: string; googleUser?: any }) => Promise<{ isComplete: boolean }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<{ isComplete: boolean }>;
 }
@@ -103,6 +104,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await fetchCurrentUser();
   };
 
+  const googleLogin = async (googleData: { token?: string; credential?: string; googleUser?: any }) => {
+    const data = await api.post<{ user: User; token: string }>('/auth/google', googleData);
+    localStorage.setItem('token', data.token);
+    return await fetchCurrentUser();
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -130,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         demoLogin,
+        googleLogin,
         logout,
         refreshProfile,
       }}

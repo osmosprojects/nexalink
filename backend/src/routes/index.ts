@@ -27,6 +27,7 @@ apiRouter.get('/health', (req, res) => {
 // Auth Routes (Public)
 apiRouter.post('/auth/register', AuthController.register);
 apiRouter.post('/auth/login', AuthController.login);
+apiRouter.post('/auth/google', AuthController.googleAuth);
 apiRouter.post('/auth/demo-login', AuthController.demoLogin);
 apiRouter.post('/auth/logout', AuthController.logout);
 
