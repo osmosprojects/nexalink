@@ -6,8 +6,12 @@ import path from 'path';
 import fs from 'fs';
 import { config } from './config/env';
 import { testConnection } from './config/db';
+import { runMigrations } from './database/migrate';
 import { apiRouter } from './routes';
 import { errorHandler } from './middleware/errorHandler';
+
+// Import Matchmaking Cron
+const { initMatchmakingCron } = require('./jobs/matchmakingCron');
 
 const app = express();
 
@@ -124,7 +128,21 @@ app.use(errorHandler);
 // Start Server
 async function startServer() {
   const dbConnected = await testConnection();
-  if (!dbConnected) {
+  if (dbConnected) {
+    try {
+      await runMigrations();
+    } catch (migErr) {
+      console.warn('⚠️ Auto migration notice:', migErr);
+    }
+
+    try {
+      if (typeof initMatchmakingCron === 'function') {
+        initMatchmakingCron();
+      }
+    } catch (cronErr) {
+      console.warn('⚠️ Matchmaking cron notice:', cronErr);
+    }
+  } else {
     console.error('⚠️ Could not connect to MySQL on configured port. Check database credentials in .env.');
   }
 
@@ -138,4 +156,3 @@ async function startServer() {
 }
 
 startServer();
-

@@ -11,8 +11,11 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const env_1 = require("./config/env");
 const db_1 = require("./config/db");
+const migrate_1 = require("./database/migrate");
 const routes_1 = require("./routes");
 const errorHandler_1 = require("./middleware/errorHandler");
+// Import Matchmaking Cron
+const { initMatchmakingCron } = require('./jobs/matchmakingCron');
 const app = (0, express_1.default)();
 // Security and utility middleware
 app.use((0, cors_1.default)({
@@ -113,7 +116,23 @@ app.use(errorHandler_1.errorHandler);
 // Start Server
 async function startServer() {
     const dbConnected = await (0, db_1.testConnection)();
-    if (!dbConnected) {
+    if (dbConnected) {
+        try {
+            await (0, migrate_1.runMigrations)();
+        }
+        catch (migErr) {
+            console.warn('⚠️ Auto migration notice:', migErr);
+        }
+        try {
+            if (typeof initMatchmakingCron === 'function') {
+                initMatchmakingCron();
+            }
+        }
+        catch (cronErr) {
+            console.warn('⚠️ Matchmaking cron notice:', cronErr);
+        }
+    }
+    else {
         console.error('⚠️ Could not connect to MySQL on configured port. Check database credentials in .env.');
     }
     app.listen(env_1.config.port, () => {
