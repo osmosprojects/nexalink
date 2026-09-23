@@ -46,9 +46,11 @@ class AuthController {
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
             await (0, audit_1.logAudit)(req, 'USER_REGISTERED', 'user', userId);
+            const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(userId);
             return (0, response_1.sendSuccess)(res, {
                 user: { userId, email, displayName, avatarUrl: null },
                 token,
+                isProfileComplete: isComplete,
             }, 201);
         }
         catch (err) {
@@ -77,6 +79,7 @@ class AuthController {
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
             await (0, audit_1.logAudit)(req, 'USER_LOGIN', 'user', user.user_id);
+            const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(user.user_id);
             return (0, response_1.sendSuccess)(res, {
                 user: {
                     userId: user.user_id,
@@ -85,6 +88,7 @@ class AuthController {
                     avatarUrl: user.avatar_url,
                 },
                 token,
+                isProfileComplete: isComplete,
             });
         }
         catch (err) {
@@ -106,6 +110,7 @@ class AuthController {
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
             await (0, audit_1.logAudit)(req, 'DEMO_LOGIN', 'user', user.user_id);
+            const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(user.user_id);
             return (0, response_1.sendSuccess)(res, {
                 user: {
                     userId: user.user_id,
@@ -114,6 +119,7 @@ class AuthController {
                     avatarUrl: user.avatar_url,
                 },
                 token,
+                isProfileComplete: isComplete,
             });
         }
         catch (err) {
@@ -129,6 +135,7 @@ class AuthController {
             }
             const profile = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
             const persona = await ProfileRepository_1.ProfileRepository.getPersonaByUserId(userId);
+            const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(userId);
             return (0, response_1.sendSuccess)(res, {
                 user: {
                     userId: user.user_id,
@@ -140,6 +147,7 @@ class AuthController {
                 },
                 profile,
                 persona,
+                isProfileComplete: isComplete,
             });
         }
         catch (err) {

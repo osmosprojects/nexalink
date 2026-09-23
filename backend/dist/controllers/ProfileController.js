@@ -12,6 +12,7 @@ class ProfileController {
             const profile = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
             const persona = await ProfileRepository_1.ProfileRepository.getPersonaByUserId(userId);
             const user = await UserRepository_1.UserRepository.findById(userId);
+            const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(userId);
             return (0, response_1.sendSuccess)(res, {
                 user: {
                     userId: user?.user_id,
@@ -21,6 +22,7 @@ class ProfileController {
                 },
                 profile,
                 persona,
+                isProfileComplete: isComplete,
             });
         }
         catch (err) {
@@ -64,6 +66,7 @@ class ProfileController {
             });
             const updatedProfile = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
             const updatedUser = await UserRepository_1.UserRepository.findById(userId);
+            const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(userId);
             await (0, audit_1.logAudit)(req, 'PROFILE_UPDATED', 'profile', userId);
             return (0, response_1.sendSuccess)(res, {
                 profile: updatedProfile,
@@ -73,6 +76,7 @@ class ProfileController {
                     displayName: updatedUser?.display_name,
                     avatarUrl: updatedUser?.avatar_url,
                 },
+                isProfileComplete: isComplete,
             });
         }
         catch (err) {

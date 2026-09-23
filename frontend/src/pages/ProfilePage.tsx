@@ -34,7 +34,10 @@ import {
   Link2,
   Sparkles,
   AlertCircle,
-  MapPin
+  MapPin,
+  Eye,
+  Briefcase,
+  Info
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -180,6 +183,11 @@ export const ProfilePage: React.FC = () => {
   });
   const [showAddConnRow, setShowAddConnRow] = useState(false);
 
+  // Card Auto-Saving States & View Bridge Modal State
+  const [cardSaving, setCardSaving] = useState<Record<string, boolean>>({});
+  const [cardError, setCardError] = useState<Record<string, string>>({});
+  const [viewBridgeModal, setViewBridgeModal] = useState<ConnectablePerson | null>(null);
+
   useEffect(() => {
     if (user || profile) {
       setAvatarUrl(user?.avatarUrl || profile?.avatar_url || '');
@@ -287,85 +295,247 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  // Location Handlers
-  const handleAddTargetCity = (e?: React.FormEvent) => {
+  // Central Helper to Auto-Save Profile State to Backend
+  const saveProfileStateToBackend = async (overrideData?: Partial<{
+    targetCities: string[];
+    networkingGroups: string[];
+    hobbies: string[];
+    userInterests: string[];
+    userGoals: string[];
+    targetBusinesses: string[];
+    connectionsOffered: ConnectablePerson[];
+  }>) => {
+    const cleanTargetCities = (overrideData?.targetCities ?? targetCities).map((c) => c.trim()).filter(Boolean);
+    const cleanGroups = (overrideData?.networkingGroups ?? networkingGroups).map((g) => g.trim()).filter(Boolean);
+    const cleanHobbies = (overrideData?.hobbies ?? hobbies).map((h) => h.trim()).filter(Boolean);
+    const cleanInterests = (overrideData?.userInterests ?? userInterests).map((i) => i.trim()).filter(Boolean);
+    const cleanGoals = (overrideData?.userGoals ?? userGoals).map((g) => g.trim()).filter(Boolean);
+    const cleanTargets = (overrideData?.targetBusinesses ?? targetBusinesses).map((t) => t.trim()).filter(Boolean);
+    const bridgesToSave = overrideData?.connectionsOffered ?? connectionsOffered;
+
+    const res = await api.put('/profile', {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      bio: formData.bio,
+      avatar_url: avatarUrl,
+      linkedin: formData.linkedin,
+      instagram: formData.instagram,
+      website: formData.website,
+      socialLinks: {
+        linkedin: formData.linkedin,
+        instagram: formData.instagram,
+        website: formData.website,
+      },
+      currentCity,
+      targetCities: cleanTargetCities,
+      networkingGroup: cleanGroups,
+      hobbies: cleanHobbies,
+      userInterests: cleanInterests,
+      goals: cleanGoals,
+      networkingTargetPeriod,
+      networkingNewConnections,
+      targetBusinesses: cleanTargets,
+      connectionsOffered: bridgesToSave,
+    });
+
+    await refreshProfile();
+    return res;
+  };
+
+  // Location Handlers (Auto-Saving)
+  const handleAddTargetCity = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!targetCityInput.trim()) return;
+    const val = targetCityInput.trim();
+    if (!val) return;
     if (targetCities.length >= 10) return;
-    setTargetCities([...targetCities, targetCityInput.trim()]);
-    setTargetCityInput('');
-  };
-  const handleRemoveTargetCity = (index: number) => {
-    setTargetCities(targetCities.filter((_, i) => i !== index));
+    const nextList = [...targetCities, val];
+
+    try {
+      setCardSaving((prev) => ({ ...prev, cities: true }));
+      setCardError((prev) => ({ ...prev, cities: '' }));
+      await saveProfileStateToBackend({ targetCities: nextList });
+      setTargetCities(nextList);
+      setTargetCityInput('');
+    } catch (err: any) {
+      setCardError((prev) => ({ ...prev, cities: err.message || 'Failed to save target city. Please try again.' }));
+    } finally {
+      setCardSaving((prev) => ({ ...prev, cities: false }));
+    }
   };
 
-  // Group Handlers
-  const handleAddGroup = (e?: React.FormEvent) => {
+  const handleRemoveTargetCity = async (index: number) => {
+    const nextList = targetCities.filter((_, i) => i !== index);
+    setTargetCities(nextList);
+    try {
+      await saveProfileStateToBackend({ targetCities: nextList });
+    } catch (err) {
+      console.error('Failed to auto-save target city removal', err);
+    }
+  };
+
+  // Group Handlers (Auto-Saving)
+  const handleAddGroup = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!groupInput.trim()) return;
+    const val = groupInput.trim();
+    if (!val) return;
     if (networkingGroups.length >= 10) return;
-    setNetworkingGroups([...networkingGroups, groupInput.trim()]);
-    setGroupInput('');
-    if (validationErrors.groups) setValidationErrors((prev) => ({ ...prev, groups: '' }));
-  };
-  const handleRemoveGroup = (index: number) => {
-    setNetworkingGroups(networkingGroups.filter((_, i) => i !== index));
+    const nextList = [...networkingGroups, val];
+
+    try {
+      setCardSaving((prev) => ({ ...prev, groups: true }));
+      setCardError((prev) => ({ ...prev, groups: '' }));
+      await saveProfileStateToBackend({ networkingGroups: nextList });
+      setNetworkingGroups(nextList);
+      setGroupInput('');
+      if (validationErrors.groups) setValidationErrors((prev) => ({ ...prev, groups: '' }));
+    } catch (err: any) {
+      setCardError((prev) => ({ ...prev, groups: err.message || 'Failed to save group. Please try again.' }));
+    } finally {
+      setCardSaving((prev) => ({ ...prev, groups: false }));
+    }
   };
 
-  // Hobby Handlers
-  const handleAddHobby = (e?: React.FormEvent) => {
+  const handleRemoveGroup = async (index: number) => {
+    const nextList = networkingGroups.filter((_, i) => i !== index);
+    setNetworkingGroups(nextList);
+    try {
+      await saveProfileStateToBackend({ networkingGroups: nextList });
+    } catch (err) {
+      console.error('Failed to auto-save group removal', err);
+    }
+  };
+
+  // Hobby Handlers (Auto-Saving)
+  const handleAddHobby = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!hobbyInput.trim()) return;
+    const val = hobbyInput.trim();
+    if (!val) return;
     if (hobbies.length >= 5) return;
-    setHobbies([...hobbies, hobbyInput.trim()]);
-    setHobbyInput('');
-    if (validationErrors.hobbies) setValidationErrors((prev) => ({ ...prev, hobbies: '' }));
-  };
-  const handleRemoveHobby = (index: number) => {
-    setHobbies(hobbies.filter((_, i) => i !== index));
+    const nextList = [...hobbies, val];
+
+    try {
+      setCardSaving((prev) => ({ ...prev, hobbies: true }));
+      setCardError((prev) => ({ ...prev, hobbies: '' }));
+      await saveProfileStateToBackend({ hobbies: nextList });
+      setHobbies(nextList);
+      setHobbyInput('');
+      if (validationErrors.hobbies) setValidationErrors((prev) => ({ ...prev, hobbies: '' }));
+    } catch (err: any) {
+      setCardError((prev) => ({ ...prev, hobbies: err.message || 'Failed to save hobby. Please try again.' }));
+    } finally {
+      setCardSaving((prev) => ({ ...prev, hobbies: false }));
+    }
   };
 
-  // Interest Handlers
-  const handleAddInterest = (e?: React.FormEvent) => {
+  const handleRemoveHobby = async (index: number) => {
+    const nextList = hobbies.filter((_, i) => i !== index);
+    setHobbies(nextList);
+    try {
+      await saveProfileStateToBackend({ hobbies: nextList });
+    } catch (err) {
+      console.error('Failed to auto-save hobby removal', err);
+    }
+  };
+
+  // Interest Handlers (Auto-Saving)
+  const handleAddInterest = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!interestInput.trim()) return;
+    const val = interestInput.trim();
+    if (!val) return;
     if (userInterests.length >= 10) return;
-    setUserInterests([...userInterests, interestInput.trim()]);
-    setInterestInput('');
-    if (validationErrors.interests) setValidationErrors((prev) => ({ ...prev, interests: '' }));
-  };
-  const handleRemoveInterest = (index: number) => {
-    setUserInterests(userInterests.filter((_, i) => i !== index));
+    const nextList = [...userInterests, val];
+
+    try {
+      setCardSaving((prev) => ({ ...prev, interests: true }));
+      setCardError((prev) => ({ ...prev, interests: '' }));
+      await saveProfileStateToBackend({ userInterests: nextList });
+      setUserInterests(nextList);
+      setInterestInput('');
+      if (validationErrors.interests) setValidationErrors((prev) => ({ ...prev, interests: '' }));
+    } catch (err: any) {
+      setCardError((prev) => ({ ...prev, interests: err.message || 'Failed to save interest. Please try again.' }));
+    } finally {
+      setCardSaving((prev) => ({ ...prev, interests: false }));
+    }
   };
 
-  // Objective Handlers
-  const handleAddGoal = (e?: React.FormEvent) => {
+  const handleRemoveInterest = async (index: number) => {
+    const nextList = userInterests.filter((_, i) => i !== index);
+    setUserInterests(nextList);
+    try {
+      await saveProfileStateToBackend({ userInterests: nextList });
+    } catch (err) {
+      console.error('Failed to auto-save interest removal', err);
+    }
+  };
+
+  // Objective Handlers (Auto-Saving)
+  const handleAddGoal = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!goalInput.trim()) return;
+    const val = goalInput.trim();
+    if (!val) return;
     if (userGoals.length >= 5) return;
-    setUserGoals([...userGoals, goalInput.trim()]);
-    setGoalInput('');
-    if (validationErrors.objectives) setValidationErrors((prev) => ({ ...prev, objectives: '' }));
-  };
-  const handleRemoveGoal = (index: number) => {
-    setUserGoals(userGoals.filter((_, i) => i !== index));
+    const nextList = [...userGoals, val];
+
+    try {
+      setCardSaving((prev) => ({ ...prev, objectives: true }));
+      setCardError((prev) => ({ ...prev, objectives: '' }));
+      await saveProfileStateToBackend({ userGoals: nextList });
+      setUserGoals(nextList);
+      setGoalInput('');
+      if (validationErrors.objectives) setValidationErrors((prev) => ({ ...prev, objectives: '' }));
+    } catch (err: any) {
+      setCardError((prev) => ({ ...prev, objectives: err.message || 'Failed to save objective. Please try again.' }));
+    } finally {
+      setCardSaving((prev) => ({ ...prev, objectives: false }));
+    }
   };
 
-  // Target Business Handlers
-  const handleAddTargetBusiness = (e?: React.FormEvent) => {
+  const handleRemoveGoal = async (index: number) => {
+    const nextList = userGoals.filter((_, i) => i !== index);
+    setUserGoals(nextList);
+    try {
+      await saveProfileStateToBackend({ userGoals: nextList });
+    } catch (err) {
+      console.error('Failed to auto-save objective removal', err);
+    }
+  };
+
+  // Target Business Handlers (Auto-Saving)
+  const handleAddTargetBusiness = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!targetInput.trim()) return;
+    const val = targetInput.trim();
+    if (!val) return;
     if (targetBusinesses.length >= 10) return;
-    setTargetBusinesses([...targetBusinesses, targetInput.trim()]);
-    setTargetInput('');
-    if (validationErrors.targets) setValidationErrors((prev) => ({ ...prev, targets: '' }));
-  };
-  const handleRemoveTargetBusiness = (index: number) => {
-    setTargetBusinesses(targetBusinesses.filter((_, i) => i !== index));
+    const nextList = [...targetBusinesses, val];
+
+    try {
+      setCardSaving((prev) => ({ ...prev, targets: true }));
+      setCardError((prev) => ({ ...prev, targets: '' }));
+      await saveProfileStateToBackend({ targetBusinesses: nextList });
+      setTargetBusinesses(nextList);
+      setTargetInput('');
+      if (validationErrors.targets) setValidationErrors((prev) => ({ ...prev, targets: '' }));
+    } catch (err: any) {
+      setCardError((prev) => ({ ...prev, targets: err.message || 'Failed to save target business. Please try again.' }));
+    } finally {
+      setCardSaving((prev) => ({ ...prev, targets: false }));
+    }
   };
 
-  // Connection Bridge Handlers
-  const handleAddConnectionBridge = (e: React.FormEvent) => {
+  const handleRemoveTargetBusiness = async (index: number) => {
+    const nextList = targetBusinesses.filter((_, i) => i !== index);
+    setTargetBusinesses(nextList);
+    try {
+      await saveProfileStateToBackend({ targetBusinesses: nextList });
+    } catch (err) {
+      console.error('Failed to auto-save target business removal', err);
+    }
+  };
+
+  // Connection Bridge Handlers (Auto-Saving)
+  const handleAddConnectionBridge = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newConn.businessDomain.trim() || !newConn.personName.trim()) return;
     if (connectionsOffered.length >= 10) return;
@@ -373,14 +543,31 @@ export const ProfilePage: React.FC = () => {
       ...newConn,
       id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
-    setConnectionsOffered([...connectionsOffered, newEntry]);
-    setNewConn({ businessDomain: '', personName: '', orgName: '', role: '', city: '', relationship: '' });
-    setShowAddConnRow(false);
-    if (validationErrors.bridges) setValidationErrors((prev) => ({ ...prev, bridges: '' }));
+    const nextBridges = [...connectionsOffered, newEntry];
+
+    try {
+      setCardSaving((prev) => ({ ...prev, bridges: true }));
+      setCardError((prev) => ({ ...prev, bridges: '' }));
+      await saveProfileStateToBackend({ connectionsOffered: nextBridges });
+      setConnectionsOffered(nextBridges);
+      setNewConn({ businessDomain: '', personName: '', orgName: '', role: '', city: '', relationship: '' });
+      setShowAddConnRow(false);
+      if (validationErrors.bridges) setValidationErrors((prev) => ({ ...prev, bridges: '' }));
+    } catch (err: any) {
+      setCardError((prev) => ({ ...prev, bridges: err.message || 'Failed to save connection bridge. Please try again.' }));
+    } finally {
+      setCardSaving((prev) => ({ ...prev, bridges: false }));
+    }
   };
 
-  const handleRemoveConnectionOffered = (id: string) => {
-    setConnectionsOffered(connectionsOffered.filter((c) => c.id !== id));
+  const handleRemoveConnectionOffered = async (id: string) => {
+    const nextBridges = connectionsOffered.filter((c) => c.id !== id);
+    setConnectionsOffered(nextBridges);
+    try {
+      await saveProfileStateToBackend({ connectionsOffered: nextBridges });
+    } catch (err) {
+      console.error('Failed to auto-save bridge removal', err);
+    }
   };
 
   const handleSaveProfile = async (e?: React.FormEvent) => {
@@ -943,6 +1130,12 @@ export const ProfilePage: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700">
                     I am looking to network with people in
                   </label>
+                  {cardError['cities'] && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                      <span>{cardError['cities']}</span>
+                    </div>
+                  )}
                   <form onSubmit={handleAddTargetCity} className="flex items-center gap-2">
                     <div className="relative flex-1">
                       <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
@@ -956,9 +1149,10 @@ export const ProfilePage: React.FC = () => {
                     </div>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                      disabled={cardSaving['cities']}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
                     >
-                      + Add
+                      {cardSaving['cities'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : '+ Add'}
                     </button>
                   </form>
 
@@ -1032,6 +1226,12 @@ export const ProfilePage: React.FC = () => {
                     <span>{validationErrors.groups}</span>
                   </div>
                 )}
+                {cardError['groups'] && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                    <span>{cardError['groups']}</span>
+                  </div>
+                )}
 
                 <form onSubmit={handleAddGroup} className="flex items-center gap-2">
                   <div className="relative flex-1">
@@ -1046,9 +1246,10 @@ export const ProfilePage: React.FC = () => {
                   </div>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                    disabled={cardSaving['groups']}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
                   >
-                    Add
+                    {cardSaving['groups'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
                   </button>
                 </form>
 
@@ -1123,6 +1324,12 @@ export const ProfilePage: React.FC = () => {
                     <span>{validationErrors.hobbies}</span>
                   </div>
                 )}
+                {cardError['hobbies'] && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                    <span>{cardError['hobbies']}</span>
+                  </div>
+                )}
 
                 <form onSubmit={handleAddHobby} className="flex items-center gap-2">
                   <div className="relative flex-1">
@@ -1137,9 +1344,10 @@ export const ProfilePage: React.FC = () => {
                   </div>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                    disabled={cardSaving['hobbies']}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
                   >
-                    Add
+                    {cardSaving['hobbies'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
                   </button>
                 </form>
 
@@ -1214,6 +1422,12 @@ export const ProfilePage: React.FC = () => {
                     <span>{validationErrors.interests}</span>
                   </div>
                 )}
+                {cardError['interests'] && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                    <span>{cardError['interests']}</span>
+                  </div>
+                )}
 
                 <form onSubmit={handleAddInterest} className="flex items-center gap-2">
                   <div className="relative flex-1">
@@ -1228,9 +1442,10 @@ export const ProfilePage: React.FC = () => {
                   </div>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                    disabled={cardSaving['interests']}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
                   >
-                    Add
+                    {cardSaving['interests'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
                   </button>
                 </form>
 
@@ -1305,6 +1520,12 @@ export const ProfilePage: React.FC = () => {
                     <span>{validationErrors.objectives}</span>
                   </div>
                 )}
+                {cardError['objectives'] && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                    <span>{cardError['objectives']}</span>
+                  </div>
+                )}
 
                 <form onSubmit={handleAddGoal} className="flex items-center gap-2">
                   <div className="relative flex-1">
@@ -1319,9 +1540,10 @@ export const ProfilePage: React.FC = () => {
                   </div>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                    disabled={cardSaving['objectives']}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
                   >
-                    Add
+                    {cardSaving['objectives'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
                   </button>
                 </form>
 
@@ -1467,6 +1689,12 @@ export const ProfilePage: React.FC = () => {
                   <span>{validationErrors.targets}</span>
                 </div>
               )}
+              {cardError['targets'] && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                  <span>{cardError['targets']}</span>
+                </div>
+              )}
 
               <form onSubmit={handleAddTargetBusiness} className="flex items-center gap-2">
                 <div className="relative flex-1">
@@ -1481,9 +1709,10 @@ export const ProfilePage: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0"
+                  disabled={cardSaving['targets']}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
                 >
-                  Add
+                  {cardSaving['targets'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
                 </button>
               </form>
 
@@ -1608,14 +1837,17 @@ export const ProfilePage: React.FC = () => {
                       onChange={(e) => setNewConn({ ...newConn, role: e.target.value })}
                       className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
                     />
-                    <input
-                      type="text"
-                      placeholder="Business Domain (e.g. AI / SaaS)"
-                      value={newConn.businessDomain}
-                      onChange={(e) => setNewConn({ ...newConn, businessDomain: e.target.value })}
-                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
-                      required
-                    />
+                    <div>
+                      <label className="block text-[10px] font-bold text-indigo-900 uppercase tracking-wider mb-1">Business Domain / Industry</label>
+                      <input
+                        type="text"
+                        placeholder="Business Domain / Industry (e.g. AI / SaaS, Finance)"
+                        value={newConn.businessDomain}
+                        onChange={(e) => setNewConn({ ...newConn, businessDomain: e.target.value })}
+                        className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
+                        required
+                      />
+                    </div>
                     <input
                       type="text"
                       placeholder="City / Location (e.g. Mumbai, New York)"
@@ -1625,7 +1857,7 @@ export const ProfilePage: React.FC = () => {
                     />
                     <input
                       type="text"
-                      placeholder="relationship with you (e.g. Friend, College Alumni, Family)"
+                      placeholder="Relationship with you (e.g. Friend, College Alumni, Family)"
                       value={newConn.relationship || ''}
                       onChange={(e) => setNewConn({ ...newConn, relationship: e.target.value, orgName: e.target.value })}
                       className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900"
@@ -1634,9 +1866,17 @@ export const ProfilePage: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs text-center"
+                    disabled={cardSaving['bridges']}
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
-                    Save Bridge
+                    {cardSaving['bridges'] ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Saving Bridge...</span>
+                      </>
+                    ) : (
+                      <span>Save Bridge</span>
+                    )}
                   </button>
                 </form>
               )}
@@ -1656,7 +1896,7 @@ export const ProfilePage: React.FC = () => {
                     return (
                       <div
                         key={conn.id}
-                        className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3 flex items-start justify-between gap-3 animate-fadeIn"
+                        className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3 flex items-start justify-between gap-3 animate-fadeIn hover:border-indigo-200 transition-all"
                       >
                         <div className="flex items-start gap-3 min-w-0">
                           <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
@@ -1665,16 +1905,22 @@ export const ProfilePage: React.FC = () => {
                           <div className="min-w-0 space-y-1">
                             <h4 className="text-xs font-bold text-slate-900 truncate">{conn.personName}</h4>
                             <p className="text-[11px] font-medium text-slate-500 truncate">
-                              {conn.role || 'Contact'} {conn.businessDomain ? `• ${conn.businessDomain}` : ''}
+                              {conn.role || 'Contact'}
                             </p>
-                            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 flex-wrap">
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 flex-wrap pt-0.5">
+                              {conn.businessDomain && (
+                                <span className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200/80 font-bold text-indigo-700 flex items-center gap-1">
+                                  <Briefcase className="w-3 h-3 text-indigo-500" />
+                                  <span>Domain/Industry: {conn.businessDomain}</span>
+                                </span>
+                              )}
                               {conn.city && (
                                 <span className="px-2 py-0.5 rounded bg-slate-200/70 font-semibold text-slate-700">
                                   📍 {conn.city}
                                 </span>
                               )}
                               {(conn.relationship || conn.orgName) && (
-                                <span className="px-2 py-0.5 rounded bg-indigo-100/70 font-semibold text-indigo-700">
+                                <span className="px-2 py-0.5 rounded bg-purple-50 border border-purple-200/60 font-semibold text-purple-700">
                                   🤝 {conn.relationship || conn.orgName}
                                 </span>
                               )}
@@ -1682,14 +1928,24 @@ export const ProfilePage: React.FC = () => {
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveConnectionOffered(conn.id)}
-                          className="text-rose-400 hover:text-rose-600 p-1 shrink-0 transition-colors"
-                          title="Remove bridge"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setViewBridgeModal(conn)}
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                            title="View Complete Bridge Details"
+                          >
+                            <Eye className="w-4 h-4 text-indigo-600" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveConnectionOffered(conn.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                            title="Remove bridge"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     );
                   })
@@ -1700,6 +1956,64 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* VIEW BRIDGE DETAILS MODAL */}
+      {viewBridgeModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-5 relative">
+            <button
+              onClick={() => setViewBridgeModal(null)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3.5 border-b border-slate-100 pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 font-black text-base flex items-center justify-center shrink-0 border border-indigo-200">
+                {viewBridgeModal.personName.slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">{viewBridgeModal.personName}</h3>
+                <p className="text-xs text-slate-500 font-medium">{viewBridgeModal.role || 'Connection Bridge Contact'}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3.5 text-xs">
+              <div className="bg-indigo-50/60 p-3.5 rounded-2xl border border-indigo-100 space-y-1">
+                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Business Domain / Industry</span>
+                <div className="font-extrabold text-indigo-950 text-sm flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-indigo-600" />
+                  <span>{viewBridgeModal.businessDomain || 'Not specified'}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Organization / Company</span>
+                  <div className="font-bold text-slate-800">{viewBridgeModal.orgName || viewBridgeModal.role || 'N/A'}</div>
+                </div>
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Location / City</span>
+                  <div className="font-bold text-slate-800">{viewBridgeModal.city || 'Not specified'}</div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Relationship with You</span>
+                <div className="font-bold text-slate-800">{viewBridgeModal.relationship || 'Direct Contact'}</div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setViewBridgeModal(null)}
+                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition-colors shadow-md"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,6 +6,23 @@ import { AuthProvider } from './context/AuthContext';
 import { router } from './app/router';
 import './index.css';
 
+// Unregister any legacy service workers that might cache stale HTML or JS assets
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+
+// Global error listener to handle missing bundle chunks after new deployment
+window.addEventListener('error', (e) => {
+  if (e.message && (e.message.includes('Loading chunk') || e.message.includes('Importing a module script failed'))) {
+    console.warn('New deployment version detected. Reloading page...');
+    window.location.reload();
+  }
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

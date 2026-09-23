@@ -31,6 +31,21 @@ app.use((0, cookie_parser_1.default)());
 // Serve uploads directory
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, 'uploads')));
+// Cache Control Middleware for API routes to prevent stale API responses
+app.use('/api', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    next();
+});
+// App version check endpoint
+app.get('/api/version', (_req, res) => {
+    res.json({
+        success: true,
+        data: {
+            version: '1.2.0',
+            timestamp: Date.now(),
+        },
+    });
+});
 // Rate Limiter for API
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
@@ -57,11 +72,27 @@ const possibleStaticDirs = [
 let staticServed = false;
 for (const dir of possibleStaticDirs) {
     if (fs_1.default.existsSync(dir) && fs_1.default.existsSync(path_1.default.join(dir, 'index.html'))) {
-        app.use(express_1.default.static(dir));
+        app.use(express_1.default.static(dir, {
+            etag: true,
+            lastModified: true,
+            setHeaders: (res, filePath) => {
+                if (filePath.endsWith('.html')) {
+                    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                    res.setHeader('Pragma', 'no-cache');
+                    res.setHeader('Expires', '0');
+                }
+                else if (filePath.includes('/assets/')) {
+                    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+                }
+            },
+        }));
         app.get('*', (req, res, next) => {
             if (req.path.startsWith('/api')) {
                 return next();
             }
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
             res.sendFile(path_1.default.join(dir, 'index.html'));
         });
         staticServed = true;

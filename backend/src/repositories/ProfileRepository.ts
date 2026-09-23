@@ -51,14 +51,17 @@ export class ProfileRepository {
     const goals = typeof p.networking_goals === 'string' ? JSON.parse(p.networking_goals) : p.networking_goals;
     const bridges = typeof p.interests === 'string' ? JSON.parse(p.interests) : p.interests;
 
-    const hasGroup = Array.isArray(skills?.networkingGroup) && skills.networkingGroup.length > 0;
-    const hasHobby = Array.isArray(skills?.hobbies) && skills.hobbies.length > 0;
-    const hasInterest = Array.isArray(skills?.interests) && skills.interests.length > 0;
-    const hasObjective = Array.isArray(skills?.goals) && skills.goals.length > 0;
-    const hasTarget = Array.isArray(goals) && goals.length > 0;
+    const groupVal = skills?.networkingGroup;
+    const hasGroup = Array.isArray(groupVal)
+      ? groupVal.some((g: any) => typeof g === 'string' && g.trim().length > 0)
+      : typeof groupVal === 'string' && groupVal.trim().length > 0;
+    const hasHobby = Array.isArray(skills?.hobbies) && skills.hobbies.some((h: any) => typeof h === 'string' && h.trim().length > 0);
+    const hasInterest = Array.isArray(skills?.interests) && skills.interests.some((i: any) => typeof i === 'string' && i.trim().length > 0);
+    const hasObjective = Array.isArray(skills?.goals) && skills.goals.some((o: any) => typeof o === 'string' && o.trim().length > 0);
+    const hasTarget = Array.isArray(goals) && goals.some((t: any) => typeof t === 'string' && t.trim().length > 0);
     const hasBridge = Array.isArray(bridges) && bridges.length > 0;
 
-    return hasGroup && hasHobby && hasInterest && hasObjective && hasTarget && hasBridge;
+    return Boolean(hasGroup && hasHobby && hasInterest && hasObjective && hasTarget && hasBridge);
   }
 
   static async getProfileByUserId(userId: number): Promise<UserProfileRow | null> {

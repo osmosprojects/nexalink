@@ -22,7 +22,12 @@ export const checkIsProfileComplete = (profile: UserProfile | null, _persona?: U
   const hasBio = Boolean(profile.bio && profile.bio.trim().length > 0);
   const hasPhone = Boolean(profile.phone && profile.phone.trim().length > 0);
 
-  const groups = Array.isArray(profile.skills?.networkingGroup) ? profile.skills.networkingGroup : [];
+  const rawGroup = profile.skills?.networkingGroup;
+  const groups = Array.isArray(rawGroup)
+    ? rawGroup
+    : typeof rawGroup === 'string' && rawGroup.trim().length > 0
+    ? [rawGroup]
+    : [];
   const hobbies = Array.isArray(profile.skills?.hobbies) ? profile.skills.hobbies : [];
   const interests = Array.isArray(profile.skills?.interests) ? profile.skills.interests : [];
   const objectives = Array.isArray(profile.skills?.goals) ? profile.skills.goals : [];
@@ -31,7 +36,11 @@ export const checkIsProfileComplete = (profile: UserProfile | null, _persona?: U
     : Array.isArray(profile.targetBusinesses)
     ? profile.targetBusinesses
     : [];
-  const bridges = Array.isArray(profile.interests) && typeof profile.interests[0] === 'object' ? profile.interests : [];
+  const bridges = Array.isArray(profile.interests) && profile.interests.length > 0
+    ? profile.interests
+    : Array.isArray(profile.connectionsOffered)
+    ? profile.connectionsOffered
+    : [];
 
   const hasGroup = groups.some((g: any) => typeof g === 'string' && g.trim().length > 0);
   const hasHobby = hobbies.some((h: any) => typeof h === 'string' && h.trim().length > 0);
@@ -40,28 +49,32 @@ export const checkIsProfileComplete = (profile: UserProfile | null, _persona?: U
   const hasTarget = targets.some((t: any) => typeof t === 'string' && t.trim().length > 0);
   const hasBridge = bridges.length > 0;
 
-  return hasBio && hasPhone && hasGroup && hasHobby && hasInterest && hasObjective && hasTarget && hasBridge;
+  return Boolean(hasBio && hasPhone && hasGroup && hasHobby && hasInterest && hasObjective && hasTarget && hasBridge);
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [persona, setPersona] = useState<UserPersona | null>(null);
+  const [serverIsComplete, setServerIsComplete] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isProfileComplete = checkIsProfileComplete(profile, persona);
+  const isProfileComplete = serverIsComplete !== null ? serverIsComplete : checkIsProfileComplete(profile, persona);
 
   const fetchCurrentUser = async (): Promise<{ isComplete: boolean }> => {
     try {
-      const data = await api.get<{ user: User; profile: UserProfile; persona: UserPersona }>('/auth/me');
+      const data = await api.get<{ user: User; profile: UserProfile; persona: UserPersona; isProfileComplete?: boolean }>('/auth/me');
       setUser(data.user);
       setProfile(data.profile);
       setPersona(data.persona);
-      return { isComplete: checkIsProfileComplete(data.profile, data.persona) };
+      const computed = data.isProfileComplete !== undefined ? Boolean(data.isProfileComplete) : checkIsProfileComplete(data.profile, data.persona);
+      setServerIsComplete(computed);
+      return { isComplete: computed };
     } catch {
       setUser(null);
       setProfile(null);
       setPersona(null);
+      setServerIsComplete(false);
       return { isComplete: false };
     } finally {
       setIsLoading(false);

@@ -12,6 +12,7 @@ export class ProfileController {
       const persona = await ProfileRepository.getPersonaByUserId(userId);
       const user = await UserRepository.findById(userId);
 
+      const isComplete = await ProfileRepository.isProfileComplete(userId);
       return sendSuccess(res, {
         user: {
           userId: user?.user_id,
@@ -21,6 +22,7 @@ export class ProfileController {
         },
         profile,
         persona,
+        isProfileComplete: isComplete,
       });
     } catch (err) {
       next(err);
@@ -67,6 +69,7 @@ export class ProfileController {
 
       const updatedProfile = await ProfileRepository.getProfileByUserId(userId);
       const updatedUser = await UserRepository.findById(userId);
+      const isComplete = await ProfileRepository.isProfileComplete(userId);
 
       await logAudit(req, 'PROFILE_UPDATED', 'profile', userId);
 
@@ -78,6 +81,7 @@ export class ProfileController {
           displayName: updatedUser?.display_name,
           avatarUrl: updatedUser?.avatar_url,
         },
+        isProfileComplete: isComplete,
       });
     } catch (err) {
       next(err);

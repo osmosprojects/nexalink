@@ -53,9 +53,11 @@ export class AuthController {
 
       await logAudit(req, 'USER_REGISTERED', 'user', userId);
 
+      const isComplete = await ProfileRepository.isProfileComplete(userId);
       return sendSuccess(res, {
         user: { userId, email, displayName, avatarUrl: null },
         token,
+        isProfileComplete: isComplete,
       }, 201);
     } catch (err) {
       next(err);
@@ -93,6 +95,7 @@ export class AuthController {
       });
 
       await logAudit(req, 'USER_LOGIN', 'user', user.user_id);
+      const isComplete = await ProfileRepository.isProfileComplete(user.user_id);
 
       return sendSuccess(res, {
         user: {
@@ -102,6 +105,7 @@ export class AuthController {
           avatarUrl: user.avatar_url,
         },
         token,
+        isProfileComplete: isComplete,
       });
     } catch (err) {
       next(err);
@@ -130,6 +134,7 @@ export class AuthController {
       });
 
       await logAudit(req, 'DEMO_LOGIN', 'user', user.user_id);
+      const isComplete = await ProfileRepository.isProfileComplete(user.user_id);
 
       return sendSuccess(res, {
         user: {
@@ -139,6 +144,7 @@ export class AuthController {
           avatarUrl: user.avatar_url,
         },
         token,
+        isProfileComplete: isComplete,
       });
     } catch (err) {
       next(err);
@@ -155,6 +161,7 @@ export class AuthController {
 
       const profile = await ProfileRepository.getProfileByUserId(userId);
       const persona = await ProfileRepository.getPersonaByUserId(userId);
+      const isComplete = await ProfileRepository.isProfileComplete(userId);
 
       return sendSuccess(res, {
         user: {
@@ -167,6 +174,7 @@ export class AuthController {
         },
         profile,
         persona,
+        isProfileComplete: isComplete,
       });
     } catch (err) {
       next(err);
