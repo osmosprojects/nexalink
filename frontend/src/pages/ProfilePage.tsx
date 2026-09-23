@@ -37,7 +37,8 @@ import {
   MapPin,
   Eye,
   Briefcase,
-  Info
+  Info,
+  Pencil
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -187,6 +188,7 @@ export const ProfilePage: React.FC = () => {
   const [cardSaving, setCardSaving] = useState<Record<string, boolean>>({});
   const [cardError, setCardError] = useState<Record<string, string>>({});
   const [viewBridgeModal, setViewBridgeModal] = useState<ConnectablePerson | null>(null);
+  const [editingBridge, setEditingBridge] = useState<ConnectablePerson | null>(null);
 
   useEffect(() => {
     if (user || profile) {
@@ -567,6 +569,31 @@ export const ProfilePage: React.FC = () => {
       await saveProfileStateToBackend({ connectionsOffered: nextBridges });
     } catch (err) {
       console.error('Failed to auto-save bridge removal', err);
+    }
+  };
+
+  const handleSaveEditBridge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBridge || !editingBridge.businessDomain.trim() || !editingBridge.personName.trim()) return;
+
+    const nextBridges = connectionsOffered.map((c) =>
+      c.id === editingBridge.id ? editingBridge : c
+    );
+
+    try {
+      setCardSaving((prev) => ({ ...prev, bridges: true }));
+      setCardError((prev) => ({ ...prev, bridges: '' }));
+      await saveProfileStateToBackend({ connectionsOffered: nextBridges });
+      setConnectionsOffered(nextBridges);
+      if (viewBridgeModal && viewBridgeModal.id === editingBridge.id) {
+        setViewBridgeModal(editingBridge);
+      }
+      setEditingBridge(null);
+      if (validationErrors.bridges) setValidationErrors((prev) => ({ ...prev, bridges: '' }));
+    } catch (err: any) {
+      setCardError((prev) => ({ ...prev, bridges: err.message || 'Failed to update connection bridge. Please try again.' }));
+    } finally {
+      setCardSaving((prev) => ({ ...prev, bridges: false }));
     }
   };
 
@@ -1950,6 +1977,14 @@ export const ProfilePage: React.FC = () => {
                           </button>
                           <button
                             type="button"
+                            onClick={() => setEditingBridge(conn)}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                            title="Edit Bridge Details"
+                          >
+                            <Pencil className="w-4 h-4 text-blue-600" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleRemoveConnectionOffered(conn.id)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                             title="Remove bridge"
@@ -2014,7 +2049,17 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex items-center justify-end gap-2">
+              <button
+                onClick={() => {
+                  setEditingBridge(viewBridgeModal);
+                  setViewBridgeModal(null);
+                }}
+                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md flex items-center gap-1.5"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit Bridge</span>
+              </button>
               <button
                 onClick={() => setViewBridgeModal(null)}
                 className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition-colors shadow-md"
@@ -2022,6 +2067,132 @@ export const ProfilePage: React.FC = () => {
                 Close Details
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT BRIDGE MODAL */}
+      {editingBridge && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 relative">
+            <button
+              onClick={() => setEditingBridge(null)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                <Pencil className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Edit Connection Bridge</h3>
+                <p className="text-xs text-slate-500 font-medium">Update relationship & contact details for this bridge.</p>
+              </div>
+            </div>
+
+            {cardError['bridges'] && (
+              <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                <span>{cardError['bridges']}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEditBridge} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Person Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingBridge.personName}
+                  onChange={(e) => setEditingBridge({ ...editingBridge, personName: e.target.value })}
+                  placeholder="e.g. John Doe"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Role & Company
+                </label>
+                <input
+                  type="text"
+                  value={editingBridge.role}
+                  onChange={(e) => setEditingBridge({ ...editingBridge, role: e.target.value })}
+                  placeholder="e.g. CTO • TechCorp"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Business Domain / Industry <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingBridge.businessDomain}
+                  onChange={(e) => setEditingBridge({ ...editingBridge, businessDomain: e.target.value })}
+                  placeholder="e.g. AI / SaaS, Finance"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    City / Location
+                  </label>
+                  <input
+                    type="text"
+                    value={editingBridge.city || ''}
+                    onChange={(e) => setEditingBridge({ ...editingBridge, city: e.target.value })}
+                    placeholder="e.g. Mumbai, New York"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Relationship with You
+                  </label>
+                  <input
+                    type="text"
+                    value={editingBridge.relationship || ''}
+                    onChange={(e) => setEditingBridge({ ...editingBridge, relationship: e.target.value, orgName: e.target.value })}
+                    placeholder="e.g. Friend, College Alumni"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingBridge(null)}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={cardSaving['bridges']}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {cardSaving['bridges'] ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
