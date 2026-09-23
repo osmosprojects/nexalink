@@ -43,10 +43,18 @@ export const AppLayout: React.FC = () => {
   });
 
   const path = location.pathname;
-  const pageMeta = routeTitleMap[path] || {
+  const rawMeta = routeTitleMap[path] || {
     title: path.startsWith('/connections/') ? 'Contact Detail' : 'NexaLink CRM',
     subtitle: 'Relationship intelligence platform',
   };
+  const pageMeta = path === '/profile'
+    ? {
+        title: 'Networking Profile',
+        subtitle: isProfileComplete
+          ? 'Manage your networking identity, locations, and connection bridges'
+          : 'Complete your identity to unlock all CRM modules',
+      }
+    : rawMeta;
 
   // Enforce Mandatory Profile Completion Guard
   if (!isLoading && user && !isProfileComplete && path !== '/profile') {

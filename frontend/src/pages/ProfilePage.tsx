@@ -668,13 +668,14 @@ export const ProfilePage: React.FC = () => {
         connectionsOffered,
       });
 
+      const wasCompleteBeforeSave = isProfileComplete;
       const { isComplete } = await refreshProfile();
       setSavedSuccess(true);
       confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
 
       setTimeout(() => {
         setSavedSuccess(false);
-        if (isComplete) {
+        if (!wasCompleteBeforeSave && isComplete) {
           navigate('/dashboard');
         }
       }, 1000);
@@ -704,6 +705,8 @@ export const ProfilePage: React.FC = () => {
   const completionPercentage = calcCompletionScore();
   const completionScoreText = `${Math.round(completionPercentage / 10)}/10`;
 
+  const isCompletedUser = isProfileComplete || completionPercentage === 100;
+
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 overflow-x-hidden">
       
@@ -715,7 +718,11 @@ export const ProfilePage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-lg sm:text-2xl font-bold tracking-tight">Networking Profile</h1>
-            <p className="text-xs sm:text-sm text-blue-100 font-medium">Complete your identity to unlock all CRM modules</p>
+            <p className="text-xs sm:text-sm text-blue-100 font-medium">
+              {isCompletedUser
+                ? 'Your networking identity & preferences are active and synced'
+                : 'Complete your identity to unlock all CRM modules'}
+            </p>
           </div>
         </div>
 
@@ -740,8 +747,12 @@ export const ProfilePage: React.FC = () => {
               </>
             ) : (
               <>
-                <UserCheck className="w-4 h-4 text-blue-700" />
-                <span>Complete Profile Setup</span>
+                {isCompletedUser ? (
+                  <Save className="w-4 h-4 text-blue-700" />
+                ) : (
+                  <UserCheck className="w-4 h-4 text-blue-700" />
+                )}
+                <span>{isCompletedUser ? 'Save Profile Changes' : 'Complete Profile Setup'}</span>
               </>
             )}
           </button>
