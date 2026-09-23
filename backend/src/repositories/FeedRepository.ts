@@ -10,19 +10,52 @@ export interface PostRow {
   tags: any;
   likes_count: number;
   created_at: string;
+  matchScore?: number;
+  combinedScore?: number;
 }
 
 export class FeedRepository {
   static async list(userId: number, limit = 20): Promise<PostRow[]> {
     const rows = await query<any[]>(
-      `SELECT * FROM posts ORDER BY created_at DESC LIMIT ?`,
-      [limit]
+      `SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`
     );
 
-    return rows.map((p) => ({
-      ...p,
-      tags: typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags || [],
-    }));
+    if (rows.length === 0) return [];
+
+    const authorIds = [...new Set(rows.map((p) => p.user_id))];
+
+    // Fetch precomputed match scores for authors
+    const scores = await query<any[]>(
+      `SELECT user_b_id, score FROM user_match_scores WHERE user_a_id = ? AND user_b_id IN (${authorIds.map(() => '?').join(',')})`,
+      [userId, ...authorIds]
+    );
+
+    const scoreMap = new Map<number, number>();
+    scores.forEach((s) => scoreMap.set(Number(s.user_b_id), s.score));
+
+    const now = Date.now();
+    const HALF_LIFE_HOURS = 24;
+    const DECAY_LAMBDA = Math.LN2 / HALF_LIFE_HOURS;
+
+    const rankedPosts: PostRow[] = rows.map((p) => {
+      const matchScore = scoreMap.get(Number(p.user_id)) || 50;
+      const hoursAgo = Math.max(0, (now - new Date(p.created_at).getTime()) / (1000 * 60 * 60));
+      const timeDecayScore = 100 * Math.exp(-DECAY_LAMBDA * hoursAgo);
+
+      // Combined score: 60% Match Score + 40% Time Decay Score
+      const combinedScore = Math.round(matchScore * 0.6 + timeDecayScore * 0.4);
+
+      return {
+        ...p,
+        tags: typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags || [],
+        matchScore,
+        combinedScore,
+      };
+    });
+
+    rankedPosts.sort((a, b) => (b.combinedScore || 0) - (a.combinedScore || 0));
+
+    return rankedPosts.slice(0, limit);
   }
 
   static async create(userId: number, data: { author_name: string; author_title?: string | null; author_avatar?: string | null; content: string; tags?: string[] }): Promise<number> {
