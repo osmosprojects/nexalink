@@ -109,7 +109,9 @@ apiRouter.get('/ai/insights', AIController.getInsights);
 apiRouter.get('/ai/goals/suggestions', AIController.getGoalSuggestions);
 
 // Recommendations & Discovery
+apiRouter.get('/discover', RecommendationController.list);
 apiRouter.get('/recommendations', RecommendationController.list);
+apiRouter.post('/recommendations/skip/:skippedUserId', RecommendationController.skipProfile);
 apiRouter.post('/recommendations/:id/status', RecommendationController.updateStatus);
 apiRouter.post('/recommendations/:id/convert', RecommendationController.convertToContact);
 

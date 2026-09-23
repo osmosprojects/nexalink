@@ -286,3 +286,30 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     KEY idx_audit_user (user_id),
     CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS user_match_scores (
+    match_score_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_a_id BIGINT UNSIGNED NOT NULL,
+    user_b_id BIGINT UNSIGNED NOT NULL,
+    score FLOAT NOT NULL DEFAULT 0,
+    reasons JSON NOT NULL,
+    is_mutual TINYINT(1) NOT NULL DEFAULT 0,
+    computed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user_match_pair (user_a_id, user_b_id),
+    KEY idx_user_a_score (user_a_id, score),
+    CONSTRAINT fk_ums_user_a FOREIGN KEY (user_a_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_ums_user_b FOREIGN KEY (user_b_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS skipped_profiles (
+    skip_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    skipped_user_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user_skipped_pair (user_id, skipped_user_id),
+    KEY idx_skipped_user (user_id),
+    CONSTRAINT fk_skip_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_skip_skipped FOREIGN KEY (skipped_user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

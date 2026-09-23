@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { RecommendationRepository } from '../repositories/RecommendationRepository';
 import { ContactRepository } from '../repositories/ContactRepository';
+import { UserMatchScoreRepository } from '../repositories/UserMatchScoreRepository';
 import { MatchmakingService } from '../services/MatchmakingService';
 import { sendSuccess, sendError } from '../helpers/response';
 import { logAudit } from '../middleware/audit';
@@ -9,16 +10,40 @@ export class RecommendationController {
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.userId;
-      const { status } = req.query;
+      const { status, view } = req.query;
+
+      // If view=discover, use precomputed discovery with 1-in-5 diversity injection
+      if (view === 'discover') {
+        const matches = await MatchmakingService.getDiscoverFeed(userId);
+        return sendSuccess(res, matches);
+      }
 
       let recommendations = await RecommendationRepository.list(userId, (status as string) || 'pending');
-      
+
       if (recommendations.length === 0) {
         await MatchmakingService.processProfileMatches(userId);
         recommendations = await RecommendationRepository.list(userId, (status as string) || 'pending');
       }
 
       return sendSuccess(res, recommendations);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async skipProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.userId;
+      const skippedUserId = parseInt(String(req.params.skippedUserId), 10);
+
+      if (!skippedUserId || isNaN(skippedUserId)) {
+        return sendError(res, 'Valid skippedUserId is required', 400);
+      }
+
+      await UserMatchScoreRepository.recordSkip(userId, skippedUserId);
+      await logAudit(req, 'RECOMMENDATION_SKIPPED', 'user', skippedUserId);
+
+      return sendSuccess(res, { message: 'Profile dismissed from recommendations' });
     } catch (err) {
       next(err);
     }

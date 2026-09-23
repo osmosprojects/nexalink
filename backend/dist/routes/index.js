@@ -93,7 +93,9 @@ exports.apiRouter.post('/ai/meeting/summarize', AIController_1.AIController.summ
 exports.apiRouter.get('/ai/insights', AIController_1.AIController.getInsights);
 exports.apiRouter.get('/ai/goals/suggestions', AIController_1.AIController.getGoalSuggestions);
 // Recommendations & Discovery
+exports.apiRouter.get('/discover', RecommendationController_1.RecommendationController.list);
 exports.apiRouter.get('/recommendations', RecommendationController_1.RecommendationController.list);
+exports.apiRouter.post('/recommendations/skip/:skippedUserId', RecommendationController_1.RecommendationController.skipProfile);
 exports.apiRouter.post('/recommendations/:id/status', RecommendationController_1.RecommendationController.updateStatus);
 exports.apiRouter.post('/recommendations/:id/convert', RecommendationController_1.RecommendationController.convertToContact);
 // Networking Feed

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RecommendationController = void 0;
 const RecommendationRepository_1 = require("../repositories/RecommendationRepository");
 const ContactRepository_1 = require("../repositories/ContactRepository");
+const UserMatchScoreRepository_1 = require("../repositories/UserMatchScoreRepository");
 const MatchmakingService_1 = require("../services/MatchmakingService");
 const response_1 = require("../helpers/response");
 const audit_1 = require("../middleware/audit");
@@ -10,13 +11,33 @@ class RecommendationController {
     static async list(req, res, next) {
         try {
             const userId = req.user.userId;
-            const { status } = req.query;
+            const { status, view } = req.query;
+            // If view=discover, use precomputed discovery with 1-in-5 diversity injection
+            if (view === 'discover') {
+                const matches = await MatchmakingService_1.MatchmakingService.getDiscoverFeed(userId);
+                return (0, response_1.sendSuccess)(res, matches);
+            }
             let recommendations = await RecommendationRepository_1.RecommendationRepository.list(userId, status || 'pending');
             if (recommendations.length === 0) {
                 await MatchmakingService_1.MatchmakingService.processProfileMatches(userId);
                 recommendations = await RecommendationRepository_1.RecommendationRepository.list(userId, status || 'pending');
             }
             return (0, response_1.sendSuccess)(res, recommendations);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    static async skipProfile(req, res, next) {
+        try {
+            const userId = req.user.userId;
+            const skippedUserId = parseInt(String(req.params.skippedUserId), 10);
+            if (!skippedUserId || isNaN(skippedUserId)) {
+                return (0, response_1.sendError)(res, 'Valid skippedUserId is required', 400);
+            }
+            await UserMatchScoreRepository_1.UserMatchScoreRepository.recordSkip(userId, skippedUserId);
+            await (0, audit_1.logAudit)(req, 'RECOMMENDATION_SKIPPED', 'user', skippedUserId);
+            return (0, response_1.sendSuccess)(res, { message: 'Profile dismissed from recommendations' });
         }
         catch (err) {
             next(err);
