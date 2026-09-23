@@ -8,6 +8,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const UserRepository_1 = require("../repositories/UserRepository");
 const ProfileRepository_1 = require("../repositories/ProfileRepository");
+const MatchmakingService_1 = require("../services/MatchmakingService");
 const db_1 = require("../config/db");
 const env_1 = require("../config/env");
 const response_1 = require("../helpers/response");
@@ -46,6 +47,7 @@ class AuthController {
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
             await (0, audit_1.logAudit)(req, 'USER_REGISTERED', 'user', userId);
+            MatchmakingService_1.MatchmakingService.processProfileMatches(userId).catch((err) => console.error('Matchmaking trigger on register error:', err));
             const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(userId);
             return (0, response_1.sendSuccess)(res, {
                 user: { userId, email, displayName, avatarUrl: null },

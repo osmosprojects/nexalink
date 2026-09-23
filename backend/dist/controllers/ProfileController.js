@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProfileController = void 0;
 const ProfileRepository_1 = require("../repositories/ProfileRepository");
 const UserRepository_1 = require("../repositories/UserRepository");
+const MatchmakingService_1 = require("../services/MatchmakingService");
 const response_1 = require("../helpers/response");
 const audit_1 = require("../middleware/audit");
 class ProfileController {
@@ -67,6 +68,8 @@ class ProfileController {
             const updatedProfile = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
             const updatedUser = await UserRepository_1.UserRepository.findById(userId);
             const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(userId);
+            // Trigger Matchmaking & Event-Driven Notification Engine in background
+            MatchmakingService_1.MatchmakingService.processProfileMatches(userId).catch((err) => console.error('Matchmaking trigger error:', err));
             await (0, audit_1.logAudit)(req, 'PROFILE_UPDATED', 'profile', userId);
             return (0, response_1.sendSuccess)(res, {
                 profile: updatedProfile,

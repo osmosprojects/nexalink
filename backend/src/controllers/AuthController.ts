@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserRepository } from '../repositories/UserRepository';
 import { ProfileRepository } from '../repositories/ProfileRepository';
+import { MatchmakingService } from '../services/MatchmakingService';
 import { query } from '../config/db';
 import { config } from '../config/env';
 import { sendSuccess, sendError } from '../helpers/response';
@@ -52,6 +53,10 @@ export class AuthController {
       });
 
       await logAudit(req, 'USER_REGISTERED', 'user', userId);
+
+      MatchmakingService.processProfileMatches(userId).catch((err) =>
+        console.error('Matchmaking trigger on register error:', err)
+      );
 
       const isComplete = await ProfileRepository.isProfileComplete(userId);
       return sendSuccess(res, {

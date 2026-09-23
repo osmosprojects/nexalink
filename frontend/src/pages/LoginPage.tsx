@@ -20,7 +20,7 @@ export const LoginPage: React.FC = () => {
     try {
       const res = await login(email, password);
       if (res.isComplete) {
-        navigate('/dashboard');
+        navigate('/feed');
       } else {
         navigate('/profile');
       }
@@ -37,7 +37,7 @@ export const LoginPage: React.FC = () => {
     try {
       const res = await demoLogin();
       if (res.isComplete) {
-        navigate('/dashboard');
+        navigate('/feed');
       } else {
         navigate('/profile');
       }
@@ -87,7 +87,7 @@ export const LoginPage: React.FC = () => {
             <GoogleOAuthButton
               buttonText="Continue with Google"
               onSuccess={(isComplete) => {
-                if (isComplete) navigate('/dashboard');
+                if (isComplete) navigate('/feed');
                 else navigate('/profile');
               }}
               onError={(err) => setError(err)}

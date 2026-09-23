@@ -21,7 +21,7 @@ export const RegisterPage: React.FC = () => {
     try {
       const res = await register(email, password, displayName);
       if (res.isComplete) {
-        navigate('/dashboard');
+        navigate('/feed');
       } else {
         navigate('/profile');
       }
@@ -52,7 +52,7 @@ export const RegisterPage: React.FC = () => {
             <GoogleOAuthButton
               buttonText="Sign up with Google"
               onSuccess={(isComplete) => {
-                if (isComplete) navigate('/dashboard');
+                if (isComplete) navigate('/feed');
                 else navigate('/profile');
               }}
               onError={(err) => setError(err)}

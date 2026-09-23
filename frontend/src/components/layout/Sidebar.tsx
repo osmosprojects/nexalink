@@ -32,8 +32,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
   const navigate = useNavigate();
 
   const mainNav = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/feed', label: 'Home / Feed', icon: Rss },
     { to: '/discover', label: 'Discover', icon: Compass },
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/connections', label: 'Connections', icon: Users },
     { to: '/interactions', label: 'Interactions', icon: MessageSquareShare },
     { to: '/goals', label: 'Goals', icon: Target },
@@ -48,7 +49,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
 
   const secondaryNav = [
     { to: '/ai', label: 'AI Assistant', icon: Sparkles, badge: 'AI' },
-    { to: '/feed', label: 'Feed', icon: Rss },
     { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   ];
 
@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
       {/* Brand Header */}
       <div className="p-5 flex items-center justify-between border-b border-slate-800/80">
         <div 
-          onClick={() => navigate(isProfileComplete ? '/dashboard' : '/profile')}
+          onClick={() => navigate(isProfileComplete ? '/feed' : '/profile')}
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-brand-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">

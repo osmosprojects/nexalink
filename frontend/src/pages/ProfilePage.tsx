@@ -704,7 +704,7 @@ export const ProfilePage: React.FC = () => {
       setTimeout(() => {
         setSavedSuccess(false);
         if (!wasCompleteBeforeSave && isComplete) {
-          navigate('/dashboard');
+          navigate('/feed');
         }
       }, 1000);
     } catch (err: any) {

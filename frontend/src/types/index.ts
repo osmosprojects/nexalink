@@ -201,6 +201,7 @@ export interface Recommendation {
   recommended_company: string;
   avatar_url: string | null;
   industry: string | null;
+  location?: string | null;
   skills: string[];
   reason: string;
   score: number;

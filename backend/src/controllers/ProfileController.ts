@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ProfileRepository } from '../repositories/ProfileRepository';
 import { UserRepository } from '../repositories/UserRepository';
+import { MatchmakingService } from '../services/MatchmakingService';
 import { sendSuccess, sendError } from '../helpers/response';
 import { logAudit } from '../middleware/audit';
 
@@ -70,6 +71,11 @@ export class ProfileController {
       const updatedProfile = await ProfileRepository.getProfileByUserId(userId);
       const updatedUser = await UserRepository.findById(userId);
       const isComplete = await ProfileRepository.isProfileComplete(userId);
+
+      // Trigger Matchmaking & Event-Driven Notification Engine in background
+      MatchmakingService.processProfileMatches(userId).catch((err) =>
+        console.error('Matchmaking trigger error:', err)
+      );
 
       await logAudit(req, 'PROFILE_UPDATED', 'profile', userId);
 

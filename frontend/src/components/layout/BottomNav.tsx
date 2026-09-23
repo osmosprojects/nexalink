@@ -33,13 +33,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
   const navigate = useNavigate();
 
   const primaryTabs = [
-    { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
+    { to: '/feed', label: 'Home', icon: Rss },
     { to: '/discover', label: 'Discover', icon: Compass },
     { to: '/connections', label: 'People', icon: Users },
     { to: '/profile', label: 'Profile', icon: UserCheck, highlight: !isProfileComplete },
   ];
 
   const moreItems = [
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/tasks', label: 'Tasks', icon: CheckSquare },
     { to: '/interactions', label: 'Interactions', icon: MessageSquareShare },
     { to: '/goals', label: 'Goals', icon: Target },
@@ -47,7 +48,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
     { to: '/calendar', label: 'Calendar', icon: Calendar },
     { to: '/notes', label: 'Notes', icon: FileText },
     { to: '/ai', label: 'AI Assistant', icon: Sparkles, badge: 'AI' },
-    { to: '/feed', label: 'Feed', icon: Rss },
     { to: '/analytics', label: 'Analytics', icon: BarChart3 },
     { to: '/profile', label: 'My Profile', icon: UserCheck },
     { to: '/settings', label: 'Settings', icon: Settings },
