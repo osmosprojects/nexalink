@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InteractionRepository = void 0;
 const db_1 = require("../config/db");
+const TagRepository_1 = require("./TagRepository");
 class InteractionRepository {
     static async list(userId, filters = {}) {
         const page = Math.max(1, Number(filters.page) || 1);
@@ -59,7 +60,7 @@ class InteractionRepository {
         return rows[0] || null;
     }
     static async create(userId, data) {
-        return (0, db_1.withTransaction)(async (conn) => {
+        const interactionId = await (0, db_1.withTransaction)(async (conn) => {
             const interactionDate = data.interaction_date || new Date().toISOString().slice(0, 19).replace('T', ' ');
             const followUpReq = data.follow_up_required ? 1 : 0;
             // 1. Insert Interaction
@@ -109,6 +110,9 @@ class InteractionRepository {
             }
             return interactionId;
         });
+        // Automatically synchronize Hot/Warm/Cold relationship temperature tag
+        await TagRepository_1.TagRepository.syncContactWarmth(userId, data.contact_id);
+        return interactionId;
     }
     static async update(userId, interactionId, data) {
         await (0, db_1.query)(`UPDATE interactions SET

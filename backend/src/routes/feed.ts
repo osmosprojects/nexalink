@@ -1,18 +1,19 @@
-const express = require('express');
-const router = express.Router();
-const { query } = require('../config/db');
+import { Router, Request, Response, NextFunction } from 'express';
+import { query } from '../config/db';
+
+const router = Router();
 
 /**
  * GET /api/feed
  * Returns network feed posts ranked by combined match score (60%) + recency time decay (40%).
  */
-router.get('/', async (req, res, next) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req.user.userId;
-    const limit = parseInt(req.query.limit || '20', 10);
+    const userId = (req as any).user.userId;
+    const limit = parseInt(String(req.query.limit || '20'), 10);
 
     // 1. Fetch recent network posts
-    const posts = await query(
+    const posts = await query<any[]>(
       `SELECT post_id, user_id, author_name, author_title, author_avatar, content, tags, likes_count, created_at
        FROM posts
        ORDER BY created_at DESC
@@ -26,12 +27,12 @@ router.get('/', async (req, res, next) => {
     const authorIds = [...new Set(posts.map((p) => p.user_id))];
 
     // 2. Fetch precomputed match scores for post authors
-    const scores = await query(
+    const scores = await query<any[]>(
       `SELECT userB_id, score FROM match_scores WHERE userA_id = ? AND userB_id IN (${authorIds.map(() => '?').join(',')})`,
       [userId, ...authorIds]
     );
 
-    const scoreMap = new Map();
+    const scoreMap = new Map<number, number>();
     scores.forEach((s) => scoreMap.set(Number(s.userB_id), s.score));
 
     const now = Date.now();
@@ -67,4 +68,4 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,21 +1,22 @@
-const express = require('express');
-const router = express.Router();
-const { query } = require('../config/db');
-const { runMatchmakingPrecomputation } = require('../jobs/matchmakingCron');
+import { Router, Request, Response, NextFunction } from 'express';
+import { query } from '../config/db';
+import { runMatchmakingPrecomputation } from '../jobs/matchmakingCron';
+
+const router = Router();
 
 /**
  * GET /api/discover
  * Fetches top N precomputed matches for logged-in user.
  * Excludes skipped profiles and includes 1-in-5 Diversity Injection.
  */
-router.get('/', async (req, res, next) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req.user.userId;
-    const limit = parseInt(req.query.limit || '10', 10);
-    const offset = parseInt(req.query.offset || '0', 10);
+    const userId = (req as any).user.userId;
+    const limit = parseInt(String(req.query.limit || '10'), 10);
+    const offset = parseInt(String(req.query.offset || '0'), 10);
 
     // 1. Fetch skipped profile IDs
-    const skippedRows = await query(
+    const skippedRows = await query<any[]>(
       `SELECT skipped_user_id FROM skipped_profiles WHERE user_id = ?`,
       [userId]
     );
@@ -23,7 +24,7 @@ router.get('/', async (req, res, next) => {
     const excludeIds = [userId, ...skippedUserIds];
 
     // 2. Query top matches from match_scores
-    let matches = await query(
+    let matches = await query<any[]>(
       `SELECT 
          ms.userB_id AS user_id,
          ms.score,
@@ -48,7 +49,7 @@ router.get('/', async (req, res, next) => {
     // Dynamic fallback if no precomputed scores exist yet
     if (matches.length === 0) {
       await runMatchmakingPrecomputation();
-      matches = await query(
+      matches = await query<any[]>(
         `SELECT 
            ms.userB_id AS user_id,
            ms.score,
@@ -84,7 +85,7 @@ router.get('/', async (req, res, next) => {
 
     for (let i = 4; i < finalFeed.length; i += 5) {
       const diversityExclude = [...new Set([...excludeIds, ...topIds])];
-      const randomLower = await query(
+      const randomLower = await query<any[]>(
         `SELECT 
            ms.userB_id AS user_id,
            ms.score,
@@ -129,10 +130,10 @@ router.get('/', async (req, res, next) => {
  * POST /api/discover/skip/:userId
  * Dismisses candidate profile for fatigue handling.
  */
-router.post('/skip/:userId', async (req, res, next) => {
+router.post('/skip/:userId', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req.user.userId;
-    const skippedUserId = parseInt(req.params.userId, 10);
+    const userId = (req as any).user.userId;
+    const skippedUserId = parseInt(String(req.params.userId), 10);
 
     if (!skippedUserId || isNaN(skippedUserId)) {
       return res.status(400).json({ success: false, message: 'Valid target userId required' });
@@ -154,4 +155,4 @@ router.post('/skip/:userId', async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;

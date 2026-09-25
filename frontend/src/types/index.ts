@@ -209,6 +209,22 @@ export interface Recommendation {
   created_at: string;
 }
 
+export interface AutoConnectRecommendation {
+  id: string;
+  userId: number;
+  userName: string;
+  userRole: string;
+  userCompany: string;
+  userAvatar?: string | null;
+  matchScore: number;
+  isReverseMatch: boolean;
+  targetQuery: string;
+  bridgePerson: ConnectablePerson;
+  reason: string;
+  introEmailDraft: string;
+}
+
+
 export interface Post {
   post_id: number;
   user_id: number;

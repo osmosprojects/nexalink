@@ -1,5 +1,5 @@
 /**
- * matchScoring.js - Pure Deterministic Matchmaking & Scoring Module
+ * matchScoring.ts - Pure Deterministic Matchmaking & Scoring Module
  * 
  * Column Mapping Notes:
  * - profile.skills (JSON) -> Profile Metadata (hobbies, interests, goals, networkingGroup, currentCity, targetCities)
@@ -13,7 +13,7 @@ const GOAL_KEYWORDS = ['invest', 'cofound', 'hire', 'fund', 'mentor', 'app', 'so
  * Calculates normalized array set intersection score.
  * Case-insensitive & trimmed string comparison.
  */
-function arrayIntersectionScore(a = [], b = [], maxPoints = 10) {
+export function arrayIntersectionScore(a: any[] = [], b: any[] = [], maxPoints = 10): { score: number; overlaps: string[] } {
   if (!Array.isArray(a) || !Array.isArray(b) || a.length === 0 || b.length === 0) {
     return { score: 0, overlaps: [] };
   }
@@ -21,7 +21,7 @@ function arrayIntersectionScore(a = [], b = [], maxPoints = 10) {
   const normA = a.map((s) => String(s).trim().toLowerCase()).filter(Boolean);
   const normB = b.map((s) => String(s).trim().toLowerCase()).filter(Boolean);
 
-  const overlaps = [];
+  const overlaps: string[] = [];
   for (const itemA of normA) {
     for (const itemB of normB) {
       if (itemA === itemB || itemA.includes(itemB) || itemB.includes(itemA)) {
@@ -41,11 +41,11 @@ function arrayIntersectionScore(a = [], b = [], maxPoints = 10) {
 /**
  * Evaluates Geographic Proximity Score (15% Weight / 15 Pts Max)
  */
-function matchGeography(metaA = {}, metaB = {}) {
+export function matchGeography(metaA: any = {}, metaB: any = {}): { score: number; reason: string | null } {
   const cityA = String(metaA.currentCity || '').trim().toLowerCase();
   const cityB = String(metaB.currentCity || '').trim().toLowerCase();
-  const targetA = (Array.isArray(metaA.targetCities) ? metaA.targetCities : []).map((c) => String(c).trim().toLowerCase());
-  const targetB = (Array.isArray(metaB.targetCities) ? metaB.targetCities : []).map((c) => String(c).trim().toLowerCase());
+  const targetA = (Array.isArray(metaA.targetCities) ? metaA.targetCities : []).map((c: any) => String(c).trim().toLowerCase());
+  const targetB = (Array.isArray(metaB.targetCities) ? metaB.targetCities : []).map((c: any) => String(c).trim().toLowerCase());
 
   // 1. Exact current city match = Full points (15 pts)
   if (cityA && cityB && cityA === cityB) {
@@ -61,7 +61,7 @@ function matchGeography(metaA = {}, metaB = {}) {
   }
 
   // 3. Target cities overlap = Partial points (8 pts)
-  const commonTargets = targetA.filter((tc) => targetB.includes(tc));
+  const commonTargets = targetA.filter((tc: any) => targetB.includes(tc));
   if (commonTargets.length > 0) {
     return { score: 8, reason: `Common expansion focus in target cities` };
   }
@@ -72,7 +72,7 @@ function matchGeography(metaA = {}, metaB = {}) {
 /**
  * Free-text goal alignment fallback matching (30% Weight / 30 Pts Max)
  */
-function matchGoalsFreeText(goalsA = [], goalsB = []) {
+export function matchGoalsFreeText(goalsA: any[] = [], goalsB: any[] = []): { score: number; overlaps: string[] } {
   if (!goalsA.length || !goalsB.length) return { score: 0, overlaps: [] };
 
   const textA = goalsA.join(' ').toLowerCase();
@@ -91,14 +91,14 @@ function matchGoalsFreeText(goalsA = [], goalsB = []) {
 /**
  * Evaluates Bridges relevance: B's offered connections against A's goals (10% Weight / 10 Pts Max)
  */
-function matchBridgeRelevance(goalsA = [], bridgesB = []) {
+export function matchBridgeRelevance(goalsA: any[] = [], bridgesB: any[] = []): { score: number; reasons: string[] } {
   if (!goalsA.length || !Array.isArray(bridgesB) || bridgesB.length === 0) {
     return { score: 0, reasons: [] };
   }
 
   const goalsText = goalsA.join(' ').toLowerCase();
   let points = 0;
-  const reasons = [];
+  const reasons: string[] = [];
 
   for (const bridge of bridgesB) {
     const domain = String(bridge.businessDomain || bridge.domain || '').toLowerCase();
@@ -119,7 +119,7 @@ function matchBridgeRelevance(goalsA = [], bridgesB = []) {
 /**
  * Profile Completeness & Health Score (5% Weight / 5 Pts Max)
  */
-function profileHealthScore(user = {}) {
+export function profileHealthScore(user: any = {}): number {
   let score = 5;
 
   if (!user.bio || String(user.bio).trim().length < 15) score -= 1;
@@ -134,11 +134,11 @@ function profileHealthScore(user = {}) {
 /**
  * Pure Deterministic Match Scoring Function (0 - 100 Pts)
  * 
- * @param {Object} userA - Logged-in / Source User Profile Object
- * @param {Object} userB - Candidate User Profile Object
- * @returns {Object} { userId, score, reasons }
+ * @param userA - Logged-in / Source User Profile Object
+ * @param userB - Candidate User Profile Object
+ * @returns { userId, score, reasons }
  */
-function calculateMatchScore(userA = {}, userB = {}) {
+export function calculateMatchScore(userA: any = {}, userB: any = {}): { userId: number; score: number; reasons: string[] } {
   const metaA = typeof userA.skills === 'string' ? JSON.parse(userA.skills) : userA.skills || {};
   const metaB = typeof userB.skills === 'string' ? JSON.parse(userB.skills) : userB.skills || {};
 
@@ -151,7 +151,7 @@ function calculateMatchScore(userA = {}, userB = {}) {
   const goalsA = Array.isArray(metaA.goals) ? metaA.goals : [];
   const goalsB = Array.isArray(metaB.goals) ? metaB.goals : [];
 
-  const reasons = [];
+  const reasons: string[] = [];
   let totalScore = 0;
 
   // 1. Intent / Goal Alignment (30% / 30 Pts Max)
@@ -215,7 +215,7 @@ function calculateMatchScore(userA = {}, userB = {}) {
   };
 }
 
-module.exports = {
+export default {
   calculateMatchScore,
   arrayIntersectionScore,
   matchGeography,

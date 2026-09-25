@@ -9,9 +9,7 @@ import { testConnection } from './config/db';
 import { runMigrations } from './database/migrate';
 import { apiRouter } from './routes';
 import { errorHandler } from './middleware/errorHandler';
-
-// Import Matchmaking Cron
-const { initMatchmakingCron } = require('./jobs/matchmakingCron');
+import { initMatchmakingCron } from './jobs/matchmakingCron';
 
 const app = express();
 

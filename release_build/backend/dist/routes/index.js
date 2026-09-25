@@ -18,6 +18,7 @@ const NotificationController_1 = require("../controllers/NotificationController"
 const SearchController_1 = require("../controllers/SearchController");
 const DashboardController_1 = require("../controllers/DashboardController");
 const auth_1 = require("../middleware/auth");
+const requireProfile_1 = require("../middleware/requireProfile");
 exports.apiRouter = (0, express_1.Router)();
 // Health Check
 exports.apiRouter.get('/health', (req, res) => {
@@ -26,16 +27,22 @@ exports.apiRouter.get('/health', (req, res) => {
 // Auth Routes (Public)
 exports.apiRouter.post('/auth/register', AuthController_1.AuthController.register);
 exports.apiRouter.post('/auth/login', AuthController_1.AuthController.login);
+exports.apiRouter.post('/auth/google', AuthController_1.AuthController.googleAuth);
 exports.apiRouter.post('/auth/demo-login', AuthController_1.AuthController.demoLogin);
 exports.apiRouter.post('/auth/logout', AuthController_1.AuthController.logout);
+const UploadController_1 = require("../controllers/UploadController");
 // Protected Routes (Require Auth Middleware)
 exports.apiRouter.use(auth_1.authMiddleware);
-// Auth Me
+// Auth Me (Allowed during onboarding)
 exports.apiRouter.get('/auth/me', AuthController_1.AuthController.me);
-// Profile & Persona
+// File Uploads
+exports.apiRouter.post('/upload/avatar', UploadController_1.UploadController.uploadAvatar);
+// Profile & Persona (Allowed during onboarding to complete profile)
 exports.apiRouter.get('/profile', ProfileController_1.ProfileController.getProfile);
 exports.apiRouter.put('/profile', ProfileController_1.ProfileController.updateProfile);
 exports.apiRouter.put('/profile/persona', ProfileController_1.ProfileController.updatePersona);
+// GATED MODULES: All endpoints below strictly require a complete Profile & Persona
+exports.apiRouter.use(requireProfile_1.requireProfileCompleteMiddleware);
 // Dashboard Aggregated
 exports.apiRouter.get('/dashboard', DashboardController_1.DashboardController.getDashboard);
 // Global Search
@@ -86,7 +93,9 @@ exports.apiRouter.post('/ai/meeting/summarize', AIController_1.AIController.summ
 exports.apiRouter.get('/ai/insights', AIController_1.AIController.getInsights);
 exports.apiRouter.get('/ai/goals/suggestions', AIController_1.AIController.getGoalSuggestions);
 // Recommendations & Discovery
+exports.apiRouter.get('/discover', RecommendationController_1.RecommendationController.list);
 exports.apiRouter.get('/recommendations', RecommendationController_1.RecommendationController.list);
+exports.apiRouter.post('/recommendations/skip/:skippedUserId', RecommendationController_1.RecommendationController.skipProfile);
 exports.apiRouter.post('/recommendations/:id/status', RecommendationController_1.RecommendationController.updateStatus);
 exports.apiRouter.post('/recommendations/:id/convert', RecommendationController_1.RecommendationController.convertToContact);
 // Networking Feed

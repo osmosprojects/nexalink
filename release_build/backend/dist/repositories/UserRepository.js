@@ -21,5 +21,8 @@ class UserRepository {
     static async updateAvatar(userId, avatarUrl) {
         await (0, db_1.query)(`UPDATE users SET avatar_url = ? WHERE user_id = ?`, [avatarUrl, userId]);
     }
+    static async updateName(userId, displayName) {
+        await (0, db_1.query)(`UPDATE users SET display_name = ? WHERE user_id = ?`, [displayName.trim(), userId]);
+    }
 }
 exports.UserRepository = UserRepository;

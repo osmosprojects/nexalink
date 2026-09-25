@@ -31,7 +31,7 @@ class TaskRepository {
        LEFT JOIN contacts c ON t.contact_id = c.contact_id
        LEFT JOIN goals g ON t.goal_id = g.goal_id
        WHERE ${whereClauses.join(' AND ')}
-       ORDER BY t.sort_order ASC, t.due_date ASC, t.created_at DESC`, params);
+       ORDER BY t.due_date ASC, t.created_at DESC`, params);
     }
     static async getById(userId, taskId) {
         const rows = await (0, db_1.query)(`SELECT 

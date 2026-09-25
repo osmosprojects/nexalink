@@ -13,7 +13,9 @@ class ContactController {
     static async list(req, res, next) {
         try {
             const userId = req.user.userId;
-            const { search, relationship_type, tag, company, follow_up_due, sort_by, sort_order, page, limit } = req.query;
+            // Auto-synchronize Hot/Warm/Cold warmth tags
+            await TagRepository_1.TagRepository.syncContactWarmth(userId);
+            const { search, relationship_type, tag, company, follow_up_due, sort_by, sort_order, page, limit, } = req.query;
             const result = await ContactRepository_1.ContactRepository.list(userId, {
                 search: search,
                 relationship_type: relationship_type,
@@ -83,6 +85,7 @@ class ContactController {
                 notes,
                 tagNames,
             });
+            await TagRepository_1.TagRepository.syncContactWarmth(userId, contactId);
             const contact = await ContactRepository_1.ContactRepository.getById(userId, contactId);
             await (0, audit_1.logAudit)(req, 'CONTACT_CREATED', 'contact', contactId);
             return (0, response_1.sendSuccess)(res, contact, 201);

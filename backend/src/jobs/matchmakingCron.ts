@@ -1,17 +1,23 @@
-const cron = require('node-cron');
-const { query } = require('../config/db');
-const { calculateMatchScore } = require('../services/matchScoring');
+import { query } from '../config/db';
+import { calculateMatchScore } from '../services/matchScoring';
+
+let cron: any = null;
+try {
+  cron = require('node-cron');
+} catch (e) {
+  console.warn('⚠️ node-cron optional module warning:', e);
+}
 
 /**
  * Runs pairwise precomputation for all active profiles.
  * Includes async chunking to prevent blocking the event loop on large datasets.
  */
-async function runMatchmakingPrecomputation() {
+export async function runMatchmakingPrecomputation(): Promise<void> {
   console.log('⚡ Starting background matchmaking precomputation cron job...');
 
   try {
     // 1. Fetch all active user profiles
-    const profiles = await query(`
+    const profiles = await query<any[]>(`
       SELECT u.user_id, u.display_name, u.avatar_url,
              p.bio, p.headline, p.company, p.job_title, p.skills, p.interests, p.networking_goals
       FROM users u
@@ -25,7 +31,7 @@ async function runMatchmakingPrecomputation() {
       return;
     }
 
-    const scoresMap = new Map();
+    const scoresMap = new Map<string, { userA_id: number; userB_id: number; score: number; reasons: string[] }>();
 
     // 2. Pairwise scoring with non-blocking async chunking
     for (let i = 0; i < totalUsers; i++) {
@@ -71,7 +77,7 @@ async function runMatchmakingPrecomputation() {
 
     for (let i = 0; i < allRecords.length; i += BATCH_SIZE) {
       const batch = allRecords.slice(i, i + BATCH_SIZE);
-      
+
       for (const rec of batch) {
         await query(
           `INSERT INTO match_scores (userA_id, userB_id, score, reasons, computed_at)
@@ -92,17 +98,24 @@ async function runMatchmakingPrecomputation() {
 }
 
 /**
- * Schedule cron job to run every 4 hours
- * ('0 */4 * * *')
+ * Schedule cron job to run every 4 hours (0 every 4 hours)
  */
-function initMatchmakingCron() {
+export function initMatchmakingCron(): void {
   console.log('⏰ Initializing Matchmaking Cron Scheduler (Every 4 Hours)');
-  cron.schedule('0 */4 * * *', () => {
-    runMatchmakingPrecomputation();
-  });
+  try {
+    if (cron && typeof cron.schedule === 'function') {
+      cron.schedule('0 */4 * * *', () => {
+        runMatchmakingPrecomputation();
+      });
+    } else {
+      console.warn('⚠️ node-cron not available; skipping cron scheduler initialization.');
+    }
+  } catch (err) {
+    console.warn('⚠️ Matchmaking cron scheduling notice:', err);
+  }
 }
 
-module.exports = {
+export default {
   runMatchmakingPrecomputation,
   initMatchmakingCron,
 };

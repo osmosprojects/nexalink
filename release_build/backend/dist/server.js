@@ -11,8 +11,10 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const env_1 = require("./config/env");
 const db_1 = require("./config/db");
+const migrate_1 = require("./database/migrate");
 const routes_1 = require("./routes");
 const errorHandler_1 = require("./middleware/errorHandler");
+const matchmakingCron_1 = require("./jobs/matchmakingCron");
 const app = (0, express_1.default)();
 // Security and utility middleware
 app.use((0, cors_1.default)({
@@ -28,6 +30,33 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
+// Serve uploads directory from all possible build/runtime candidate paths
+const possibleUploadDirs = [
+    path_1.default.join(process.cwd(), 'uploads'),
+    path_1.default.join(process.cwd(), 'public/uploads'),
+    path_1.default.join(__dirname, '../uploads'),
+    path_1.default.join(__dirname, '../../uploads'),
+    path_1.default.join(__dirname, '../public/uploads'),
+    path_1.default.join(__dirname, '../../public/uploads'),
+];
+for (const dir of possibleUploadDirs) {
+    app.use('/uploads', express_1.default.static(dir));
+}
+// Cache Control Middleware for API routes to prevent stale API responses
+app.use('/api', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    next();
+});
+// App version check endpoint
+app.get('/api/version', (_req, res) => {
+    res.json({
+        success: true,
+        data: {
+            version: '1.2.0',
+            timestamp: Date.now(),
+        },
+    });
+});
 // Rate Limiter for API
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
@@ -47,18 +76,34 @@ app.use('/api', limiter);
 app.use('/api', routes_1.apiRouter);
 // Serve static frontend assets in production if available
 const possibleStaticDirs = [
-    path_1.default.join(__dirname, '../public'),
     path_1.default.join(__dirname, '../../frontend/dist'),
+    path_1.default.join(__dirname, '../public'),
     path_1.default.join(__dirname, 'public'),
 ];
 let staticServed = false;
 for (const dir of possibleStaticDirs) {
     if (fs_1.default.existsSync(dir) && fs_1.default.existsSync(path_1.default.join(dir, 'index.html'))) {
-        app.use(express_1.default.static(dir));
+        app.use(express_1.default.static(dir, {
+            etag: true,
+            lastModified: true,
+            setHeaders: (res, filePath) => {
+                if (filePath.endsWith('.html')) {
+                    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                    res.setHeader('Pragma', 'no-cache');
+                    res.setHeader('Expires', '0');
+                }
+                else if (filePath.includes('/assets/')) {
+                    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+                }
+            },
+        }));
         app.get('*', (req, res, next) => {
             if (req.path.startsWith('/api')) {
                 return next();
             }
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
             res.sendFile(path_1.default.join(dir, 'index.html'));
         });
         staticServed = true;
@@ -70,7 +115,23 @@ app.use(errorHandler_1.errorHandler);
 // Start Server
 async function startServer() {
     const dbConnected = await (0, db_1.testConnection)();
-    if (!dbConnected) {
+    if (dbConnected) {
+        try {
+            await (0, migrate_1.runMigrations)();
+        }
+        catch (migErr) {
+            console.warn('⚠️ Auto migration notice:', migErr);
+        }
+        try {
+            if (typeof matchmakingCron_1.initMatchmakingCron === 'function') {
+                (0, matchmakingCron_1.initMatchmakingCron)();
+            }
+        }
+        catch (cronErr) {
+            console.warn('⚠️ Matchmaking cron notice:', cronErr);
+        }
+    }
+    else {
         console.error('⚠️ Could not connect to MySQL on configured port. Check database credentials in .env.');
     }
     app.listen(env_1.config.port, () => {

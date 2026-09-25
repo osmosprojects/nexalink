@@ -14,8 +14,7 @@ const db_1 = require("./config/db");
 const migrate_1 = require("./database/migrate");
 const routes_1 = require("./routes");
 const errorHandler_1 = require("./middleware/errorHandler");
-// Import Matchmaking Cron
-const { initMatchmakingCron } = require('./jobs/matchmakingCron');
+const matchmakingCron_1 = require("./jobs/matchmakingCron");
 const app = (0, express_1.default)();
 // Security and utility middleware
 app.use((0, cors_1.default)({
@@ -124,8 +123,8 @@ async function startServer() {
             console.warn('⚠️ Auto migration notice:', migErr);
         }
         try {
-            if (typeof initMatchmakingCron === 'function') {
-                initMatchmakingCron();
+            if (typeof matchmakingCron_1.initMatchmakingCron === 'function') {
+                (0, matchmakingCron_1.initMatchmakingCron)();
             }
         }
         catch (cronErr) {

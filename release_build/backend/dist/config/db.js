@@ -34,6 +34,14 @@ async function testConnection() {
     try {
         const connection = await exports.pool.getConnection();
         await connection.ping();
+        // Ensure avatar_url column can hold Base64 image data without truncation
+        try {
+            await connection.query(`ALTER TABLE users MODIFY COLUMN avatar_url LONGTEXT NULL`);
+            await connection.query(`ALTER TABLE user_profiles MODIFY COLUMN avatar_url LONGTEXT NULL`);
+        }
+        catch {
+            // Ignore if table/column does not exist yet or already altered
+        }
         connection.release();
         console.log('✅ Connected to MySQL Database:', env_1.config.db.database);
         return true;

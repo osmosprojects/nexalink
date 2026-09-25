@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
@@ -13,21 +13,102 @@ import {
   ArrowRight,
   Plus,
   MessageSquareShare,
-  Coffee,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Mail,
+  Copy,
+  Check,
+  Zap,
+  ArrowUpRight,
+  ArrowDownRight,
+  X,
+  Send
 } from 'lucide-react';
 import { api } from '../lib/api';
-import { DashboardData } from '../types';
+import { DashboardData, AutoConnectRecommendation } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { formatDate, getRelationshipTypeBadge } from '../lib/utils';
+import { formatDate } from '../lib/utils';
+import { generateAutoConnectRecommendations } from '../lib/matchmakingEngine';
 import confetti from 'canvas-confetti';
 
+const SAMPLE_NETWORK_MEMBERS = [
+  {
+    userId: 101,
+    displayName: 'Sanjeev Sarma',
+    jobTitle: 'Strategic Director & Tech Advisor',
+    company: 'NexaLink Enterprise',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    targetBusinesses: ['SaaS', 'FinTech', 'AI Software'],
+    connectionsOffered: [
+      {
+        id: 'b1',
+        businessDomain: 'Enterprise SaaS',
+        personName: 'Rohan Mehta',
+        orgName: 'SaaSify Global',
+        role: 'VP Engineering',
+        city: 'Mumbai',
+        relationship: 'Former Colleague',
+      },
+      {
+        id: 'b2',
+        businessDomain: 'Healthcare',
+        personName: 'Dr. Ananya Roy',
+        orgName: 'Apollo Digital',
+        role: 'Chief Medical Officer',
+        city: 'Bengaluru',
+        relationship: 'Advisor',
+      },
+    ],
+  },
+  {
+    userId: 102,
+    displayName: 'Geeta Rathod',
+    jobTitle: 'VP of Talent & Culture',
+    company: 'Innovate HR',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    targetBusinesses: ['HealthTech', 'Human Resources'],
+    connectionsOffered: [
+      {
+        id: 'b3',
+        businessDomain: 'FinTech',
+        personName: 'Vikram Shah',
+        orgName: 'PayGlobal',
+        role: 'Head of Product',
+        city: 'Delhi',
+        relationship: 'Alumni',
+      },
+    ],
+  },
+  {
+    userId: 103,
+    displayName: 'Devyani',
+    jobTitle: 'Head of Product Design',
+    company: 'Creative Labs',
+    avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    targetBusinesses: ['Product Design / UX', 'FinTech'],
+    connectionsOffered: [
+      {
+        id: 'b4',
+        businessDomain: 'AI Software',
+        personName: 'Sameer Verma',
+        orgName: 'NeuroTech AI',
+        role: 'Founder & CEO',
+        city: 'Pune',
+        relationship: 'Co-founder',
+      },
+    ],
+  },
+];
+
 export const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { openQuickAdd } = useOutletContext<{ openQuickAdd: () => void }>() || {};
+
+  const [activeIntroModal, setActiveIntroModal] = useState<AutoConnectRecommendation | null>(null);
+  const [editedEmailDraft, setEditedEmailDraft] = useState<string>('');
+  const [copiedSuccess, setCopiedSuccess] = useState<boolean>(false);
 
   const { data, isLoading, error } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
@@ -42,6 +123,57 @@ export const DashboardPage: React.FC = () => {
       confetti({ particleCount: 30, spread: 50, origin: { y: 0.8 } });
     },
   });
+
+  // Calculate AutoConnect Recommendations using Bidirectional Matchmaking Engine
+  const autoConnectRecs = useMemo(() => {
+    const userProfileData = {
+      userId: user?.userId || 1,
+      displayName: user?.displayName || 'User',
+      avatarUrl: user?.avatarUrl,
+      jobTitle: profile?.job_title || profile?.headline || 'Builder',
+      company: profile?.company || 'Innovator',
+      targetBusinesses: profile?.targetBusinesses && profile.targetBusinesses.length > 0
+        ? profile.targetBusinesses
+        : ['SaaS', 'FinTech', 'AI Software'],
+      connectionsOffered: profile?.connectionsOffered && profile.connectionsOffered.length > 0
+        ? profile.connectionsOffered
+        : [
+            {
+              id: 'my-b1',
+              businessDomain: 'HealthTech',
+              personName: 'Dr. Dave Sharma',
+              orgName: 'HealthTech Labs',
+              role: 'Chief Technology Officer',
+              city: 'Mumbai',
+            },
+          ],
+    };
+
+    const recs = generateAutoConnectRecommendations(userProfileData, SAMPLE_NETWORK_MEMBERS);
+    return recs;
+  }, [user, profile]);
+
+  const handleOpenIntroModal = (rec: AutoConnectRecommendation) => {
+    setActiveIntroModal(rec);
+    setEditedEmailDraft(rec.introEmailDraft);
+    setCopiedSuccess(false);
+  };
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText(editedEmailDraft);
+    setCopiedSuccess(true);
+    confetti({ particleCount: 25, spread: 40, origin: { y: 0.7 } });
+    setTimeout(() => setCopiedSuccess(false), 3000);
+  };
+
+  const handleOpenMailClient = () => {
+    if (!activeIntroModal) return;
+    const lines = editedEmailDraft.split('\n\n');
+    const subjectLine = lines[0].startsWith('Subject: ') ? lines[0].replace('Subject: ', '') : `Intro Request: ${activeIntroModal.userName}`;
+    const bodyText = lines.slice(1).join('\n\n');
+    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(bodyText)}`;
+    window.open(mailtoUrl, '_blank');
+  };
 
   if (isLoading) {
     return (
@@ -70,7 +202,7 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  const { stats, tasks, upcoming_meetings, follow_ups, recommendations, ai_insights, goals, recent_interactions } = data;
+  const { stats, tasks, upcoming_meetings, recommendations, ai_insights, recent_interactions } = data;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -79,7 +211,7 @@ export const DashboardPage: React.FC = () => {
         <div className="relative z-10 space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[11px] font-bold">
             <Sparkles className="w-3 h-3 text-brand-400" />
-            <span>AI Relationship Engine</span>
+            <span>AI Matchmaking Engine</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black tracking-tight">
             Good morning, {user?.displayName?.split(' ')[0] || 'Builder'} 👋
@@ -107,14 +239,13 @@ export const DashboardPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Decorative background ambient circles */}
+        {/* Ambient background glow */}
         <div className="absolute right-0 top-0 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-40 bottom-0 w-60 h-60 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
       {/* 4 KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
-        {/* Card 1: Connections */}
         <div 
           onClick={() => navigate('/connections')}
           className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-soft hover:border-brand-300 transition-all cursor-pointer group"
@@ -134,7 +265,6 @@ export const DashboardPage: React.FC = () => {
           <p className="text-[11px] text-slate-400 mt-1 font-medium">In your network</p>
         </div>
 
-        {/* Card 2: Active Relationships */}
         <div 
           onClick={() => navigate('/connections')}
           className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-soft hover:border-purple-300 transition-all cursor-pointer group"
@@ -152,7 +282,6 @@ export const DashboardPage: React.FC = () => {
           <p className="text-[11px] text-slate-400 mt-1 font-medium">Recent touchpoints</p>
         </div>
 
-        {/* Card 3: Follow-ups Due */}
         <div 
           onClick={() => navigate('/tasks')}
           className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-soft hover:border-amber-300 transition-all cursor-pointer group"
@@ -174,7 +303,6 @@ export const DashboardPage: React.FC = () => {
           <p className="text-[11px] text-slate-400 mt-1 font-medium">Timely responses</p>
         </div>
 
-        {/* Card 4: Goals Complete */}
         <div 
           onClick={() => navigate('/goals')}
           className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-soft hover:border-emerald-300 transition-all cursor-pointer group"
@@ -198,7 +326,7 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* AI Insight Card (Guide Section 9) */}
+      {/* AI Insight Card */}
       {ai_insights.length > 0 && (
         <div className="p-5 sm:p-6 bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-900 rounded-3xl text-white shadow-xl shadow-purple-900/10 border border-purple-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -227,9 +355,121 @@ export const DashboardPage: React.FC = () => {
         </div>
       )}
 
+      {/* ========================================== */}
+      {/* BIDIRECTIONAL AUTOCONNECT MATCHMAKING WIDGET */}
+      {/* ========================================== */}
+      <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200/90 shadow-card space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-purple-600 fill-purple-600" />
+              </div>
+              <h3 className="text-base font-extrabold text-slate-900">Bidirectional AutoConnect Recommendations</h3>
+            </div>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Calculated dynamically using exact substring & token overlap scoring (50%–95% Synergy) across direct and reverse network bridges.
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate('/profile')}
+            className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-100 shrink-0 self-start sm:self-auto"
+          >
+            <span>Update Target Fields</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {autoConnectRecs.length === 0 ? (
+          <div className="text-center py-8 text-slate-400 text-xs">
+            No active bridge recommendations found. Add your target businesses and connections offered in Profile.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {autoConnectRecs.map((rec) => {
+              const isReverse = rec.isReverseMatch;
+              return (
+                <div
+                  key={rec.id}
+                  className="p-5 rounded-2xl bg-gradient-to-br from-slate-50/90 via-white to-purple-50/30 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all space-y-3.5 flex flex-col justify-between group"
+                >
+                  <div className="space-y-3">
+                    {/* Top Row: User Avatar & Score Badge */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={rec.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(rec.userName)}&background=6366f1&color=fff`}
+                          alt={rec.userName}
+                          className="w-11 h-11 rounded-2xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform"
+                        />
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1.5">
+                            <span>{rec.userName}</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-500 font-medium">{rec.userRole} · {rec.userCompany}</p>
+                        </div>
+                      </div>
+
+                      {/* Synergy Score & Direction Tag */}
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                          {rec.matchScore}% Synergy Match
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${
+                            isReverse
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                          }`}
+                        >
+                          {isReverse ? (
+                            <>
+                              <ArrowUpRight className="w-3 h-3 text-amber-600" /> Reverse Match (You Offer)
+                            </>
+                          ) : (
+                            <>
+                              <ArrowDownRight className="w-3 h-3 text-indigo-600" /> Direct Match (What You Want)
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Explanatory Reason Box */}
+                    <div className="bg-slate-100/70 p-3 rounded-xl border border-slate-200/60 text-xs text-slate-700 leading-relaxed space-y-1">
+                      <p className="font-semibold text-slate-800">
+                        <span className="text-purple-700 font-bold">Match Reason:</span> {rec.reason}
+                      </p>
+                      <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-500 font-medium">
+                        <span className="px-2 py-0.5 rounded bg-white font-bold text-slate-800 border border-slate-200">
+                          Target: {rec.targetQuery}
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-purple-100/70 font-bold text-purple-800">
+                          Bridge: {rec.bridgePerson.personName} ({rec.bridgePerson.role || 'Executive'})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 1-Click Automated Intro Email Generator Button */}
+                  <button
+                    onClick={() => handleOpenIntroModal(rec)}
+                    className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Mail className="w-4 h-4 text-brand-200" />
+                    <span>Generate 1-Click Intro Email</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Main Grid: Priority Actions & Upcoming */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        {/* Left 2 Cols: Priority Tasks & Follow-ups & Recent Activity */}
+        {/* Left 2 Cols: Priority Tasks & Recent Activity */}
         <div className="lg:col-span-2 space-y-6">
           {/* Priority Tasks */}
           <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
@@ -349,7 +589,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Col: Upcoming Meetings & AI Recommendations */}
+        {/* Right Col: Upcoming Meetings & Standard AI Recommendations */}
         <div className="space-y-6">
           {/* Upcoming Meetings */}
           <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
@@ -447,6 +687,88 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ========================================== */}
+      {/* 1-CLICK INTRO EMAIL GENERATOR MODAL */}
+      {/* ========================================== */}
+      {activeIntroModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl space-y-5 border border-slate-100">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center shrink-0">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Automated 1-Click Intro Email Generator</h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    To: <span className="font-bold text-slate-800">{activeIntroModal.userName}</span> · {activeIntroModal.userRole}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveIntroModal(null)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Match Context Pill */}
+            <div className="p-3 bg-purple-50/70 border border-purple-100 rounded-2xl flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-purple-600 fill-purple-600" />
+                <span className="font-bold text-purple-900">
+                  {activeIntroModal.matchScore}% Synergy Match ({activeIntroModal.isReverseMatch ? 'Reverse Match' : 'Direct Match'})
+                </span>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-purple-200/80 text-[11px] font-bold text-purple-800">
+                Target: {activeIntroModal.targetQuery}
+              </span>
+            </div>
+
+            {/* Email Body Draft Text Area */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700">Editable Email Draft</label>
+              <textarea
+                rows={8}
+                value={editedEmailDraft}
+                onChange={(e) => setEditedEmailDraft(e.target.value)}
+                className="w-full p-4 text-xs font-mono bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:outline-hidden leading-relaxed text-slate-800"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex items-center gap-3">
+              <button
+                onClick={handleCopyEmail}
+                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-95"
+              >
+                {copiedSuccess ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span className="text-emerald-700 font-bold">Copied to Clipboard!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-slate-600" />
+                    <span>Copy Email Draft</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleOpenMailClient}
+                className="flex-1 py-3 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-brand-600/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+              >
+                <Send className="w-4 h-4" />
+                <span>Open Email App (mailto)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
