@@ -113,7 +113,7 @@ export const DiscoverPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto px-1 sm:px-4 pb-12">
+    <div className="space-y-6 w-full max-w-[1400px] mx-auto px-1 sm:px-4 pb-12">
       
       {/* 1. TOP HEADER BANNER (Screen 1 & 5) */}
       <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-purple-900/10 space-y-5">
@@ -354,7 +354,7 @@ export const DiscoverPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
               {filtered.map((rec) => {
                 const scoreBadge = getScoreBadge(rec.score);
                 const reasonsList = rec.reason.split('\n').map((b) => b.replace(/^✓\s*/, ''));
