@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { sendSuccess, sendError } from '../helpers/response';
+import { UserRepository } from '../repositories/UserRepository';
+import { query } from '../config/db';
 
 export class UploadController {
   static async uploadAvatar(req: Request, res: Response, next: NextFunction) {
@@ -43,11 +45,16 @@ export class UploadController {
           }
           await fs.promises.writeFile(path.join(dir, filename), buffer);
         } catch {
-          // ignore error for secondary directory targets
+          // ignore error for secondary targets
         }
       }
 
       const avatarUrl = `/uploads/avatars/${filename}`;
+
+      // Immediately update database user, profile, and post avatar references
+      await UserRepository.updateAvatar(userId, avatarUrl);
+      await query(`UPDATE user_profiles SET avatar_url = ? WHERE user_id = ?`, [avatarUrl, userId]);
+      await query(`UPDATE posts SET author_avatar = ? WHERE user_id = ?`, [avatarUrl, userId]);
 
       return sendSuccess(res, { avatarUrl });
     } catch (err) {

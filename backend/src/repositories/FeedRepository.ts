@@ -15,10 +15,39 @@ export interface PostRow {
 }
 
 export class FeedRepository {
-  static async list(userId: number, limit = 20): Promise<PostRow[]> {
-    const rows = await query<any[]>(
+  static async list(userId: number, limit = 30): Promise<PostRow[]> {
+    let rows = await query<any[]>(
       `SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`
     );
+
+    // If posts table has no entries, auto-generate welcome network posts from active members
+    if (rows.length === 0) {
+      const members = await query<any[]>(
+        `SELECT u.user_id, u.display_name, u.avatar_url, p.headline, p.company, p.skills, p.networking_goals
+         FROM users u
+         JOIN user_profiles p ON u.user_id = p.user_id
+         WHERE u.status = 'active'`
+      );
+
+      for (const m of members) {
+        const skillsObj = typeof m.skills === 'string' ? JSON.parse(m.skills) : m.skills || {};
+        const rawGroups = skillsObj.networkingGroup;
+        const groupsStr = Array.isArray(rawGroups) ? rawGroups.join(' & ') : typeof rawGroups === 'string' ? rawGroups : '';
+        const introText = `Hello NexaLink Network! Excited to connect with leaders and peers.${groupsStr ? ' Active in ' + groupsStr + '.' : ''}`;
+
+        await this.create(m.user_id, {
+          author_name: m.display_name,
+          author_title: m.headline || 'Network Member',
+          author_avatar: m.avatar_url,
+          content: introText,
+          tags: ['Networking', 'Growth'],
+        });
+      }
+
+      rows = await query<any[]>(
+        `SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`
+      );
+    }
 
     if (rows.length === 0) return [];
 
@@ -38,7 +67,7 @@ export class FeedRepository {
     const DECAY_LAMBDA = Math.LN2 / HALF_LIFE_HOURS;
 
     const rankedPosts: PostRow[] = rows.map((p) => {
-      const matchScore = scoreMap.get(Number(p.user_id)) || 50;
+      const matchScore = scoreMap.get(Number(p.user_id)) || 55;
       const hoursAgo = Math.max(0, (now - new Date(p.created_at).getTime()) / (1000 * 60 * 60));
       const timeDecayScore = 100 * Math.exp(-DECAY_LAMBDA * hoursAgo);
 

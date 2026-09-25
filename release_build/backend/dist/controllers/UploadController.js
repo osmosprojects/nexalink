@@ -7,6 +7,8 @@ exports.UploadController = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const response_1 = require("../helpers/response");
+const UserRepository_1 = require("../repositories/UserRepository");
+const db_1 = require("../config/db");
 class UploadController {
     static async uploadAvatar(req, res, next) {
         try {
@@ -41,10 +43,14 @@ class UploadController {
                     await fs_1.default.promises.writeFile(path_1.default.join(dir, filename), buffer);
                 }
                 catch {
-                    // ignore error for secondary directory targets
+                    // ignore error for secondary targets
                 }
             }
             const avatarUrl = `/uploads/avatars/${filename}`;
+            // Immediately update database user, profile, and post avatar references
+            await UserRepository_1.UserRepository.updateAvatar(userId, avatarUrl);
+            await (0, db_1.query)(`UPDATE user_profiles SET avatar_url = ? WHERE user_id = ?`, [avatarUrl, userId]);
+            await (0, db_1.query)(`UPDATE posts SET author_avatar = ? WHERE user_id = ?`, [avatarUrl, userId]);
             return (0, response_1.sendSuccess)(res, { avatarUrl });
         }
         catch (err) {

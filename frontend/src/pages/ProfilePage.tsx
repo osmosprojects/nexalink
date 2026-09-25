@@ -278,13 +278,14 @@ export const ProfilePage: React.FC = () => {
         const rawBase64 = uploadEvent.target.result as string;
         try {
           const res = await api.post<{ avatarUrl: string }>('/upload/avatar', { imageBase64: rawBase64 });
-          if (res.avatarUrl) {
-            setAvatarUrl(res.avatarUrl);
-          } else {
-            setAvatarUrl(rawBase64);
-          }
+          const finalUrl = res.avatarUrl || rawBase64;
+          setAvatarUrl(finalUrl);
+          await api.put('/profile', { avatar_url: finalUrl });
+          await refreshProfile();
         } catch {
           setAvatarUrl(rawBase64);
+          await api.put('/profile', { avatar_url: rawBase64 });
+          await refreshProfile();
         }
       }
     };
