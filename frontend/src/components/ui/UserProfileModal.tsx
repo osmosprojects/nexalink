@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   Calendar,
   Share2,
-  Award
+  Award,
+  Send,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Recommendation } from '../../types';
 
@@ -21,15 +24,18 @@ interface UserProfileModalProps {
   user: Recommendation | any;
   onClose: () => void;
   onConnect?: (recId: number) => void;
+  onRequestIntro?: (user: Recommendation) => void;
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   user,
   onClose,
   onConnect,
+  onRequestIntro,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'experience' | 'interests' | 'more'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'icebreakers' | 'experience' | 'interests' | 'more'>('overview');
   const [connected, setConnected] = useState(user.status === 'connected');
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
   if (!user) return null;
 
@@ -84,11 +90,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
 
             {/* Action Buttons Header */}
-            <div className="flex items-center gap-2.5 w-full sm:w-auto pt-2 sm:pt-0">
+            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto pt-2 sm:pt-0">
+              {onRequestIntro && (
+                <button
+                  onClick={() => onRequestIntro(user)}
+                  className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
+                  title="Request Warm Intro via mutual connection"
+                >
+                  <Send className="w-4 h-4 text-purple-600" />
+                  <span>Request Intro</span>
+                </button>
+              )}
+
               <button
                 onClick={handleConnectClick}
                 disabled={connected}
-                className={`flex-1 sm:flex-none px-5 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95 ${
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95 ${
                   connected
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/20'
@@ -108,15 +125,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               </button>
 
               <button
-                onClick={() => alert(`Opening message thread with ${user.recommended_name}...`)}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition-colors flex items-center gap-1.5"
+                onClick={() => setActiveTab('icebreakers')}
+                className="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold transition-all shadow-md shadow-purple-500/20 flex items-center gap-1.5"
               >
-                <MessageSquare className="w-4 h-4 text-slate-600" />
-                <span>Message</span>
-              </button>
-
-              <button className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl transition-colors">
-                <MoreHorizontal className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>AI Icebreakers</span>
               </button>
             </div>
           </div>
@@ -143,7 +156,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-100 mt-5 space-x-6 text-xs font-bold text-slate-500">
+          <div className="flex border-b border-slate-100 mt-5 space-x-6 text-xs font-bold text-slate-500 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
               className={`pb-3 border-b-2 transition-colors ${
@@ -153,6 +166,17 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               }`}
             >
               Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('icebreakers')}
+              className={`pb-3 border-b-2 transition-colors flex items-center gap-1 ${
+                activeTab === 'icebreakers'
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent hover:text-slate-800'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+              <span>AI Icebreakers</span>
             </button>
             <button
               onClick={() => setActiveTab('experience')}
@@ -173,16 +197,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               }`}
             >
               Interests
-            </button>
-            <button
-              onClick={() => setActiveTab('more')}
-              className={`pb-3 border-b-2 transition-colors ${
-                activeTab === 'more'
-                  ? 'border-brand-600 text-brand-600'
-                  : 'border-transparent hover:text-slate-800'
-              }`}
-            >
-              More
             </button>
           </div>
         </div>
@@ -301,6 +315,65 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 <span className="text-xs font-bold text-indigo-600 cursor-pointer hover:underline">View</span>
               </div>
             </>
+          )}
+
+          {activeTab === 'icebreakers' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-purple-900 to-indigo-900 p-4 rounded-2xl text-white space-y-1">
+                <div className="inline-flex items-center gap-1 text-xs font-bold text-amber-300 uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>AI Conversation Starter Studio</span>
+                </div>
+                <h4 className="text-sm font-bold">Personalized Icebreakers for {user.recommended_name}</h4>
+                <p className="text-[11px] text-purple-200">
+                  Select and copy a customized conversation starter to launch your warm conversation.
+                </p>
+              </div>
+
+              {[
+                {
+                  label: '🎯 Strategic Industry Synergy',
+                  text: `Hi ${user.recommended_name.split(' ')[0]}, I loved seeing your focus on ${user.industry || 'technology & growth'} at ${user.recommended_company}. I'm currently expanding partnerships in this domain and would love to connect and swap insights!`,
+                },
+                {
+                  label: '🤝 Common Network & Goal Hook',
+                  text: `Hi ${user.recommended_name.split(' ')[0]}, I noticed our mutual focus on ${skillsList.slice(0, 2).join(' & ') || 'innovation and strategy'}. I'm actively exploring new synergies and would be very glad to connect with a fellow leader in ${user.location || 'the network'}.`,
+                },
+                {
+                  label: '☕ Casual Coffee Chat / Advisory',
+                  text: `Hi ${user.recommended_name.split(' ')[0]}, your background as ${user.recommended_role} at ${user.recommended_company} really caught my eye. If you ever have 10 minutes for a quick virtual coffee chat, I'd love to learn more about your trajectory!`,
+                }
+              ].map((item, idx) => (
+                <div key={idx} className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">{item.label}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(item.text);
+                        setCopiedIdx(idx);
+                        setTimeout(() => setCopiedIdx(null), 2000);
+                      }}
+                      className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-purple-700 flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs"
+                    >
+                      {copiedIdx === idx ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Hook</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-600 font-mono leading-relaxed bg-white p-3 rounded-xl border border-slate-200/80">
+                    "{item.text}"
+                  </p>
+                </div>
+              ))}
+            </div>
           )}
 
           {activeTab === 'experience' && (

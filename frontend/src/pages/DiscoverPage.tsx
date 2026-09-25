@@ -21,18 +21,76 @@ import {
   CheckCircle2,
   Users2,
   Lightbulb,
-  ArrowRight
+  ArrowRight,
+  Send,
+  MessageSquareShare
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Recommendation } from '../types';
+import { computeRecommendationSynergy } from '../lib/matchmakingEngine';
 import { UserProfileModal } from '../components/ui/UserProfileModal';
+import { WarmIntroModal } from '../components/ui/WarmIntroModal';
 import confetti from 'canvas-confetti';
+
+const SynergyBreakdownWidget: React.FC<{ rec: Recommendation }> = ({ rec }) => {
+  const syn = computeRecommendationSynergy(rec);
+  return (
+    <div className="space-y-2 bg-slate-50 border border-slate-200/80 p-3 rounded-2xl">
+      <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+        <span className="flex items-center gap-1.5 uppercase">
+          <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+          <span>Synergy Radar</span>
+        </span>
+        <span className="text-purple-700 font-extrabold">{syn.overallScore}% Synergy</span>
+      </div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px]">
+        <div>
+          <div className="flex justify-between text-slate-600 font-medium mb-0.5">
+            <span>Domain Match</span>
+            <span className="font-bold text-slate-800">{syn.domainScore}%</span>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-purple-600 h-full rounded-full" style={{ width: `${syn.domainScore}%` }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-slate-600 font-medium mb-0.5">
+            <span>Goal Match</span>
+            <span className="font-bold text-slate-800">{syn.goalScore}%</span>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-blue-600 h-full rounded-full" style={{ width: `${syn.goalScore}%` }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-slate-600 font-medium mb-0.5">
+            <span>Warm Bridge</span>
+            <span className="font-bold text-slate-800">{syn.bridgeScore}%</span>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${syn.bridgeScore}%` }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-slate-600 font-medium mb-0.5">
+            <span>Geo Proximity</span>
+            <span className="font-bold text-slate-800">{syn.geoScore}%</span>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-amber-600 h-full rounded-full" style={{ width: `${syn.geoScore}%` }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const DiscoverPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'swiper' | 'list'>('list');
   const [swiperIndex, setSwiperIndex] = useState(0);
   const [selectedProfile, setSelectedProfile] = useState<Recommendation | null>(null);
+  const [warmIntroTarget, setWarmIntroTarget] = useState<Recommendation | null>(null);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
   // Recommendation Filter Preferences State (Screen 6)
@@ -43,6 +101,19 @@ export const DiscoverPage: React.FC = () => {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Keyboard navigation for Desktop (Arrow keys for swiper, Escape for drawer)
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showFilterDrawer && e.key === 'Escape') {
+        setShowFilterDrawer(false);
+      } else if (selectedProfile && e.key === 'Escape') {
+        setSelectedProfile(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showFilterDrawer, selectedProfile]);
 
   const { data: recommendations = [], isLoading } = useQuery<Recommendation[]>({
     queryKey: ['recommendations'],
@@ -179,118 +250,240 @@ export const DiscoverPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. SWIPER / QUICK DISCOVER VIEW (Screens 2 & 4) */}
+      {/* 2. SWIPER / QUICK DISCOVER VIEW (Screens 2 & 4 - Desktop Dual Pane Upgrade) */}
       {viewMode === 'swiper' && (
-        <div className="flex flex-col items-center justify-center pt-2 pb-6 space-y-4">
+        <div className="pt-2 pb-6 space-y-4">
           {isLoading ? (
-            <div className="w-full max-w-md h-[450px] bg-slate-200 rounded-3xl animate-pulse" />
+            <div className="w-full max-w-4xl mx-auto h-[450px] bg-slate-200 rounded-3xl animate-pulse" />
           ) : !currentSwiperCard ? (
-            <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 p-8 space-y-3 max-w-md w-full">
+            <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 p-8 space-y-3 max-w-md mx-auto w-full shadow-sm">
               <Compass className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No more cards to discover</h3>
               <p className="text-xs text-slate-500">Switch to List View or update your filter preferences.</p>
             </div>
           ) : (
-            <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden animate-fadeIn relative">
+            <div className="max-w-6xl mx-auto w-full flex flex-col lg:flex-row items-start justify-center gap-6">
               
-              {/* Swiper Header Counter */}
-              <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-slate-900/60 backdrop-blur-md text-white text-[11px] font-bold rounded-full border border-white/20">
-                Discover {swiperIndex + 1}/{filtered.length}
-              </div>
-
-              {/* Score Badge */}
-              <div className="absolute top-3 right-3 z-10">
-                {(() => {
-                  const badge = getScoreBadge(currentSwiperCard.score);
-                  return (
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-md shadow-md ${badge.bg}`}>
-                      {badge.label}
-                    </span>
-                  );
-                })()}
-              </div>
-
-              {/* Profile Image & Cover */}
-              <div className="h-64 sm:h-72 bg-gradient-to-br from-slate-100 to-indigo-50 relative flex items-center justify-center overflow-hidden">
-                <img
-                  src={currentSwiperCard.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentSwiperCard.recommended_name)}&background=3b82f6&color=fff`}
-                  alt={currentSwiperCard.recommended_name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+              {/* Left Pane: Interactive Deck Card */}
+              <div className="w-full max-w-md mx-auto lg:mx-0 shrink-0 bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden animate-fadeIn relative">
                 
-                <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                  <h3 className="text-xl font-extrabold flex items-center gap-1.5">
-                    <span>{currentSwiperCard.recommended_name}</span>
-                    <CheckCircle2 className="w-4 h-4 text-blue-400 inline" />
-                  </h3>
-                  <p className="text-xs font-semibold text-slate-200">{currentSwiperCard.recommended_role} • {currentSwiperCard.recommended_company}</p>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-300 font-medium">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-slate-400" />
-                      <span>{currentSwiperCard.location || 'Mumbai, India'}</span>
-                    </span>
-                    <span>• 8+ yrs</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Body: Why this match? */}
-              <div className="p-5 space-y-4">
-                <div className="bg-indigo-50/70 border border-indigo-100 p-4 rounded-2xl space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-900">
-                    <Sparkles className="w-4 h-4 text-indigo-600" />
-                    <span>Why Your Match?</span>
-                  </div>
-                  <ul className="space-y-1 text-xs text-indigo-950 font-medium">
-                    {currentSwiperCard.reason.split('\n').map((bullet, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5">
-                        <span className="text-emerald-600 font-bold">✓</span>
-                        <span>{bullet.replace(/^✓\s*/, '')}</span>
-                      </li>
-                    ))}
-                  </ul>
+                {/* Swiper Header Counter */}
+                <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-slate-900/70 backdrop-blur-md text-white text-[11px] font-bold rounded-full border border-white/20">
+                  Card {swiperIndex + 1} of {filtered.length}
                 </div>
 
-                {/* Skills/Tags */}
-                {currentSwiperCard.skills && currentSwiperCard.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {currentSwiperCard.skills.map((skill, idx) => (
-                      <span key={idx} className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-100 rounded-lg text-xs font-bold">
-                        {skill}
+                {/* Score Badge */}
+                <div className="absolute top-3 right-3 z-10">
+                  {(() => {
+                    const badge = getScoreBadge(currentSwiperCard.score);
+                    return (
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-md shadow-md ${badge.bg}`}>
+                        {badge.label}
                       </span>
-                    ))}
+                    );
+                  })()}
+                </div>
+
+                {/* Profile Image & Cover */}
+                <div className="h-64 sm:h-72 bg-gradient-to-br from-slate-100 to-indigo-50 relative flex items-center justify-center overflow-hidden">
+                  <img
+                    src={currentSwiperCard.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentSwiperCard.recommended_name)}&background=3b82f6&color=fff`}
+                    alt={currentSwiperCard.recommended_name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent" />
+                  
+                  <div className="absolute bottom-4 left-4 right-4 text-white space-y-1 min-w-0">
+                    <h3 className="text-xl font-extrabold flex items-center gap-1.5 truncate">
+                      <span className="truncate">{currentSwiperCard.recommended_name}</span>
+                      <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0 inline" />
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-200 truncate">
+                      {currentSwiperCard.recommended_role} • {currentSwiperCard.recommended_company}
+                    </p>
+                    <div className="flex items-center gap-2 text-[11px] text-slate-300 font-medium">
+                      <span className="flex items-center gap-1 truncate">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{currentSwiperCard.location || 'Mumbai, India'}</span>
+                      </span>
+                      <span>• 8+ yrs</span>
+                    </div>
                   </div>
-                )}
+                </div>
 
-                {/* Action Controls (Screen 4: Tinder-style controls) */}
-                <div className="pt-2 flex items-center justify-between gap-3">
-                  <button
-                    onClick={() => dismissMutation.mutate(currentSwiperCard.recommendation_id)}
-                    className="flex-1 py-3 px-3 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <X className="w-4 h-4 text-rose-500" />
-                    <span>Not for me</span>
-                  </button>
+                {/* Body: Why this match? */}
+                <div className="p-5 space-y-4">
+                  <div className="bg-indigo-50/70 border border-indigo-100 p-4 rounded-2xl space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-900">
+                      <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>Why Your Match?</span>
+                    </div>
+                    <ul className="space-y-1 text-xs text-indigo-950 font-medium">
+                      {currentSwiperCard.reason.split('\n').map((bullet, idx) => (
+                        <li key={idx} className="flex items-start gap-1.5">
+                          <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                          <span>{bullet.replace(/^✓\s*/, '')}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                  <button
-                    onClick={() => setSelectedProfile(currentSwiperCard)}
-                    className="p-3 bg-slate-100 hover:bg-indigo-50 text-indigo-600 rounded-2xl transition-colors"
-                    title="View Profile Details"
-                  >
-                    <Eye className="w-5 h-5" />
-                  </button>
+                  {/* Skills/Tags */}
+                  {currentSwiperCard.skills && currentSwiperCard.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {currentSwiperCard.skills.map((skill, idx) => (
+                        <span key={idx} className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-100 rounded-lg text-xs font-bold">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
-                  <button
-                    onClick={() => connectMutation.mutate(currentSwiperCard.recommendation_id)}
-                    disabled={connectMutation.isPending}
-                    className="flex-1 py-3 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    <Heart className="w-4 h-4 fill-white" />
-                    <span>Interested</span>
-                  </button>
+                  {/* Desktop Prev / Next Nav Row */}
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs text-slate-500 font-semibold">
+                    <button
+                      onClick={() => setSwiperIndex((prev) => Math.max(0, prev - 1))}
+                      disabled={swiperIndex === 0}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span>Previous</span>
+                    </button>
+                    <span>Use Left/Right to Navigate</span>
+                    <button
+                      onClick={() => setSwiperIndex((prev) => Math.min(filtered.length - 1, prev + 1))}
+                      disabled={swiperIndex >= filtered.length - 1}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Action Controls (Tinder-style controls) */}
+                  <div className="pt-2 flex items-center justify-between gap-2.5">
+                    <button
+                      onClick={() => dismissMutation.mutate(currentSwiperCard.recommendation_id)}
+                      className="flex-1 py-3 px-3 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                      <X className="w-4 h-4 text-rose-500" />
+                      <span>Not for me</span>
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedProfile(currentSwiperCard)}
+                      className="p-3 bg-slate-100 hover:bg-indigo-50 text-indigo-600 rounded-2xl transition-colors shrink-0"
+                      title="View Profile Details"
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
+
+                    <button
+                      onClick={() => connectMutation.mutate(currentSwiperCard.recommendation_id)}
+                      disabled={connectMutation.isPending}
+                      className="flex-1 py-3 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 shrink-0"
+                    >
+                      <Heart className="w-4 h-4 fill-white" />
+                      <span>Interested</span>
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              {/* Right Pane: Desktop Deep Analysis & AI Preview Panel */}
+              <div className="hidden lg:flex flex-col flex-1 bg-white rounded-3xl border border-slate-200 p-6 space-y-6 shadow-xl min-w-0 self-stretch">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="space-y-1 min-w-0">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Match Intelligence Breakdown</span>
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 truncate">
+                      {currentSwiperCard.recommended_name}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-semibold truncate">
+                      {currentSwiperCard.recommended_role} at {currentSwiperCard.recommended_company}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <span className="text-xs text-slate-400 font-bold block mb-1">Affinity Score</span>
+                    <span className="text-2xl font-black text-purple-700 bg-purple-50 px-4 py-1.5 rounded-2xl border border-purple-200">
+                      {currentSwiperCard.score}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Detailed Reasons */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Synergy Highlights</span>
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {currentSwiperCard.reason.split('\n').map((bullet, idx) => (
+                      <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 font-medium flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5">
+                          ✓
+                        </span>
+                        <span className="leading-relaxed">{bullet.replace(/^✓\s*/, '')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Multi-Vector Synergy Radar Widget */}
+                <SynergyBreakdownWidget rec={currentSwiperCard} />
+
+                {/* AI Warm Intro Draft Preview */}
+                <div className="space-y-2 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 p-4.5 rounded-2xl border border-purple-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold text-purple-900 flex items-center gap-1.5 uppercase">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      <span>AI Warm Outreach Strategy</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-md">
+                      Auto-Drafted
+                    </span>
+                  </div>
+                  <p className="text-xs text-purple-950 font-medium leading-relaxed italic bg-white/70 p-3 rounded-xl border border-purple-200/60">
+                    "Hi {currentSwiperCard.recommended_name.split(' ')[0]}, I noticed your work in {currentSwiperCard.industry || 'the industry'} and your expertise in {currentSwiperCard.skills?.slice(0, 2).join(', ') || 'strategic growth'}. I'd love to connect and share insights."
+                  </p>
+                </div>
+
+                {/* Upcoming Recommendations Deck Navigator */}
+                <div className="space-y-3 pt-2 border-t border-slate-100 mt-auto">
+                  <div className="flex items-center justify-between text-xs font-extrabold text-slate-700">
+                    <span>Upcoming Discover Deck ({filtered.length} profiles)</span>
+                    <span className="text-[11px] text-slate-400 font-normal">Click to preview card</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {filtered.slice(0, 7).map((card, idx) => (
+                      <button
+                        key={card.recommendation_id}
+                        onClick={() => setSwiperIndex(idx)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold shrink-0 transition-all border ${
+                          idx === swiperIndex
+                            ? 'bg-purple-600 text-white border-purple-600 shadow-md scale-105'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <img
+                          src={card.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(card.recommended_name)}&background=3b82f6&color=fff`}
+                          alt={card.recommended_name}
+                          className="w-5 h-5 rounded-full object-cover shrink-0"
+                        />
+                        <span className="truncate max-w-[100px]">{card.recommended_name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
             </div>
           )}
         </div>
@@ -302,20 +495,20 @@ export const DiscoverPage: React.FC = () => {
           <div className="flex items-center justify-between pt-2">
             <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
               <span>Recommended for You</span>
-              <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full hidden sm:inline">
                 Based on your networking goals & interests
               </span>
             </h3>
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-pulse">
-              {[1, 2, 3, 4].map((i) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 animate-pulse">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="h-64 bg-slate-200 rounded-3xl" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            /* Screen 7: Empty State */
+            /* Empty State */
             <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/90 p-8 space-y-4 max-w-2xl mx-auto shadow-sm">
               <div className="w-16 h-16 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
                 <Users2 className="w-8 h-8 text-purple-600" />
@@ -354,7 +547,7 @@ export const DiscoverPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
               {filtered.map((rec) => {
                 const scoreBadge = getScoreBadge(rec.score);
                 const reasonsList = rec.reason.split('\n').map((b) => b.replace(/^✓\s*/, ''));
@@ -362,27 +555,27 @@ export const DiscoverPage: React.FC = () => {
                 return (
                   <div
                     key={rec.recommendation_id}
-                    className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-card hover:shadow-soft hover:border-purple-300 transition-all flex flex-col justify-between space-y-4 group"
+                    className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-card hover:shadow-soft hover:border-purple-300 transition-all flex flex-col justify-between space-y-4 group min-w-0"
                   >
-                    <div className="space-y-3.5">
+                    <div className="space-y-3.5 min-w-0">
                       {/* Top Row: Avatar & Basic Info */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-start justify-between gap-3 min-w-0">
+                        <div className="flex items-center gap-3 min-w-0">
                           <img
                             src={rec.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(rec.recommended_name)}&background=3b82f6&color=fff`}
                             alt={rec.recommended_name}
-                            className="w-14 h-14 rounded-2xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform"
+                            className="w-14 h-14 rounded-2xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform shrink-0"
                           />
-                          <div>
-                            <h4 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1">
-                              <span>{rec.recommended_name}</span>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1 min-w-0">
+                              <span className="truncate">{rec.recommended_name}</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                             </h4>
-                            <p className="text-xs text-slate-600 font-bold">{rec.recommended_role}</p>
-                            <p className="text-[11px] text-slate-400 font-semibold">{rec.recommended_company}</p>
-                            <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3 text-slate-400" />
-                              <span>{rec.location || 'Mumbai, India'} • 8+ yrs</span>
+                            <p className="text-xs text-slate-600 font-bold truncate">{rec.recommended_role}</p>
+                            <p className="text-[11px] text-slate-400 font-semibold truncate">{rec.recommended_company}</p>
+                            <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
+                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span className="truncate">{rec.location || 'Mumbai, India'} • 8+ yrs</span>
                             </p>
                           </div>
                         </div>
@@ -404,45 +597,57 @@ export const DiscoverPage: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Why this match? Box (Screen 1 & 5) */}
+                      {/* Why this match? Box */}
                       <div className="bg-gradient-to-r from-indigo-50/80 to-purple-50/50 p-3.5 rounded-2xl border border-indigo-100/80 space-y-1.5">
                         <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-900 uppercase">
-                          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                          <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                           <span>Why this match?</span>
                         </div>
                         <ul className="space-y-1 text-xs text-indigo-950 font-medium">
                           {reasonsList.map((bullet, idx) => (
                             <li key={idx} className="flex items-start gap-1.5">
-                              <span className="text-emerald-600 font-bold">✓</span>
-                              <span>{bullet}</span>
+                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                              <span className="leading-snug">{bullet}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
+
+                      {/* Synergy Breakdown Vector */}
+                      <SynergyBreakdownWidget rec={rec} />
                     </div>
 
                     {/* Card Actions */}
-                    <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                    <div className="pt-2 border-t border-slate-100 flex items-center gap-2 min-w-0">
                       <button
                         onClick={() => setSelectedProfile(rec)}
-                        className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                        className="flex-1 py-2 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 min-w-0 shrink-0"
                       >
-                        <Eye className="w-3.5 h-3.5 text-slate-600" />
-                        <span>View Profile</span>
+                        <Eye className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                        <span className="truncate">View</span>
+                      </button>
+
+                      <button
+                        onClick={() => setWarmIntroTarget(rec)}
+                        className="flex-1 py-2 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 min-w-0 shrink-0"
+                        title="Request Warm Intro via mutual connection"
+                      >
+                        <Send className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                        <span className="truncate">Intro</span>
                       </button>
 
                       <button
                         onClick={() => connectMutation.mutate(rec.recommendation_id)}
                         disabled={connectMutation.isPending}
-                        className="flex-1 py-2 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-600/20 flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                        className="flex-1 py-2 px-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-600/20 flex items-center justify-center gap-1 transition-all active:scale-95 disabled:opacity-50 min-w-0 shrink-0"
                       >
-                        <UserPlus className="w-3.5 h-3.5" />
-                        <span>Connect</span>
+                        <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Connect</span>
                       </button>
 
                       <button
                         onClick={() => dismissMutation.mutate(rec.recommendation_id)}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
                         title="Dismiss"
                       >
                         <X className="w-4 h-4" />
@@ -456,19 +661,40 @@ export const DiscoverPage: React.FC = () => {
         </>
       )}
 
-      {/* 4. COMPLETE USER PROFILE MODAL (Screen 3) */}
+      {/* 4. COMPLETE USER PROFILE MODAL */}
       {selectedProfile && (
         <UserProfileModal
           user={selectedProfile}
           onClose={() => setSelectedProfile(null)}
           onConnect={(recId) => connectMutation.mutate(recId)}
+          onRequestIntro={(u) => {
+            setSelectedProfile(null);
+            setWarmIntroTarget(u);
+          }}
         />
       )}
 
-      {/* 5. "IMPROVE RECOMMENDATIONS" FILTER DRAWER (Screen 6) */}
+      {/* 4.5. WARM INTRO FACILITATOR MODAL */}
+      {warmIntroTarget && (
+        <WarmIntroModal
+          user={warmIntroTarget}
+          onClose={() => setWarmIntroTarget(null)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['recommendations'] });
+          }}
+        />
+      )}
+
+      {/* 5. "IMPROVE RECOMMENDATIONS" FILTER DRAWER */}
       {showFilterDrawer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-end animate-fadeIn">
-          <div className="bg-white w-full max-w-md h-full shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+        <div 
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-end animate-fadeIn"
+          onClick={() => setShowFilterDrawer(false)}
+        >
+          <div 
+            className="bg-white w-full max-w-md h-full shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div>
@@ -477,7 +703,8 @@ export const DiscoverPage: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setShowFilterDrawer(false)}
-                  className="p-2 rounded-full text-slate-400 hover:bg-slate-100"
+                  className="p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors"
+                  title="Close (Esc)"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -591,6 +818,7 @@ export const DiscoverPage: React.FC = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

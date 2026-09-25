@@ -192,6 +192,16 @@ export interface Note {
   contact_name?: string;
 }
 
+export interface SynergyVector {
+  domainScore: number;
+  goalScore: number;
+  bridgeScore: number;
+  geoScore: number;
+  overallScore: number;
+  matchType: 'direct' | 'reverse' | 'mutual';
+  badges: string[];
+}
+
 export interface Recommendation {
   recommendation_id: number;
   user_id: number;
@@ -205,6 +215,7 @@ export interface Recommendation {
   skills: string[];
   reason: string;
   score: number;
+  synergy_vector?: SynergyVector;
   status: 'pending' | 'connected' | 'saved' | 'dismissed';
   created_at: string;
 }
@@ -222,6 +233,7 @@ export interface AutoConnectRecommendation {
   bridgePerson: ConnectablePerson;
   reason: string;
   introEmailDraft: string;
+  synergyVector?: SynergyVector;
 }
 
 
