@@ -36,10 +36,10 @@ export const DiscoverPage: React.FC = () => {
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
   // Recommendation Filter Preferences State (Screen 6)
-  const [selectedGoals, setSelectedGoals] = useState<string[]>(['Strategic Partnerships']);
-  const [selectedLookingFor, setSelectedLookingFor] = useState<string[]>(['Founders', 'Investors']);
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(['Technology', 'SaaS']);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(['Mumbai']);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [selectedLookingFor, setSelectedLookingFor] = useState<string[]>([]);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -69,17 +69,25 @@ export const DiscoverPage: React.FC = () => {
   });
 
   const filtered = recommendations.filter((r) => {
+    const searchLower = search.trim().toLowerCase();
     const matchSearch =
-      r.recommended_name.toLowerCase().includes(search.toLowerCase()) ||
-      r.recommended_role.toLowerCase().includes(search.toLowerCase()) ||
-      r.recommended_company.toLowerCase().includes(search.toLowerCase()) ||
-      r.reason.toLowerCase().includes(search.toLowerCase());
+      !searchLower ||
+      r.recommended_name.toLowerCase().includes(searchLower) ||
+      r.recommended_role.toLowerCase().includes(searchLower) ||
+      r.recommended_company.toLowerCase().includes(searchLower) ||
+      r.reason.toLowerCase().includes(searchLower) ||
+      (r.skills && r.skills.some((s) => s.toLowerCase().includes(searchLower)));
 
     const matchIndustry =
       selectedIndustries.length === 0 ||
-      selectedIndustries.some(
-        (ind) => r.industry?.toLowerCase().includes(ind.toLowerCase()) || r.reason.toLowerCase().includes(ind.toLowerCase())
-      );
+      selectedIndustries.some((ind) => {
+        const targetInd = ind.toLowerCase();
+        return (
+          r.industry?.toLowerCase().includes(targetInd) ||
+          r.reason.toLowerCase().includes(targetInd) ||
+          (r.skills && r.skills.some((s) => s.toLowerCase().includes(targetInd)))
+        );
+      });
 
     return matchSearch && matchIndustry;
   });
