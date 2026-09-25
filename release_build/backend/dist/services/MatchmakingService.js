@@ -14,13 +14,13 @@ class MatchmakingService {
     static arrayIntersectionScore(a = [], b = [], maxPoints) {
         if (!a.length || !b.length)
             return { score: 0, overlaps: [] };
-        const normA = a.map((s) => s.trim().toLowerCase()).filter(Boolean);
-        const normB = b.map((s) => s.trim().toLowerCase()).filter(Boolean);
+        const normA = a.map((s) => String(s).trim().toLowerCase()).filter(Boolean);
+        const normB = b.map((s) => String(s).trim().toLowerCase()).filter(Boolean);
         const overlaps = [];
         for (const itemA of normA) {
             for (const itemB of normB) {
                 if (itemA === itemB || itemA.includes(itemB) || itemB.includes(itemA)) {
-                    const original = a.find((x) => x.toLowerCase() === itemA) || itemA;
+                    const original = a.find((x) => String(x).toLowerCase() === itemA) || itemA;
                     if (!overlaps.includes(original))
                         overlaps.push(original);
                 }
@@ -90,16 +90,16 @@ class MatchmakingService {
                 continue;
             const isTargetMatch = targetBusinessesA.some((tb) => tb.toLowerCase().includes(domainLower) || domainLower.includes(tb.toLowerCase()));
             if (isTargetMatch) {
-                points += 5;
+                points += 10;
                 reasons.push(`Offers warm connection to ${bridge.personName || 'Contact'} (${bridge.role || 'Executive'} at ${bridge.orgName || 'Company'}) in ${bridge.businessDomain}`);
             }
         }
-        return { score: Math.min(10, points), reasons };
+        return { score: Math.min(20, points), reasons };
     }
     static profileHealthScore(user) {
         let score = 5;
         const penalties = [];
-        if (!user.bio || user.bio.trim().length < 20) {
+        if (!user.bio || user.bio.trim().length < 15) {
             score -= 1;
             penalties.push('Short bio');
         }
@@ -111,10 +111,6 @@ class MatchmakingService {
             score -= 1;
             penalties.push('Missing headline');
         }
-        if (!user.linkedin) {
-            score -= 1;
-            penalties.push('Unverified social link');
-        }
         return { score: Math.max(0, score), penalties };
     }
     // ==========================================
@@ -123,47 +119,47 @@ class MatchmakingService {
     static calculateMatchScore(userA, userB) {
         const reasons = [];
         let totalScore = 0;
-        // 1. Intent Complementarity (Max 30 pts)
+        // 1. Shared Networking Groups (Up to 30 pts)
+        const groupResult = this.arrayIntersectionScore(userA.networkingGroup, userB.networkingGroup, 30);
+        if (groupResult.overlaps.length > 0) {
+            const pts = groupResult.overlaps.length >= 2 ? 30 : 20;
+            totalScore += pts;
+            reasons.push(`Shared membership in ${groupResult.overlaps.join(' & ')}`);
+        }
+        // 2. Cross-Category Hobbies & Personal Interests Overlap (Up to 25 pts)
+        const tagsA = [...(userA.interests || []), ...(userA.hobbies || [])];
+        const tagsB = [...(userB.interests || []), ...(userB.hobbies || [])];
+        const tagOverlap = this.arrayIntersectionScore(tagsA, tagsB, 25);
+        if (tagOverlap.overlaps.length > 0) {
+            const pts = Math.min(25, tagOverlap.overlaps.length * 12);
+            totalScore += pts;
+            reasons.push(`Shared focus on ${tagOverlap.overlaps.join(', ')}`);
+        }
+        // 3. Target Industry / Business Overlap (Up to 15 pts)
+        const targetOverlap = this.arrayIntersectionScore(userA.targetBusinesses, userB.targetBusinesses, 15);
+        if (targetOverlap.overlaps.length > 0) {
+            totalScore += targetOverlap.score;
+            reasons.push(`Shared target industry focus (${targetOverlap.overlaps[0]})`);
+        }
+        // 4. Intent & Objective Complementarity (Up to 20 pts)
         const intentResult = this.matchIntents(userA.goals, userB.connectionsOffered, userB.jobTitle || userB.headline);
         totalScore += intentResult.score;
         reasons.push(...intentResult.reasons);
-        // 2. Domain / Interest Overlap (Max 20 pts)
-        const interestOverlap = this.arrayIntersectionScore(userA.interests, userB.interests, 10);
-        const targetOverlap = this.arrayIntersectionScore(userA.targetBusinesses, userB.targetBusinesses, 10);
-        totalScore += interestOverlap.score + targetOverlap.score;
-        if (interestOverlap.overlaps.length > 0) {
-            reasons.push(`Shared interests in ${interestOverlap.overlaps.slice(0, 2).join(', ')}`);
-        }
-        if (targetOverlap.overlaps.length > 0) {
-            reasons.push(`Shared target industry focus (${targetOverlap.overlaps[0]})`);
-        }
-        // 3. Geography Match (Max 15 pts)
+        // 5. Geography Match (Up to 15 pts)
         const geoResult = this.matchGeography(userA, userB);
         totalScore += geoResult.score;
         if (geoResult.reason)
             reasons.push(geoResult.reason);
-        // 4. Shared Networking Groups (Max 15 pts)
-        const groupResult = this.arrayIntersectionScore(userA.networkingGroup, userB.networkingGroup, 15);
-        totalScore += groupResult.score;
-        if (groupResult.overlaps.length > 0) {
-            reasons.push(`Shared membership in ${groupResult.overlaps[0]}`);
-        }
-        // 5. Bridges Value (Max 10 pts)
+        // 6. Network Bridge Connections Value (Up to 15 pts)
         const bridgeResult = this.matchBridges(userA.goals, userA.targetBusinesses, userB.connectionsOffered);
         totalScore += bridgeResult.score;
         reasons.push(...bridgeResult.reasons);
-        // 6. Hobbies Overlap (Max 5 pts)
-        const hobbyResult = this.arrayIntersectionScore(userA.hobbies, userB.hobbies, 5);
-        totalScore += hobbyResult.score;
-        if (hobbyResult.overlaps.length > 0) {
-            reasons.push(`Mutual hobby in ${hobbyResult.overlaps[0]}`);
-        }
-        // 7. Profile Health / Activity (Max 5 pts)
+        // 7. Profile Completeness Health (Up to 5 pts)
         const healthResult = this.profileHealthScore(userB);
         totalScore += healthResult.score;
-        // Fallback baseline score if low overlap
+        // Baseline fallback if low overlap but valid users
         if (totalScore === 0) {
-            totalScore = 55;
+            totalScore = 40;
             reasons.push('Shared professional ecosystem identity');
         }
         const finalScore = Math.min(98, totalScore);
@@ -208,7 +204,7 @@ class MatchmakingService {
                 let finalScoreForSource = matchForSource.score;
                 let isMutual = false;
                 // Mutual Match Bonus (+10 points if both scores are high)
-                if (matchForSource.score >= 60 && matchForCand.score >= 60) {
+                if (matchForSource.score >= 40 && matchForCand.score >= 40) {
                     finalScoreForSource = Math.min(98, finalScoreForSource + 10);
                     isMutual = true;
                     matchForSource.reasons.unshift('⭐ High Mutual Synergy Match');
@@ -223,9 +219,9 @@ class MatchmakingService {
                     score: finalScoreForSource,
                     reason: matchForSource.reasons.map((r) => `✓ ${r}`).join('\n'),
                     reasonsList: matchForSource.reasons,
-                    skills: [...new Set([...(candData.interests || []), ...(candData.targetBusinesses || [])])].slice(0, 4),
+                    skills: [...new Set([...(candData.interests || []), ...(candData.targetBusinesses || []), ...(candData.networkingGroup || [])])].slice(0, 4),
                 };
-                if (finalScoreForSource >= 40) {
+                if (finalScoreForSource >= 10) {
                     matchResults.push(matchResultItem);
                     // 1. Upsert recommendation row for legacy UI backward compatibility
                     await this.upsertRecommendation(sourceUserId, matchResultItem);
@@ -256,7 +252,7 @@ class MatchmakingService {
                         reason: matchForCand.reasons.map((r) => `✓ ${r}`).join('\n'),
                         reasonsList: matchForCand.reasons,
                     });
-                    if (matchForCand.score >= 50 && recIdForCand) {
+                    if (matchForCand.score >= 20 && recIdForCand) {
                         const existingNotif = await (0, db_1.query)(`SELECT notification_id FROM notifications WHERE user_id = ? AND entity_type = 'recommendation' AND entity_id = ? LIMIT 1`, [cand.user_id, recIdForCand]);
                         if (!existingNotif || existingNotif.length === 0) {
                             await NotificationRepository_1.NotificationRepository.create(cand.user_id, {
@@ -307,7 +303,23 @@ class MatchmakingService {
     static extractProfileParameters(profile, user) {
         const skillsObj = typeof profile.skills === 'string' ? JSON.parse(profile.skills) : profile.skills || {};
         const hobbies = Array.isArray(skillsObj.hobbies) ? skillsObj.hobbies : [];
-        const interests = Array.isArray(skillsObj.interests) ? skillsObj.interests : [];
+        const interestsFromSkills = Array.isArray(skillsObj.interests) ? skillsObj.interests : [];
+        // Check if profile.interests is string array or bridge objects array
+        const rawInterests = typeof profile.interests === 'string' ? JSON.parse(profile.interests) : profile.interests || [];
+        let bridges = [];
+        let interestsFromProfile = [];
+        if (Array.isArray(rawInterests)) {
+            if (rawInterests.length > 0 && typeof rawInterests[0] === 'object' && rawInterests[0] !== null && 'businessDomain' in rawInterests[0]) {
+                bridges = rawInterests;
+            }
+            else if (rawInterests.length > 0 && typeof rawInterests[0] === 'string') {
+                interestsFromProfile = rawInterests;
+            }
+        }
+        if (!bridges.length && Array.isArray(skillsObj.connectionsOffered)) {
+            bridges = skillsObj.connectionsOffered;
+        }
+        const combinedInterests = [...new Set([...interestsFromSkills, ...interestsFromProfile])];
         const goals = Array.isArray(skillsObj.goals) ? skillsObj.goals : [];
         const rawGroups = skillsObj.networkingGroup;
         const groups = Array.isArray(rawGroups)
@@ -321,8 +333,6 @@ class MatchmakingService {
             : typeof rawTargets === 'string' && rawTargets.trim()
                 ? [rawTargets]
                 : [];
-        const bridgesObj = profile.interests || skillsObj.connectionsOffered;
-        const bridges = Array.isArray(bridgesObj) ? bridgesObj : [];
         return {
             userId: user.user_id || user.userId,
             displayName: user.display_name || user.displayName || 'User',
@@ -336,7 +346,7 @@ class MatchmakingService {
             targetCities: Array.isArray(skillsObj.targetCities) ? skillsObj.targetCities : [],
             networkingGroup: groups,
             hobbies,
-            interests,
+            interests: combinedInterests,
             goals,
             targetBusinesses,
             connectionsOffered: bridges,

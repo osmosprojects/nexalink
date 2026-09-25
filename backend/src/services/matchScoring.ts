@@ -1,10 +1,5 @@
 /**
  * matchScoring.ts - Pure Deterministic Matchmaking & Scoring Module
- * 
- * Column Mapping Notes:
- * - profile.skills (JSON) -> Profile Metadata (hobbies, interests, goals, networkingGroup, currentCity, targetCities)
- * - profile.interests (JSON) -> Connections Offered / Bridges [{ businessDomain, personName, orgName, role, city, relationship }]
- * - profile.networking_goals (JSON) -> Target Businesses & Industries ["SaaS", "FinTech", ...]
  */
 
 const GOAL_KEYWORDS = ['invest', 'cofound', 'hire', 'fund', 'mentor', 'app', 'software', 'network', 'partner', 'lead', 'client'];
@@ -142,8 +137,8 @@ export function calculateMatchScore(userA: any = {}, userB: any = {}): { userId:
   const metaA = typeof userA.skills === 'string' ? JSON.parse(userA.skills) : userA.skills || {};
   const metaB = typeof userB.skills === 'string' ? JSON.parse(userB.skills) : userB.skills || {};
 
-  const bridgesA = typeof userA.interests === 'string' ? JSON.parse(userA.interests) : userA.interests || [];
-  const bridgesB = typeof userB.interests === 'string' ? JSON.parse(userB.interests) : userB.interests || [];
+  const rawBridgesA = typeof userA.interests === 'string' ? JSON.parse(userA.interests) : userA.interests || [];
+  const rawBridgesB = typeof userB.interests === 'string' ? JSON.parse(userB.interests) : userB.interests || [];
 
   const targetBizA = typeof userA.networking_goals === 'string' ? JSON.parse(userA.networking_goals) : userA.networking_goals || [];
   const targetBizB = typeof userB.networking_goals === 'string' ? JSON.parse(userB.networking_goals) : userB.networking_goals || [];
@@ -151,53 +146,80 @@ export function calculateMatchScore(userA: any = {}, userB: any = {}): { userId:
   const goalsA = Array.isArray(metaA.goals) ? metaA.goals : [];
   const goalsB = Array.isArray(metaB.goals) ? metaB.goals : [];
 
+  const hobbiesA = Array.isArray(metaA.hobbies) ? metaA.hobbies : [];
+  const hobbiesB = Array.isArray(metaB.hobbies) ? metaB.hobbies : [];
+
+  const interestsA = Array.isArray(metaA.interests)
+    ? metaA.interests
+    : Array.isArray(rawBridgesA) && typeof rawBridgesA[0] === 'string'
+    ? rawBridgesA
+    : [];
+
+  const interestsB = Array.isArray(metaB.interests)
+    ? metaB.interests
+    : Array.isArray(rawBridgesB) && typeof rawBridgesB[0] === 'string'
+    ? rawBridgesB
+    : [];
+
+  const groupsA = Array.isArray(metaA.networkingGroup)
+    ? metaA.networkingGroup
+    : typeof metaA.networkingGroup === 'string'
+    ? [metaA.networkingGroup]
+    : [];
+
+  const groupsB = Array.isArray(metaB.networkingGroup)
+    ? metaB.networkingGroup
+    : typeof metaB.networkingGroup === 'string'
+    ? [metaB.networkingGroup]
+    : [];
+
   const reasons: string[] = [];
   let totalScore = 0;
 
-  // 1. Intent / Goal Alignment (30% / 30 Pts Max)
+  // 1. Shared Networking Groups (Up to 30 pts)
+  const groupResult = arrayIntersectionScore(groupsA, groupsB, 30);
+  if (groupResult.overlaps.length > 0) {
+    const pts = groupResult.overlaps.length >= 2 ? 30 : 20;
+    totalScore += pts;
+    reasons.push(`Shared membership in ${groupResult.overlaps.join(' & ')}`);
+  }
+
+  // 2. Cross-Category Hobbies & Interests Overlap (Up to 25 pts)
+  const tagsA = [...interestsA, ...hobbiesA];
+  const tagsB = [...interestsB, ...hobbiesB];
+  const tagResult = arrayIntersectionScore(tagsA, tagsB, 25);
+  if (tagResult.overlaps.length > 0) {
+    const pts = Math.min(25, tagResult.overlaps.length * 12);
+    totalScore += pts;
+    reasons.push(`Shared focus on ${tagResult.overlaps.join(', ')}`);
+  }
+
+  // 3. Target Business / Industry Overlap (Up to 15 pts)
+  const targetBizResult = arrayIntersectionScore(targetBizA, targetBizB, 15);
+  if (targetBizResult.overlaps.length > 0) {
+    totalScore += targetBizResult.score;
+    reasons.push(`Same target industry focus (${targetBizResult.overlaps[0]})`);
+  }
+
+  // 4. Intent / Goal Alignment (Up to 20 pts)
   const goalResult = matchGoalsFreeText(goalsA, goalsB);
   totalScore += goalResult.score;
   if (goalResult.overlaps.length > 0) {
     reasons.push(`Mutual networking focus on ${goalResult.overlaps.slice(0, 2).join(' & ')}`);
   }
 
-  // 2. Interest + Target Business Overlap (20% / 20 Pts Max: 12pts interests, 8pts target businesses)
-  const interestResult = arrayIntersectionScore(metaA.interests, metaB.interests, 12);
-  const targetBizResult = arrayIntersectionScore(targetBizA, targetBizB, 8);
-  totalScore += interestResult.score + targetBizResult.score;
-
-  if (interestResult.overlaps.length > 0) {
-    reasons.push(`Shared interests in ${interestResult.overlaps.slice(0, 2).join(', ')}`);
-  }
-  if (targetBizResult.overlaps.length > 0) {
-    reasons.push(`Same target industry focus (${targetBizResult.overlaps[0]})`);
-  }
-
-  // 3. Geography Match (15% / 15 Pts Max)
+  // 5. Geography Match (Up to 15 pts)
   const geoResult = matchGeography(metaA, metaB);
   totalScore += geoResult.score;
   if (geoResult.reason) reasons.push(geoResult.reason);
 
-  // 4. Shared Networking Groups (15% / 15 Pts Max)
-  const groupResult = arrayIntersectionScore(metaA.networkingGroup, metaB.networkingGroup, 15);
-  totalScore += groupResult.score;
-  if (groupResult.overlaps.length > 0) {
-    reasons.push(`Shared membership in ${groupResult.overlaps[0]}`);
-  }
-
-  // 5. Bridges Relevance (10% / 10 Pts Max)
+  // 6. Bridges Relevance (Up to 10 pts)
+  const bridgesB = Array.isArray(rawBridgesB) && typeof rawBridgesB[0] === 'object' ? rawBridgesB : [];
   const bridgeResult = matchBridgeRelevance(goalsA, bridgesB);
   totalScore += bridgeResult.score;
   reasons.push(...bridgeResult.reasons);
 
-  // 6. Hobbies Overlap (5% / 5 Pts Max)
-  const hobbyResult = arrayIntersectionScore(metaA.hobbies, metaB.hobbies, 5);
-  totalScore += hobbyResult.score;
-  if (hobbyResult.overlaps.length > 0) {
-    reasons.push(`Mutual hobby in ${hobbyResult.overlaps[0]}`);
-  }
-
-  // 7. Profile Completeness (5% / 5 Pts Max)
+  // 7. Profile Completeness (Up to 5 pts)
   const healthPts = profileHealthScore(userB);
   totalScore += healthPts;
 
