@@ -22,10 +22,14 @@ export interface UserProfile {
   user_id?: number;
   headline?: string | null;
   bio?: string | null;
+  servicesOffered?: string | null;
   company?: string | null;
+  brandName?: string | null;
   job_title?: string | null;
+  role?: string | null;
   location?: string | null;
   industry?: string | null;
+  domain?: string | null;
   website?: string | null;
   linkedin_url?: string | null;
   phone?: string | null;
@@ -230,7 +234,7 @@ export interface AutoConnectRecommendation {
   matchScore: number;
   isReverseMatch: boolean;
   targetQuery: string;
-  bridgePerson: ConnectablePerson;
+  bridgePerson?: ConnectablePerson;
   reason: string;
   introEmailDraft: string;
   synergyVector?: SynergyVector;

@@ -22,6 +22,7 @@ export interface ProfileData {
   headline?: string;
   jobTitle?: string;
   company?: string;
+  domain?: string;
   avatarUrl?: string | null;
   linkedin?: string;
   instagram?: string;
@@ -233,7 +234,33 @@ export class MatchmakingService {
       reasons.push(`Shared target industry focus (${targetOverlap.overlaps[0]})`);
     }
 
-    // 4. Intent & Objective Complementarity (Up to 20 pts)
+    // 4. Services We Offer & Domain Synergy (Up to 20 pts)
+    if (userB.bio && (userA.targetBusinesses?.length || userA.goals?.length)) {
+      const targetsAndGoalsText = [...(userA.targetBusinesses || []), ...(userA.goals || [])].join(' ').toLowerCase();
+      const servicesText = (userB.bio || '').toLowerCase();
+      const tokens = targetsAndGoalsText.split(/[\s,&\/-]+/).filter((t) => t.length > 2);
+      const matchedServices = tokens.filter((t) => servicesText.includes(t));
+      if (matchedServices.length > 0) {
+        totalScore += 15;
+        reasons.push(`Offers services matching your target focus ("${matchedServices[0]}")`);
+      }
+    }
+
+    if (userB.domain && (userA.targetBusinesses?.length || userA.domain)) {
+      const domainB = userB.domain.toLowerCase();
+      const domainA = (userA.domain || '').toLowerCase();
+      const targetsA = (userA.targetBusinesses || []).map((t) => t.toLowerCase());
+
+      if (domainA && domainA === domainB) {
+        totalScore += 15;
+        reasons.push(`Both operating in the ${userB.domain} domain`);
+      } else if (targetsA.some((t) => t.includes(domainB) || domainB.includes(t))) {
+        totalScore += 15;
+        reasons.push(`Domain (${userB.domain}) matches your target industry focus`);
+      }
+    }
+
+    // 5. Intent & Objective Complementarity (Up to 20 pts)
     const intentResult = this.matchIntents(userA.goals, userB.connectionsOffered, userB.jobTitle || userB.headline);
     totalScore += intentResult.score;
     reasons.push(...intentResult.reasons);
@@ -471,10 +498,11 @@ export class MatchmakingService {
       userId: user.user_id || user.userId,
       displayName: user.display_name || user.displayName || 'User',
       avatarUrl: user.avatar_url,
-      company: profile.company || 'Innovator',
+      company: profile.company || skillsObj.company || 'Innovator',
       headline: profile.headline || 'Strategic Professional',
-      jobTitle: profile.job_title || profile.headline,
-      bio: profile.bio,
+      jobTitle: profile.job_title || skillsObj.role || profile.headline,
+      domain: profile.industry || skillsObj.domain || '',
+      bio: profile.bio || skillsObj.servicesOffered || '',
       linkedin: profile.linkedin_url,
       currentCity: skillsObj.currentCity || profile.headline || '',
       targetCities: Array.isArray(skillsObj.targetCities) ? skillsObj.targetCities : [],

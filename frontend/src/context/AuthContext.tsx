@@ -20,7 +20,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const checkIsProfileComplete = (profile: UserProfile | null, _persona?: UserPersona | null): boolean => {
   if (!profile) return false;
-  const hasBio = Boolean(profile.bio && profile.bio.trim().length > 0);
+  const bioVal = profile.bio || profile.servicesOffered || profile.skills?.servicesOffered;
+  const companyVal = profile.company || profile.brandName || profile.skills?.company;
+  const roleVal = profile.job_title || profile.role || profile.skills?.role;
+  const domainVal = profile.industry || profile.domain || profile.skills?.domain;
+
+  const hasServices = Boolean(bioVal && String(bioVal).trim().length > 0);
+  const hasCompany = Boolean(companyVal && String(companyVal).trim().length > 0);
+  const hasRole = Boolean(roleVal && String(roleVal).trim().length > 0);
+  const hasDomain = Boolean(domainVal && String(domainVal).trim().length > 0);
   const hasPhone = Boolean(profile.phone && profile.phone.trim().length > 0);
 
   const rawGroup = profile.skills?.networkingGroup;
@@ -50,7 +58,7 @@ export const checkIsProfileComplete = (profile: UserProfile | null, _persona?: U
   const hasTarget = targets.some((t: any) => typeof t === 'string' && t.trim().length > 0);
   const hasBridge = bridges.length > 0;
 
-  return Boolean(hasBio && hasPhone && hasGroup && hasHobby && hasInterest && hasObjective && hasTarget && hasBridge);
+  return Boolean(hasServices && hasCompany && hasRole && hasDomain && hasPhone && hasGroup && hasHobby && hasInterest && hasObjective && hasTarget && hasBridge);
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

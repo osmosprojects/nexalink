@@ -223,11 +223,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 </div>
               )}
 
-              {/* About Section */}
+              {/* Services We Offer Section */}
               <div className="space-y-1.5">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">About</h4>
+                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Services We Offer</h4>
                 <p className="text-xs text-slate-700 leading-relaxed font-normal">
-                  Tech entrepreneur with 8+ years of experience in building scalable SaaS products and driving business growth. Passionate about AI, innovation, and creating meaningful partnerships in the technology ecosystem.
+                  {user.bio || user.servicesOffered || 'Provides strategic enterprise solutions, domain leadership, and key services to drive growth and scale.'}
                 </p>
               </div>
 
@@ -282,23 +282,23 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
               {/* Details Grid */}
               <div className="pt-2 border-t border-slate-100 space-y-2">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Details</h4>
+                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Brand & Role Details</h4>
                 <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-bold block">Brand / Company</span>
+                    <span className="font-bold text-slate-800">{user.recommended_company || user.company || 'N/A'}</span>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-bold block">Role</span>
+                    <span className="font-bold text-slate-800">{user.recommended_role || user.role || user.job_title || 'N/A'}</span>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-bold block">Domain</span>
+                    <span className="font-bold text-slate-800">{user.domain || user.industry || 'Technology & SaaS'}</span>
+                  </div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
                     <span className="text-[10px] text-slate-400 font-bold block">Location</span>
                     <span className="font-bold text-slate-800">{user.location || 'Mumbai, India'}</span>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold block">Industry</span>
-                    <span className="font-bold text-slate-800">{user.industry || 'Technology & SaaS'}</span>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold block">Experience</span>
-                    <span className="font-bold text-slate-800">8+ years</span>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold block">Company</span>
-                    <span className="font-bold text-slate-800">{user.recommended_company}</span>
                   </div>
                 </div>
               </div>

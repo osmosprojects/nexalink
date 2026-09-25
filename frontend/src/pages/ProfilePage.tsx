@@ -84,7 +84,10 @@ export const ProfilePage: React.FC = () => {
     name: user?.displayName || '',
     email: user?.email || '',
     phone: profile?.phone || '',
-    bio: profile?.bio || '',
+    company: profile?.company || profile?.skills?.company || '',
+    role: profile?.job_title || profile?.skills?.role || '',
+    domain: profile?.industry || profile?.skills?.domain || '',
+    bio: profile?.bio || profile?.skills?.servicesOffered || '',
     linkedin: profile?.linkedin_url || profile?.skills?.socialLinks?.linkedin || profile?.skills?.linkedin || '',
     instagram: profile?.skills?.socialLinks?.instagram || profile?.skills?.instagram || '',
     website: profile?.website || profile?.skills?.socialLinks?.website || profile?.skills?.website || '',
@@ -198,7 +201,10 @@ export const ProfilePage: React.FC = () => {
         name: user?.displayName || '',
         email: user?.email || '',
         phone: profile?.phone || '',
-        bio: profile?.bio || '',
+        company: profile?.company || profile?.skills?.company || '',
+        role: profile?.job_title || profile?.skills?.role || '',
+        domain: profile?.industry || profile?.skills?.domain || '',
+        bio: profile?.bio || profile?.skills?.servicesOffered || '',
         linkedin: profile?.linkedin_url || profile?.skills?.socialLinks?.linkedin || profile?.skills?.linkedin || '',
         instagram: profile?.skills?.socialLinks?.instagram || profile?.skills?.instagram || '',
         website: profile?.website || profile?.skills?.socialLinks?.website || profile?.skills?.website || '',
@@ -321,7 +327,13 @@ export const ProfilePage: React.FC = () => {
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
+      company: formData.company,
+      job_title: formData.role,
+      role: formData.role,
+      industry: formData.domain,
+      domain: formData.domain,
       bio: formData.bio,
+      servicesOffered: formData.bio,
       avatar_url: avatarUrl,
       linkedin: formData.linkedin,
       instagram: formData.instagram,
@@ -613,8 +625,17 @@ export const ProfilePage: React.FC = () => {
     if (!formData.phone || !formData.phone.trim()) {
       errors.phone = 'Phone Number is required.';
     }
+    if (!formData.company || !formData.company.trim()) {
+      errors.company = 'Brand/Company Name is required.';
+    }
+    if (!formData.role || !formData.role.trim()) {
+      errors.role = 'Role is required.';
+    }
+    if (!formData.domain || !formData.domain.trim()) {
+      errors.domain = 'Domain is required.';
+    }
     if (!formData.bio || !formData.bio.trim()) {
-      errors.bio = 'Professional Biography is required.';
+      errors.bio = 'Services We Offer is required.';
     }
 
     const cleanGroups = networkingGroups.map((g) => g.trim()).filter(Boolean);
@@ -652,7 +673,7 @@ export const ProfilePage: React.FC = () => {
       // Auto-expand any collapsed cards that have validation errors
       setCollapsedBlocks((prev) => {
         const updated = { ...prev };
-        if (errors.name || errors.phone || errors.bio) updated['identity'] = false;
+        if (errors.name || errors.phone || errors.company || errors.role || errors.domain || errors.bio) updated['identity'] = false;
         if (errors.groups) updated['groups'] = false;
         if (errors.hobbies) updated['hobbies'] = false;
         if (errors.interests) updated['interests'] = false;
@@ -675,7 +696,13 @@ export const ProfilePage: React.FC = () => {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
+        company: formData.company,
+        job_title: formData.role,
+        role: formData.role,
+        industry: formData.domain,
+        domain: formData.domain,
         bio: formData.bio,
+        servicesOffered: formData.bio,
         avatar_url: avatarUrl,
         linkedin: formData.linkedin,
         instagram: formData.instagram,
@@ -722,13 +749,14 @@ export const ProfilePage: React.FC = () => {
     if (formData.name) score += 10;
     if (formData.email) score += 10;
     if (formData.phone) score += 10;
+    if (formData.company && formData.role && formData.domain) score += 10;
     if (formData.bio) score += 10;
     if (avatarUrl) score += 10;
     if (networkingGroups.length > 0) score += 10;
     if (hobbies.length > 0) score += 10;
     if (userInterests.length > 0) score += 10;
-    if (userGoals.length > 0) score += 10;
-    if (targetBusinesses.length > 0 && connectionsOffered.length > 0) score += 10;
+    if (userGoals.length > 0) score += 5;
+    if (targetBusinesses.length > 0 && connectionsOffered.length > 0) score += 5;
     return Math.min(100, score);
   };
   const completionPercentage = calcCompletionScore();
@@ -921,7 +949,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* BLOCK 2: Personal & Professional Identity (Collapsible) */}
           <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
-            (validationErrors.name || validationErrors.phone || validationErrors.bio)
+            (validationErrors.name || validationErrors.phone || validationErrors.company || validationErrors.role || validationErrors.domain || validationErrors.bio)
               ? 'border-rose-300 ring-2 ring-rose-100'
               : 'border-slate-200/90'
           }`}>
@@ -937,14 +965,14 @@ export const ProfilePage: React.FC = () => {
                 <div>
                   <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
                     <span>Personal & Professional Identity</span>
-                    {(validationErrors.name || validationErrors.phone || validationErrors.bio) && (
+                    {(validationErrors.name || validationErrors.phone || validationErrors.company || validationErrors.role || validationErrors.domain || validationErrors.bio) && (
                       <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
                         <AlertCircle className="w-3 h-3" />
                         <span>Action Required</span>
                       </span>
                     )}
                   </h2>
-                  <p className="text-[11px] text-slate-500 font-medium">Tell us about yourself and your professional background.</p>
+                  <p className="text-[11px] text-slate-500 font-medium">Tell us about your brand, role, domain, and services offered.</p>
                 </div>
               </div>
               <div className="text-slate-400 hover:text-slate-600 p-1">
@@ -1035,10 +1063,112 @@ export const ProfilePage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Brand/Company Name & Role & Domain Inputs */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Brand/Company Name <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Building2 className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. NexaCorp / Acme Inc"
+                        value={formData.company}
+                        onChange={(e) => {
+                          setFormData({ ...formData, company: e.target.value });
+                          if (validationErrors.company) {
+                            setValidationErrors((prev) => ({ ...prev, company: '' }));
+                          }
+                        }}
+                        className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                          validationErrors.company
+                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                            : 'border-slate-200 focus:ring-blue-500'
+                        }`}
+                      />
+                      {formData.company && !validationErrors.company && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                    </div>
+                    {validationErrors.company && (
+                      <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>{validationErrors.company}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Role <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Briefcase className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Founder & CEO / VP Marketing"
+                        value={formData.role}
+                        onChange={(e) => {
+                          setFormData({ ...formData, role: e.target.value });
+                          if (validationErrors.role) {
+                            setValidationErrors((prev) => ({ ...prev, role: '' }));
+                          }
+                        }}
+                        className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                          validationErrors.role
+                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                            : 'border-slate-200 focus:ring-blue-500'
+                        }`}
+                      />
+                      {formData.role && !validationErrors.role && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                    </div>
+                    {validationErrors.role && (
+                      <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>{validationErrors.role}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Domain <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Compass className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. SaaS / HealthTech / FinTech"
+                        value={formData.domain}
+                        onChange={(e) => {
+                          setFormData({ ...formData, domain: e.target.value });
+                          if (validationErrors.domain) {
+                            setValidationErrors((prev) => ({ ...prev, domain: '' }));
+                          }
+                        }}
+                        className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                          validationErrors.domain
+                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                            : 'border-slate-200 focus:ring-blue-500'
+                        }`}
+                      />
+                      {formData.domain && !validationErrors.domain && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                    </div>
+                    {validationErrors.domain && (
+                      <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>{validationErrors.domain}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-bold text-slate-700">
-                      Professional Biography <span className="text-rose-500">*</span>
+                      Services We Offer <span className="text-rose-500">*</span>
                     </label>
                     <span className="text-[10px] font-bold text-slate-400">
                       {formData.bio.length} / 500
@@ -1055,7 +1185,7 @@ export const ProfilePage: React.FC = () => {
                         setValidationErrors((prev) => ({ ...prev, bio: '' }));
                       }
                     }}
-                    placeholder="Brief overview of your professional background, achievements, and key domain expertise."
+                    placeholder="Describe the key services, solutions, or products your brand or company offers..."
                     className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden leading-relaxed ${
                       validationErrors.bio
                         ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'

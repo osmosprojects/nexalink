@@ -38,12 +38,18 @@ export interface UserPersonaRow {
 export class ProfileRepository {
   static async isProfileComplete(userId: number): Promise<boolean> {
     const profileRows = await query<UserProfileRow[]>(
-      `SELECT bio, phone, networking_goals, skills, interests FROM user_profiles WHERE user_id = ? LIMIT 1`,
+      `SELECT bio, phone, company, job_title, industry, networking_goals, skills, interests FROM user_profiles WHERE user_id = ? LIMIT 1`,
       [userId]
     );
     if (!profileRows[0]) return false;
     const p = profileRows[0];
-    if (!p.bio || !p.bio.trim() || !p.phone || !p.phone.trim()) {
+    if (
+      !p.bio || !p.bio.trim() ||
+      !p.phone || !p.phone.trim() ||
+      !p.company || !p.company.trim() ||
+      !p.job_title || !p.job_title.trim() ||
+      !p.industry || !p.industry.trim()
+    ) {
       return false;
     }
 

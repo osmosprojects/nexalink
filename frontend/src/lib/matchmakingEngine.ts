@@ -193,12 +193,54 @@ export function generateAutoConnectRecommendations(
     const memberAvatar = member.avatar_url || member.avatarUrl;
     const memberCity = member.currentCity || member.location || '';
 
+    const memberDomain = member.industry || (member as any).domain || '';
+    const memberServices = member.bio || (member as any).servicesOffered || '';
+    const myDomain = userProfile.industry || (userProfile as any).domain || '';
+    const myServices = userProfile.bio || (userProfile as any).servicesOffered || '';
+
     const memberTargets: string[] = Array.isArray(member.targetBusinesses) ? member.targetBusinesses : [];
     const memberBridges: ConnectablePerson[] = Array.isArray(member.connectionsOffered) ? member.connectionsOffered : [];
 
     // Direct Matches (isReverseMatch: false): What You Want -> What Network Members Offer
     for (const targetQuery of myTargets) {
       if (!targetQuery || !targetQuery.trim()) continue;
+
+      // Check member's Domain & Services Offered
+      const directServiceScore = calculateMatchScore(
+        targetQuery,
+        memberDomain,
+        memberCompany,
+        memberRole,
+        memberServices
+      );
+
+      if (directServiceScore > 0) {
+        const reason = `Direct Match (${directServiceScore}% Synergy): ${memberName} (${memberRole} at ${memberCompany}) offers services in ${memberDomain || 'their domain'} matching your target "${targetQuery}".`;
+        const introEmailDraft = `Subject: Inquiry regarding services offered by ${memberCompany}\n\nHi ${memberName.split(' ')[0]},\n\nI hope you're having a great week!\n\nI saw that your brand ${memberCompany} specializes in ${memberDomain || 'services'} (${memberServices.slice(0, 80)}...).\n\nI am currently expanding focus in ${targetQuery} and would love to connect to explore potential collaboration.\n\nBest regards,\n${currentUserName}`;
+        const synergyVector = calculateSynergyVector(
+          directServiceScore,
+          false,
+          targetQuery,
+          undefined,
+          memberCity,
+          myCity
+        );
+
+        recs.push({
+          id: `direct-service-${memberId || memberName}-${targetQuery}`,
+          userId: memberId || 0,
+          userName: memberName,
+          userRole: memberRole,
+          userCompany: memberCompany,
+          userAvatar: memberAvatar,
+          matchScore: synergyVector.overallScore,
+          isReverseMatch: false,
+          targetQuery,
+          reason,
+          introEmailDraft,
+          synergyVector,
+        });
+      }
 
       for (const bridge of memberBridges) {
         const score = calculateMatchScore(
@@ -246,6 +288,43 @@ export function generateAutoConnectRecommendations(
     // Reverse Matches (isReverseMatch: true): What Network Members Want -> What You Offer
     for (const targetQuery of memberTargets) {
       if (!targetQuery || !targetQuery.trim()) continue;
+
+      // Check if user's own Services We Offer or Domain matches candidate's target
+      const reverseServiceScore = calculateMatchScore(
+        targetQuery,
+        myDomain,
+        userProfile.company || '',
+        userProfile.job_title || userProfile.headline || '',
+        myServices
+      );
+
+      if (reverseServiceScore > 0) {
+        const reason = `Reverse Match (${reverseServiceScore}% Synergy): Your services in ${myDomain || 'your domain'} match ${memberName}'s target "${targetQuery}".`;
+        const introEmailDraft = `Subject: Offering Solutions in ${targetQuery}\n\nHi ${memberName.split(' ')[0]},\n\nI noticed you are exploring opportunities in ${targetQuery}.\n\nOur team offers tailored services in ${myDomain || 'this domain'} (${myServices.slice(0, 80)}...). I'd be glad to connect and share insights!\n\nBest regards,\n${currentUserName}`;
+        const synergyVector = calculateSynergyVector(
+          reverseServiceScore,
+          true,
+          targetQuery,
+          undefined,
+          memberCity,
+          myCity
+        );
+
+        recs.push({
+          id: `reverse-service-${memberId || memberName}-${targetQuery}`,
+          userId: memberId || 0,
+          userName: memberName,
+          userRole: memberRole,
+          userCompany: memberCompany,
+          userAvatar: memberAvatar,
+          matchScore: synergyVector.overallScore,
+          isReverseMatch: true,
+          targetQuery,
+          reason,
+          introEmailDraft,
+          synergyVector,
+        });
+      }
 
       for (const bridge of myBridges) {
         const score = calculateMatchScore(

@@ -445,9 +445,11 @@ export const DashboardPage: React.FC = () => {
                         <span className="px-2 py-0.5 rounded bg-white font-bold text-slate-800 border border-slate-200">
                           Target: {rec.targetQuery}
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-purple-100/70 font-bold text-purple-800">
-                          Bridge: {rec.bridgePerson.personName} ({rec.bridgePerson.role || 'Executive'})
-                        </span>
+                        {rec.bridgePerson && (
+                          <span className="px-2 py-0.5 rounded bg-purple-100/70 font-bold text-purple-800">
+                            Bridge: {rec.bridgePerson.personName} ({rec.bridgePerson.role || 'Executive'})
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

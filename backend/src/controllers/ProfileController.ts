@@ -42,13 +42,25 @@ export class ProfileController {
         await UserRepository.updateAvatar(userId, data.avatar_url || '');
       }
 
+      const companyName = data.company || data.brandName || data.brand_name || null;
+      const roleName = data.job_title || data.role || null;
+      const domainName = data.industry || data.domain || null;
+      const servicesBio = data.bio || data.servicesOffered || data.services_offered || null;
+
       await ProfileRepository.upsertProfile(userId, {
-        bio: data.bio,
+        bio: servicesBio,
+        company: companyName,
+        job_title: roleName,
+        industry: domainName,
         phone: data.phone,
         website: data.website || data.socialLinks?.website,
         linkedin_url: data.linkedin || data.socialLinks?.linkedin,
         avatar_url: data.avatar_url || null,
         skills: {
+          company: companyName,
+          role: roleName,
+          domain: domainName,
+          servicesOffered: servicesBio,
           networkingGroup: data.networkingGroup,
           hobbies: data.hobbies || [],
           interests: data.userInterests || data.interestsList || [],
@@ -65,7 +77,7 @@ export class ProfileController {
         },
         networking_goals: data.targetBusinesses || data.networking_goals || [],
         interests: data.connectionsOffered || data.interests || [],
-        headline: data.bio ? data.bio.slice(0, 100) : null,
+        headline: roleName && companyName ? `${roleName} at ${companyName}` : servicesBio ? servicesBio.slice(0, 100) : null,
       });
 
       const updatedProfile = await ProfileRepository.getProfileByUserId(userId);
