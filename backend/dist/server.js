@@ -34,8 +34,12 @@ app.use((0, cookie_parser_1.default)());
 const possibleUploadDirs = [
     path_1.default.join(process.cwd(), 'uploads'),
     path_1.default.join(process.cwd(), 'public/uploads'),
+    path_1.default.join(process.cwd(), '../uploads'),
+    path_1.default.join(process.cwd(), '../../uploads'),
+    path_1.default.join(process.cwd(), '../../../uploads'),
     path_1.default.join(__dirname, '../uploads'),
     path_1.default.join(__dirname, '../../uploads'),
+    path_1.default.join(__dirname, '../../../uploads'),
     path_1.default.join(__dirname, '../public/uploads'),
     path_1.default.join(__dirname, '../../public/uploads'),
 ];

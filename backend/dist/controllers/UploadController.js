@@ -30,7 +30,11 @@ class UploadController {
             const targetDirs = [
                 path_1.default.join(process.cwd(), 'uploads/avatars'),
                 path_1.default.join(process.cwd(), 'public/uploads/avatars'),
+                path_1.default.join(process.cwd(), '../uploads/avatars'),
+                path_1.default.join(process.cwd(), '../../uploads/avatars'),
+                path_1.default.join(process.cwd(), '../../../uploads/avatars'),
                 path_1.default.join(__dirname, '../../uploads/avatars'),
+                path_1.default.join(__dirname, '../../../uploads/avatars'),
                 path_1.default.join(__dirname, '../public/uploads/avatars'),
                 path_1.default.join(__dirname, '../../public/uploads/avatars'),
             ];
