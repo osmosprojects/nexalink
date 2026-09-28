@@ -22,9 +22,9 @@ import { useAuth } from '../context/AuthContext';
 import confetti from 'canvas-confetti';
 
 export const FeedPage: React.FC = () => {
-  const [postType, setPostType] = useState<'I want to meet' | 'I can connect You to'>('I want to meet');
+  const [postType, setPostType] = useState<'wants to meet' | 'can connect you to'>('wants to meet');
   const [content, setContent] = useState('');
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -52,6 +52,13 @@ export const FeedPage: React.FC = () => {
     },
   });
 
+  // Calculate current user role & company subtitle
+  const userSubtitle =
+    profile?.headline ||
+    (profile?.job_title && profile?.company
+      ? `${profile.job_title} at ${profile.company}`
+      : profile?.job_title || profile?.company || 'NexaLink Member');
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 pb-12">
       {/* Header */}
@@ -67,15 +74,23 @@ export const FeedPage: React.FC = () => {
 
       {/* Share Networking Requirement & Update Composer */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+        {/* Profile Pic, Name, Role & Company Header */}
         <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
           <img
-            src={user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-            alt="User"
-            className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 shrink-0"
+            src={user?.avatarUrl || profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+            alt={user?.displayName || 'User'}
+            onClick={() => navigate('/profile')}
+            className="w-11 h-11 rounded-full object-cover ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
+            title="View Profile"
           />
           <div className="flex-1 min-w-0">
-            <h3 className="text-xs font-bold text-slate-900">Share networking requirement & update</h3>
-            <p className="text-[11px] text-slate-500 font-medium">Post what you need or who you can connect others to in your network</p>
+            <h3
+              onClick={() => navigate('/profile')}
+              className="text-sm font-bold text-slate-900 hover:text-brand-600 cursor-pointer transition-colors leading-tight"
+            >
+              {user?.displayName || 'User'}
+            </h3>
+            <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{userSubtitle}</p>
           </div>
         </div>
 
@@ -88,15 +103,15 @@ export const FeedPage: React.FC = () => {
             <select
               id="requirement-type"
               value={postType}
-              onChange={(e) => setPostType(e.target.value as 'I want to meet' | 'I can connect You to')}
+              onChange={(e) => setPostType(e.target.value as 'wants to meet' | 'can connect you to')}
               className="text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden cursor-pointer"
             >
-              <option value="I want to meet">🤝 I want to meet</option>
-              <option value="I can connect You to">🌟 I can connect You to</option>
+              <option value="wants to meet">🤝 wants to meet</option>
+              <option value="can connect you to">🌟 can connect you to</option>
             </select>
           </div>
 
-          {/* Text Area for Typing with Name, Role, Industry guidance */}
+          {/* Text Area for Typing */}
           <textarea
             rows={3}
             placeholder="Name, Role, Industry — Share details of your requirement or connection..."
@@ -111,7 +126,6 @@ export const FeedPage: React.FC = () => {
             <span className="flex items-center gap-1 hover:text-slate-600 cursor-pointer">
               <ImageIcon className="w-3.5 h-3.5" /> Photo
             </span>
-            {/* AI Polish is hidden as requested */}
           </div>
 
           <button
@@ -140,11 +154,23 @@ export const FeedPage: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => {
-            const isWantToMeet = post.content.startsWith('[I want to meet]');
-            const isCanConnect = post.content.startsWith('[I can connect You to]') || post.content.startsWith('[I can introduce]');
+            const isWantToMeet = post.content.startsWith('[wants to meet]') || post.content.startsWith('[I want to meet]');
+            const isCanConnect =
+              post.content.startsWith('[can connect you to]') ||
+              post.content.startsWith('[I can connect You to]') ||
+              post.content.startsWith('[I can introduce]');
+            
             let displayContent = post.content;
-            if (isWantToMeet) displayContent = post.content.replace('[I want to meet]', '').trim();
-            if (isCanConnect) displayContent = post.content.replace('[I can connect You to]', '').replace('[I can introduce]', '').trim();
+            if (isWantToMeet) {
+              displayContent = post.content.replace('[wants to meet]', '').replace('[I want to meet]', '').trim();
+            }
+            if (isCanConnect) {
+              displayContent = post.content
+                .replace('[can connect you to]', '')
+                .replace('[I can connect You to]', '')
+                .replace('[I can introduce]', '')
+                .trim();
+            }
 
             return (
               <div
@@ -152,23 +178,29 @@ export const FeedPage: React.FC = () => {
                 className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-soft transition-all space-y-3.5"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div
+                    onClick={() => navigate('/profile')}
+                    className="flex items-center gap-3 cursor-pointer group"
+                    title="View Profile"
+                  >
                     <img
                       src={post.author_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
                       alt={post.author_name}
-                      className="w-10 h-10 rounded-2xl object-cover ring-1 ring-slate-200"
+                      className="w-10 h-10 rounded-2xl object-cover ring-1 ring-slate-200 group-hover:ring-brand-500 transition-all"
                     />
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs font-bold text-slate-900">{post.author_name}</h4>
+                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
+                          {post.author_name}
+                        </h4>
                         {isWantToMeet && (
                           <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-200">
-                            🤝 I want to meet
+                            🤝 wants to meet
                           </span>
                         )}
                         {isCanConnect && (
                           <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md border border-emerald-200">
-                            🌟 I can connect You to
+                            🌟 can connect you to
                           </span>
                         )}
                       </div>
