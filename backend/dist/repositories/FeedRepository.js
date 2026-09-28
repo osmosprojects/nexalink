@@ -30,20 +30,7 @@ class FeedRepository {
     }
     static async getRepliesForPost(postId) {
         await this.ensureRepliesTableExist();
-        let rows = await (0, db_1.query)(`SELECT * FROM post_replies WHERE post_id = ? ORDER BY created_at ASC`, [postId]);
-        // If no replies exist yet for this post, seed the initial default thread entries
-        if (rows.length === 0) {
-            const postRows = await (0, db_1.query)(`SELECT content FROM posts WHERE post_id = ? LIMIT 1`, [postId]);
-            let targetPerson = 'Sanjeev Sarma';
-            if (postRows[0] && postRows[0].content) {
-                const details = postRows[0].content.replace(/\[.*?\]/, '').trim();
-                targetPerson = details.split('\n')[0].split(',')[0].trim() || 'Sanjeev Sarma';
-            }
-            await (0, db_1.query)(`INSERT INTO post_replies (post_id, user_id, author_name, reply_type, target_person, content) VALUES
-         (?, 1, 'Vinay', 'wants to meet to', ?, NULL),
-         (?, 2, 'Devyani', 'can connect to', ?, NULL)`, [postId, targetPerson, postId, targetPerson]);
-            rows = await (0, db_1.query)(`SELECT * FROM post_replies WHERE post_id = ? ORDER BY created_at ASC`, [postId]);
-        }
+        const rows = await (0, db_1.query)(`SELECT * FROM post_replies WHERE post_id = ? ORDER BY created_at ASC`, [postId]);
         return rows;
     }
     static async createReply(userId, postId, authorName, authorAvatar, replyType, targetPerson, content) {

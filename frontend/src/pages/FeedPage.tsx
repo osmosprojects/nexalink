@@ -305,25 +305,8 @@ export const FeedPage: React.FC = () => {
             };
             const topEmojis = Object.keys(reactions.counts);
 
-            // Fetch or fallback thread replies for conversation
-            const replies: ReplyItem[] = postReplies[post.post_id] || [
-              {
-                id: `r1-${post.post_id}`,
-                authorName: 'Vinay',
-                replyType: 'wants to meet to',
-                targetPerson: targetPersonInPost,
-                timeAgo: '2h ago',
-                likesCount: 2,
-              },
-              {
-                id: `r2-${post.post_id}`,
-                authorName: 'Devyani',
-                replyType: 'can connect to',
-                targetPerson: targetPersonInPost,
-                timeAgo: '1h ago',
-                likesCount: 3,
-              },
-            ];
+            // Fetch thread replies dynamically from database
+            const replies: ReplyItem[] = postReplies[post.post_id] || [];
 
             const isThreadExpanded = expandedThreadPostId === post.post_id;
             const isReplyComposerActive = activeReplyPostId === post.post_id;
