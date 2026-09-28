@@ -110,6 +110,9 @@ for (const dir of possibleStaticDirs) {
       if (req.path.startsWith('/api')) {
         return next();
       }
+      if (req.path.startsWith('/uploads')) {
+        return res.status(404).send('File Not Found');
+      }
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
