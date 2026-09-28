@@ -223,13 +223,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         <div className="relative z-10 flex items-center gap-2.5">
-          <button
-            onClick={() => navigate('/ai')}
-            className="px-4 py-2.5 bg-purple-600/90 hover:bg-purple-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/30 flex items-center gap-1.5 active:scale-95"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>AI Studio</span>
-          </button>
+
           <button
             onClick={() => openQuickAdd?.()}
             className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-brand-600/30 flex items-center gap-1.5 active:scale-95"
