@@ -869,580 +869,696 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. MAIN CONTENT 2-COLUMN GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* 3. MAIN CONTENT 2-COLUMN GRID (UNIFIED DESKTOP GRID) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 items-start">
         
-        {/* LEFT COLUMN: Profile Photo, Identity & Locations */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* BLOCK 1: Profile Photo (Collapsible) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
-            {/* Header */}
-            <div
-              onClick={() => toggleBlock('photo')}
-              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <Camera className="w-4 h-4 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Profile Photo</h2>
-                  <p className="text-[11px] text-slate-500 font-medium">Add a clear photo of yourself.</p>
-                </div>
+        {/* ROW 1 LEFT: BLOCK 1 - Profile Photo */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('photo')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Camera className="w-4 h-4 text-blue-600" />
               </div>
-              <div className="text-slate-400 hover:text-slate-600 p-1">
-                {collapsedBlocks['photo'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-slate-900 leading-tight">Profile Photo</h2>
+                {collapsedBlocks['photo'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {avatarUrl ? '✓ Photo added' : 'No photo uploaded'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">Add a clear photo of yourself.</p>
+                )}
               </div>
             </div>
-
-            {/* Body */}
-            {!collapsedBlocks['photo'] && (
-              <div className="p-5 space-y-4 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row items-center gap-5">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt={formData.name || 'User'} className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-12 h-12 text-slate-300" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 space-y-2.5 text-center sm:text-left">
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-                      >
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Upload Photo</span>
-                      </button>
-
-                      {avatarUrl && (
-                        <button
-                          type="button"
-                          onClick={handleResetAvatar}
-                          className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Reset</span>
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-400 font-medium">
-                      JPG, PNG or WEBP • Max 5 MB • 300x300px (min)
-                    </p>
-                  </div>
-                </div>
-
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-            )}
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+              {collapsedBlocks['photo'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </div>
           </div>
 
-          {/* BLOCK 2: Personal & Professional Identity (Collapsible) */}
-          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
-            (validationErrors.name || validationErrors.phone || validationErrors.company || validationErrors.role || validationErrors.domain || validationErrors.bio)
-              ? 'border-rose-300 ring-2 ring-rose-100'
-              : 'border-slate-200/90'
-          }`}>
-            {/* Header */}
-            <div
-              onClick={() => toggleBlock('identity')}
-              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4 text-blue-600" />
+          {/* Body */}
+          {!collapsedBlocks['photo'] && (
+            <div className="p-5 space-y-4 animate-fadeIn">
+              <div className="flex flex-col sm:flex-row items-center gap-5">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={formData.name || 'User'} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-12 h-12 text-slate-300" />
+                  )}
                 </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
-                    <span>Personal & Professional Identity</span>
-                    {(validationErrors.name || validationErrors.phone || validationErrors.company || validationErrors.role || validationErrors.domain || validationErrors.bio) && (
-                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>Action Required</span>
-                      </span>
+
+                <div className="flex-1 space-y-2.5 text-center sm:text-left">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload Photo</span>
+                    </button>
+
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={handleResetAvatar}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Reset</span>
+                      </button>
                     )}
-                  </h2>
-                  <p className="text-[11px] text-slate-500 font-medium">Tell us about your brand, role, domain, and services offered.</p>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    JPG, PNG or WEBP • Max 5 MB • 300x300px (min)
+                  </p>
                 </div>
               </div>
-              <div className="text-slate-400 hover:text-slate-600 p-1">
-                {collapsedBlocks['identity'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* ROW 1 RIGHT: BLOCK 4 - Networking Groups */}
+        <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+          validationErrors.groups ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+        }`}>
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('groups')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Users2 className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                  <span>Networking Groups</span>
+                  {validationErrors.groups && (
+                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200 shrink-0">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Required</span>
+                    </span>
+                  )}
+                </h2>
+                {collapsedBlocks['groups'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {networkingGroups.length > 0
+                      ? (networkingGroups.length <= 2 ? networkingGroups.join(' · ') : `${networkingGroups.slice(0, 2).join(' · ')} +${networkingGroups.length - 2}`)
+                      : '0 groups'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">Manage your networking group memberships, chapters, or clubs.</p>
+                )}
               </div>
             </div>
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+              {collapsedBlocks['groups'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </div>
+          </div>
 
-            {/* Body */}
-            {!collapsedBlocks['identity'] && (
-              <form onSubmit={handleSaveProfile} className="p-5 space-y-4 animate-fadeIn">
+          {/* Body */}
+          {!collapsedBlocks['groups'] && (
+            <div className="p-5 space-y-4 animate-fadeIn">
+              {validationErrors.groups && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{validationErrors.groups}</span>
+                </div>
+              )}
+              {cardError['groups'] && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                  <span>{cardError['groups']}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAddGroup} className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={groupInput}
+                    onChange={(e) => setGroupInput(e.target.value)}
+                    placeholder="enter group name..."
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={cardSaving['groups']}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
+                >
+                  {cardSaving['groups'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between pt-1">
+                <h3 className="text-xs font-bold text-slate-900">Your Networking Groups ({networkingGroups.length})</h3>
+                <span className="text-[10px] font-bold text-slate-400">Max 10</span>
+              </div>
+
+              {/* Tag Pills */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {networkingGroups.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic">No networking groups added yet.</div>
+                ) : (
+                  networkingGroups.map((grp, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                    >
+                      <span>{grp}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGroup(idx)}
+                        className="hover:text-blue-900 transition-colors p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ROW 2 LEFT: BLOCK 2 - Personal & Professional Identity */}
+        <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+          (validationErrors.name || validationErrors.phone || validationErrors.company || validationErrors.role || validationErrors.domain || validationErrors.bio)
+            ? 'border-rose-300 ring-2 ring-rose-100'
+            : 'border-slate-200/90'
+        }`}>
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('identity')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <User className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                  <span className="truncate">Personal & Professional Identity</span>
+                  {(validationErrors.name || validationErrors.phone || validationErrors.company || validationErrors.role || validationErrors.domain || validationErrors.bio) && (
+                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200 shrink-0">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Required</span>
+                    </span>
+                  )}
+                </h2>
+                {collapsedBlocks['identity'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {formData.role || formData.company || formData.domain
+                      ? `${formData.role || 'Member'}${formData.company ? ' · ' + formData.company : ''}${formData.domain ? ' · ' + formData.domain : ''}`
+                      : 'Tell us about your brand, role & domain'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">Tell us about your brand, role, domain, and services offered.</p>
+                )}
+              </div>
+            </div>
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+              {collapsedBlocks['identity'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </div>
+          </div>
+
+          {/* Body */}
+          {!collapsedBlocks['identity'] && (
+            <form onSubmit={handleSaveProfile} className="p-5 space-y-4 animate-fadeIn">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Full Name <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-slate-400" />
+                    <span>Pre-fetched</span>
+                  </span>
+                </div>
+                <div className="relative">
+                  <User className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    disabled
+                    value={formData.name || user?.displayName || ''}
+                    placeholder="Your Full Name"
+                    className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 cursor-not-allowed"
+                  />
+                  {(formData.name || user?.displayName) && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-bold text-slate-700">
-                      Full Name <span className="text-rose-500">*</span>
+                      Email Address <span className="text-rose-500">*</span>
                     </label>
                     <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1">
                       <Lock className="w-3 h-3 text-slate-400" />
-                      <span>Pre-fetched (Non-editable)</span>
+                      <span>Verified</span>
                     </span>
                   </div>
                   <div className="relative">
-                    <User className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <Mail className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                     <input
-                      type="text"
+                      type="email"
                       disabled
-                      value={formData.name || user?.displayName || ''}
-                      placeholder="Your Full Name"
+                      value={formData.email || user?.email || ''}
                       className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 cursor-not-allowed"
                     />
-                    {(formData.name || user?.displayName) && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-slate-700">
-                        Email Address <span className="text-rose-500">*</span>
-                      </label>
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <Lock className="w-3 h-3 text-slate-400" />
-                        <span>Pre-fetched (Verified)</span>
-                      </span>
-                    </div>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                      <input
-                        type="email"
-                        disabled
-                        value={formData.email || user?.email || ''}
-                        className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 cursor-not-allowed"
-                      />
-                      {(formData.email || user?.email) && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Phone Number <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. +91 9876543210"
-                        value={formData.phone}
-                        onChange={(e) => {
-                          setFormData({ ...formData, phone: e.target.value });
-                          if (validationErrors.phone) {
-                            setValidationErrors((prev) => ({ ...prev, phone: '' }));
-                          }
-                        }}
-                        className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
-                          validationErrors.phone
-                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
-                            : 'border-slate-200 focus:ring-blue-500'
-                        }`}
-                      />
-                      {formData.phone && !validationErrors.phone && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                    </div>
-                    {validationErrors.phone && (
-                      <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>{validationErrors.phone}</span>
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Brand/Company Name & Role & Domain Inputs */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Brand/Company Name <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Building2 className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. NexaCorp / Acme Inc"
-                        value={formData.company}
-                        onChange={(e) => {
-                          setFormData({ ...formData, company: e.target.value });
-                          if (validationErrors.company) {
-                            setValidationErrors((prev) => ({ ...prev, company: '' }));
-                          }
-                        }}
-                        className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
-                          validationErrors.company
-                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
-                            : 'border-slate-200 focus:ring-blue-500'
-                        }`}
-                      />
-                      {formData.company && !validationErrors.company && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                    </div>
-                    {validationErrors.company && (
-                      <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>{validationErrors.company}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Role <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Briefcase className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Founder & CEO / VP Marketing"
-                        value={formData.role}
-                        onChange={(e) => {
-                          setFormData({ ...formData, role: e.target.value });
-                          if (validationErrors.role) {
-                            setValidationErrors((prev) => ({ ...prev, role: '' }));
-                          }
-                        }}
-                        className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
-                          validationErrors.role
-                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
-                            : 'border-slate-200 focus:ring-blue-500'
-                        }`}
-                      />
-                      {formData.role && !validationErrors.role && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                    </div>
-                    {validationErrors.role && (
-                      <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>{validationErrors.role}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Domain <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Compass className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. SaaS / HealthTech / FinTech"
-                        value={formData.domain}
-                        onChange={(e) => {
-                          setFormData({ ...formData, domain: e.target.value });
-                          if (validationErrors.domain) {
-                            setValidationErrors((prev) => ({ ...prev, domain: '' }));
-                          }
-                        }}
-                        className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
-                          validationErrors.domain
-                            ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
-                            : 'border-slate-200 focus:ring-blue-500'
-                        }`}
-                      />
-                      {formData.domain && !validationErrors.domain && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                    </div>
-                    {validationErrors.domain && (
-                      <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>{validationErrors.domain}</span>
-                      </p>
-                    )}
+                    {(formData.email || user?.email) && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold text-slate-700">
-                      Services We Offer <span className="text-rose-500">*</span>
-                    </label>
-                    <span className="text-[10px] font-bold text-slate-400">
-                      {formData.bio.length} / 500
-                    </span>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Phone Number <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. +91 9876543210"
+                      value={formData.phone}
+                      onChange={(e) => {
+                        setFormData({ ...formData, phone: e.target.value });
+                        if (validationErrors.phone) {
+                          setValidationErrors((prev) => ({ ...prev, phone: '' }));
+                        }
+                      }}
+                      className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                        validationErrors.phone
+                          ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                          : 'border-slate-200 focus:ring-blue-500'
+                      }`}
+                    />
+                    {formData.phone && !validationErrors.phone && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
                   </div>
-                  <textarea
-                    rows={4}
-                    maxLength={500}
-                    required
-                    value={formData.bio}
-                    onChange={(e) => {
-                      setFormData({ ...formData, bio: e.target.value });
-                      if (validationErrors.bio) {
-                        setValidationErrors((prev) => ({ ...prev, bio: '' }));
-                      }
-                    }}
-                    placeholder="Describe the key services, solutions, or products your brand or company offers..."
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden leading-relaxed ${
-                      validationErrors.bio
-                        ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
-                        : 'border-slate-200 focus:ring-blue-500'
-                    }`}
-                  />
-                  {validationErrors.bio && (
+                  {validationErrors.phone && (
                     <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      <span>{validationErrors.bio}</span>
+                      <span>{validationErrors.phone}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Brand/Company <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Building2 className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Company Name"
+                      value={formData.company}
+                      onChange={(e) => {
+                        setFormData({ ...formData, company: e.target.value });
+                        if (validationErrors.company) {
+                          setValidationErrors((prev) => ({ ...prev, company: '' }));
+                        }
+                      }}
+                      className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                        validationErrors.company
+                          ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                          : 'border-slate-200 focus:ring-blue-500'
+                      }`}
+                    />
+                    {formData.company && !validationErrors.company && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                  </div>
+                  {validationErrors.company && (
+                    <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>{validationErrors.company}</span>
                     </p>
                   )}
                 </div>
 
-                {/* Social Links */}
-                <div className="pt-2 space-y-2.5 border-t border-slate-100">
-                  <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                    SOCIAL & WEB PROFILES
-                  </label>
-
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-blue-600">
-                        <Linkedin className="w-4 h-4" />
-                      </div>
-                      <input
-                        type="url"
-                        placeholder="https://linkedin.com/in/username"
-                        value={formData.linkedin}
-                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                        className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                      />
-                      {formData.linkedin && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                    </div>
-
-                    <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-pink-600">
-                        <Instagram className="w-4 h-4" />
-                      </div>
-                      <input
-                        type="url"
-                        placeholder="https://instagram.com/username"
-                        value={formData.instagram}
-                        onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
-                        className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                      />
-                      {formData.instagram && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                    </div>
-
-                    <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-emerald-600">
-                        <Globe className="w-4 h-4" />
-                      </div>
-                      <input
-                        type="url"
-                        placeholder="https://yourwebsite.com"
-                        value={formData.website}
-                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                        className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                      />
-                      {formData.website && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
-                    </div>
-                  </div>
-                </div>
-              </form>
-            )}
-          </div>
-
-          {/* BLOCK 3: Networking Locations (Collapsible) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
-            {/* Header */}
-            <div
-              onClick={() => toggleBlock('locations')}
-              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <MapPin className="w-4 h-4 text-emerald-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Locations</h2>
-                  <p className="text-[11px] text-slate-500 font-medium">Manage your current location and target cities for networking.</p>
-                </div>
-              </div>
-              <div className="text-slate-400 hover:text-slate-600 p-1">
-                {collapsedBlocks['locations'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </div>
-            </div>
-
-            {/* Body */}
-            {!collapsedBlocks['locations'] && (
-              <div className="p-5 space-y-4 animate-fadeIn">
-                {/* Field 1: Current City */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    I am in city
+                    Role <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <MapPin className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <Briefcase className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                     <input
                       type="text"
-                      value={currentCity}
-                      onChange={(e) => setCurrentCity(e.target.value)}
-                      placeholder="enter your city (e.g. Mumbai)..."
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                      required
+                      placeholder="e.g. Founder & CEO"
+                      value={formData.role}
+                      onChange={(e) => {
+                        setFormData({ ...formData, role: e.target.value });
+                        if (validationErrors.role) {
+                          setValidationErrors((prev) => ({ ...prev, role: '' }));
+                        }
+                      }}
+                      className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                        validationErrors.role
+                          ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                          : 'border-slate-200 focus:ring-blue-500'
+                      }`}
                     />
+                    {formData.role && !validationErrors.role && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
                   </div>
+                  {validationErrors.role && (
+                    <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>{validationErrors.role}</span>
+                    </p>
+                  )}
                 </div>
 
-                {/* Field 2: Target Cities */}
-                <div className="pt-2 border-t border-slate-100 space-y-2">
-                  <label className="block text-xs font-bold text-slate-700">
-                    I am looking to network with people in
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Domain <span className="text-rose-500">*</span>
                   </label>
-                  {cardError['cities'] && (
-                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
-                      <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                      <span>{cardError['cities']}</span>
-                    </div>
+                  <div className="relative">
+                    <Compass className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. SaaS / AI"
+                      value={formData.domain}
+                      onChange={(e) => {
+                        setFormData({ ...formData, domain: e.target.value });
+                        if (validationErrors.domain) {
+                          setValidationErrors((prev) => ({ ...prev, domain: '' }));
+                        }
+                      }}
+                      className={`w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden ${
+                        validationErrors.domain
+                          ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                          : 'border-slate-200 focus:ring-blue-500'
+                      }`}
+                    />
+                    {formData.domain && !validationErrors.domain && <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-2.5 top-2.5" />}
+                  </div>
+                  {validationErrors.domain && (
+                    <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>{validationErrors.domain}</span>
+                    </p>
                   )}
-                  <form onSubmit={handleAddTargetCity} className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                      <input
-                        type="text"
-                        value={targetCityInput}
-                        onChange={(e) => setTargetCityInput(e.target.value)}
-                        placeholder="enter city name..."
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={cardSaving['cities']}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Services We Offer <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {formData.bio.length} / 500
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  maxLength={500}
+                  required
+                  value={formData.bio}
+                  onChange={(e) => {
+                    setFormData({ ...formData, bio: e.target.value });
+                    if (validationErrors.bio) {
+                      setValidationErrors((prev) => ({ ...prev, bio: '' }));
+                    }
+                  }}
+                  placeholder="Describe the key services, solutions, or products your brand or company offers..."
+                  className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:outline-hidden leading-relaxed ${
+                    validationErrors.bio
+                      ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/30'
+                      : 'border-slate-200 focus:ring-blue-500'
+                  }`}
+                />
+                {validationErrors.bio && (
+                  <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>{validationErrors.bio}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Social Links */}
+              <div className="pt-2 space-y-2 border-t border-slate-100">
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  Social & Web Profiles
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="relative">
+                    <Linkedin className="w-4 h-4 absolute left-3 top-2.5 text-blue-600" />
+                    <input
+                      type="url"
+                      placeholder="LinkedIn URL"
+                      value={formData.linkedin}
+                      onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <Instagram className="w-4 h-4 absolute left-3 top-2.5 text-pink-600" />
+                    <input
+                      type="url"
+                      placeholder="Instagram URL"
+                      value={formData.instagram}
+                      onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <Globe className="w-4 h-4 absolute left-3 top-2.5 text-emerald-600" />
+                    <input
+                      type="url"
+                      placeholder="Website URL"
+                      value={formData.website}
+                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* ROW 2 RIGHT: BLOCK 5 - Hobbies */}
+        <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+          validationErrors.hobbies ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+        }`}>
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('hobbies')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+                <Heart className="w-4 h-4 text-rose-500" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                  <span>Hobbies</span>
+                  {validationErrors.hobbies && (
+                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200 shrink-0">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Required</span>
+                    </span>
+                  )}
+                </h2>
+                {collapsedBlocks['hobbies'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {hobbies.length > 0
+                      ? (hobbies.length <= 3 ? hobbies.join(' · ') : `${hobbies.slice(0, 3).join(' · ')} +${hobbies.length - 3}`)
+                      : 'No hobbies added'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">List your favorite personal hobbies and activities.</p>
+                )}
+              </div>
+            </div>
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+              {collapsedBlocks['hobbies'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </div>
+          </div>
+
+          {/* Body */}
+          {!collapsedBlocks['hobbies'] && (
+            <div className="p-5 space-y-4 animate-fadeIn">
+              {validationErrors.hobbies && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{validationErrors.hobbies}</span>
+                </div>
+              )}
+              {cardError['hobbies'] && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                  <span>{cardError['hobbies']}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAddHobby} className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={hobbyInput}
+                    onChange={(e) => setHobbyInput(e.target.value)}
+                    placeholder="enter hobby name..."
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={cardSaving['hobbies']}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
+                >
+                  {cardSaving['hobbies'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between pt-1">
+                <h3 className="text-xs font-bold text-slate-900">Your Hobbies ({hobbies.length})</h3>
+                <span className="text-[10px] font-bold text-slate-400">Max 5</span>
+              </div>
+
+              {/* Tag Pills */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {hobbies.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic">No hobbies added yet.</div>
+                ) : (
+                  hobbies.map((hb, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
                     >
-                      {cardSaving['cities'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : '+ Add'}
-                    </button>
-                  </form>
-
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {targetCities.length === 0 ? (
-                      <div className="text-xs text-slate-400 italic">No target cities added yet.</div>
-                    ) : (
-                      targetCities.map((city, idx) => (
-                        <div
-                          key={idx}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold animate-fadeIn"
-                        >
-                          <span>📍 {city}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTargetCity(idx)}
-                            className="hover:text-emerald-900 transition-colors p-0.5"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                      <span>{hb}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHobby(idx)}
+                        className="hover:text-blue-900 transition-colors p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* RIGHT COLUMN: Groups, Hobbies, Interests, Objectives */}
-        <div className="lg:col-span-7 space-y-6">
-
-          {/* BLOCK 4: Networking Groups (Collapsible) */}
-          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
-            validationErrors.groups ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
-          }`}>
-            {/* Header */}
-            <div
-              onClick={() => toggleBlock('groups')}
-              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <Users2 className="w-4 h-4 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
-                    <span>Networking Groups</span>
-                    {validationErrors.groups && (
-                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>At least 1 required</span>
-                      </span>
-                    )}
-                  </h2>
-                  <p className="text-[11px] text-slate-500 font-medium">Manage your networking group memberships, chapters, or clubs.</p>
-                </div>
+        {/* ROW 3 LEFT: BLOCK 3 - Networking Locations */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('locations')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="text-slate-400 hover:text-slate-600 p-1">
-                {collapsedBlocks['groups'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Locations</h2>
+                {collapsedBlocks['locations'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {[currentCity, ...targetCities].filter(Boolean).length > 0
+                      ? ([currentCity, ...targetCities].filter(Boolean).slice(0, 2).join(' · ') + ([currentCity, ...targetCities].filter(Boolean).length > 2 ? ` +${[currentCity, ...targetCities].filter(Boolean).length - 2}` : ''))
+                      : 'No locations added'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">Manage your current location and target cities for networking.</p>
+                )}
               </div>
             </div>
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+              {collapsedBlocks['locations'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </div>
+          </div>
 
-            {/* Body */}
-            {!collapsedBlocks['groups'] && (
-              <div className="p-5 space-y-4 animate-fadeIn">
-                {validationErrors.groups && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span>{validationErrors.groups}</span>
-                  </div>
-                )}
-                {cardError['groups'] && (
+          {/* Body */}
+          {!collapsedBlocks['locations'] && (
+            <div className="p-5 space-y-4 animate-fadeIn">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  I am in city
+                </label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={currentCity}
+                    onChange={(e) => setCurrentCity(e.target.value)}
+                    placeholder="enter your city (e.g. Mumbai)..."
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                <label className="block text-xs font-bold text-slate-700">
+                  I am looking to network with people in
+                </label>
+                {cardError['cities'] && (
                   <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
                     <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                    <span>{cardError['groups']}</span>
+                    <span>{cardError['cities']}</span>
                   </div>
                 )}
-
-                <form onSubmit={handleAddGroup} className="flex items-center gap-2">
+                <form onSubmit={handleAddTargetCity} className="flex items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                     <input
                       type="text"
-                      value={groupInput}
-                      onChange={(e) => setGroupInput(e.target.value)}
-                      placeholder="enter group name..."
+                      value={targetCityInput}
+                      onChange={(e) => setTargetCityInput(e.target.value)}
+                      placeholder="enter city name..."
                       className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     />
                   </div>
                   <button
                     type="submit"
-                    disabled={cardSaving['groups']}
+                    disabled={cardSaving['cities']}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
                   >
-                    {cardSaving['groups'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
+                    {cardSaving['cities'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : '+ Add'}
                   </button>
                 </form>
 
-                <div className="flex items-center justify-between pt-1">
-                  <h3 className="text-xs font-bold text-slate-900">Your Networking Groups ({networkingGroups.length})</h3>
-                  <span className="text-[10px] font-bold text-slate-400">Max 10</span>
-                </div>
-
-                {/* Tag Pills */}
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {networkingGroups.length === 0 ? (
-                    <div className="text-xs text-slate-400 italic">No networking groups added yet.</div>
+                  {targetCities.length === 0 ? (
+                    <div className="text-xs text-slate-400 italic">No target cities added yet.</div>
                   ) : (
-                    networkingGroups.map((grp, idx) => (
+                    targetCities.map((city, idx) => (
                       <div
                         key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold animate-fadeIn"
                       >
-                        <span>{grp}</span>
+                        <span>📍 {city}</span>
                         <button
                           type="button"
-                          onClick={() => handleRemoveGroup(idx)}
-                          className="hover:text-blue-900 transition-colors p-0.5"
+                          onClick={() => handleRemoveTargetCity(idx)}
+                          className="hover:text-emerald-900 transition-colors p-0.5"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -1451,325 +1567,139 @@ export const ProfilePage: React.FC = () => {
                   )}
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* BLOCK 5: Hobbies (Collapsible) */}
-          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
-            validationErrors.hobbies ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
-          }`}>
-            {/* Header */}
-            <div
-              onClick={() => toggleBlock('hobbies')}
-              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-                  <Heart className="w-4 h-4 text-rose-500" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
-                    <span>Hobbies</span>
-                    {validationErrors.hobbies && (
-                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>At least 1 required</span>
-                      </span>
-                    )}
-                  </h2>
-                  <p className="text-[11px] text-slate-500 font-medium">List your favorite personal hobbies and activities.</p>
-                </div>
-              </div>
-              <div className="text-slate-400 hover:text-slate-600 p-1">
-                {collapsedBlocks['hobbies'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </div>
             </div>
-
-            {/* Body */}
-            {!collapsedBlocks['hobbies'] && (
-              <div className="p-5 space-y-4 animate-fadeIn">
-                {validationErrors.hobbies && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span>{validationErrors.hobbies}</span>
-                  </div>
-                )}
-                {cardError['hobbies'] && (
-                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
-                    <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                    <span>{cardError['hobbies']}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleAddHobby} className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={hobbyInput}
-                      onChange={(e) => setHobbyInput(e.target.value)}
-                      placeholder="enter hobby name..."
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={cardSaving['hobbies']}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
-                  >
-                    {cardSaving['hobbies'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
-                  </button>
-                </form>
-
-                <div className="flex items-center justify-between pt-1">
-                  <h3 className="text-xs font-bold text-slate-900">Your Hobbies ({hobbies.length})</h3>
-                  <span className="text-[10px] font-bold text-slate-400">Max 5</span>
-                </div>
-
-                {/* Tag Pills */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {hobbies.length === 0 ? (
-                    <div className="text-xs text-slate-400 italic">No hobbies added yet.</div>
-                  ) : (
-                    hobbies.map((hb, idx) => (
-                      <div
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
-                      >
-                        <span>{hb}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveHobby(idx)}
-                          className="hover:text-blue-900 transition-colors p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* BLOCK 6: Interests (Collapsible) */}
-          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
-            validationErrors.interests ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
-          }`}>
-            {/* Header */}
-            <div
-              onClick={() => toggleBlock('interests')}
-              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                  <Compass className="w-4 h-4 text-purple-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
-                    <span>Interests</span>
-                    {validationErrors.interests && (
-                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>At least 1 required</span>
-                      </span>
-                    )}
-                  </h2>
-                  <p className="text-[11px] text-slate-500 font-medium">List your favorite interests and focus areas.</p>
-                </div>
-              </div>
-              <div className="text-slate-400 hover:text-slate-600 p-1">
-                {collapsedBlocks['interests'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </div>
-            </div>
-
-            {/* Body */}
-            {!collapsedBlocks['interests'] && (
-              <div className="p-5 space-y-4 animate-fadeIn">
-                {validationErrors.interests && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span>{validationErrors.interests}</span>
-                  </div>
-                )}
-                {cardError['interests'] && (
-                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
-                    <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                    <span>{cardError['interests']}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleAddInterest} className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={interestInput}
-                      onChange={(e) => setInterestInput(e.target.value)}
-                      placeholder="enter interest name..."
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={cardSaving['interests']}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
-                  >
-                    {cardSaving['interests'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
-                  </button>
-                </form>
-
-                <div className="flex items-center justify-between pt-1">
-                  <h3 className="text-xs font-bold text-slate-900">Your Interests ({userInterests.length})</h3>
-                  <span className="text-[10px] font-bold text-slate-400">Max 10</span>
-                </div>
-
-                {/* Tag Pills */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {userInterests.length === 0 ? (
-                    <div className="text-xs text-slate-400 italic">No interests added yet.</div>
-                  ) : (
-                    userInterests.map((interest, idx) => (
-                      <div
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
-                      >
-                        <span>{interest}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveInterest(idx)}
-                          className="hover:text-blue-900 transition-colors p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* BLOCK 7: Networking Objectives (Collapsible) */}
-          <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
-            validationErrors.objectives ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
-          }`}>
-            {/* Header */}
-            <div
-              onClick={() => toggleBlock('objectives')}
-              className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                  <Zap className="w-4 h-4 text-amber-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
-                    <span>Networking Objectives</span>
-                    {validationErrors.objectives && (
-                      <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>At least 1 required</span>
-                      </span>
-                    )}
-                  </h2>
-                  <p className="text-[11px] text-slate-500 font-medium">What are you trying to achieve through networking?</p>
-                </div>
-              </div>
-              <div className="text-slate-400 hover:text-slate-600 p-1">
-                {collapsedBlocks['objectives'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </div>
-            </div>
-
-            {/* Body */}
-            {!collapsedBlocks['objectives'] && (
-              <div className="p-5 space-y-4 animate-fadeIn">
-                {validationErrors.objectives && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span>{validationErrors.objectives}</span>
-                  </div>
-                )}
-                {cardError['objectives'] && (
-                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
-                    <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                    <span>{cardError['objectives']}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleAddGoal} className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={goalInput}
-                      onChange={(e) => setGoalInput(e.target.value)}
-                      placeholder="enter objective..."
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={cardSaving['objectives']}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
-                  >
-                    {cardSaving['objectives'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
-                  </button>
-                </form>
-
-                <div className="flex items-center justify-between pt-1">
-                  <h3 className="text-xs font-bold text-slate-900">Your Objectives ({userGoals.length})</h3>
-                  <span className="text-[10px] font-bold text-slate-400">Max 5</span>
-                </div>
-
-                {/* Tag Pills */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {userGoals.length === 0 ? (
-                    <div className="text-xs text-slate-400 italic">No objectives added yet.</div>
-                  ) : (
-                    userGoals.map((goal, idx) => (
-                      <div
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
-                      >
-                        <span>{goal}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveGoal(idx)}
-                          className="hover:text-blue-900 transition-colors p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
-      </div>
 
-      {/* 4. BOTTOM 3-COLUMN SECTION */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-        
-        {/* BLOCK 8: Networking Goals (Collapsible - Frequency & Connections) */}
-        <div className="md:col-span-4 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+        {/* ROW 3 RIGHT: BLOCK 6 - Interests */}
+        <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+          validationErrors.interests ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+        }`}>
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('interests')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <Compass className="w-4 h-4 text-purple-600" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                  <span>Interests</span>
+                  {validationErrors.interests && (
+                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200 shrink-0">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Required</span>
+                    </span>
+                  )}
+                </h2>
+                {collapsedBlocks['interests'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {userInterests.length > 0
+                      ? (userInterests.length <= 3 ? userInterests.join(' · ') : `${userInterests.slice(0, 3).join(' · ')} +${userInterests.length - 3}`)
+                      : 'No interests added'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">List your favorite interests and focus areas.</p>
+                )}
+              </div>
+            </div>
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+              {collapsedBlocks['interests'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </div>
+          </div>
+
+          {/* Body */}
+          {!collapsedBlocks['interests'] && (
+            <div className="p-5 space-y-4 animate-fadeIn">
+              {validationErrors.interests && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{validationErrors.interests}</span>
+                </div>
+              )}
+              {cardError['interests'] && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                  <span>{cardError['interests']}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAddInterest} className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={interestInput}
+                    onChange={(e) => setInterestInput(e.target.value)}
+                    placeholder="enter interest name..."
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={cardSaving['interests']}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
+                >
+                  {cardSaving['interests'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between pt-1">
+                <h3 className="text-xs font-bold text-slate-900">Your Interests ({userInterests.length})</h3>
+                <span className="text-[10px] font-bold text-slate-400">Max 10</span>
+              </div>
+
+              {/* Tag Pills */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {userInterests.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic">No interests added yet.</div>
+                ) : (
+                  userInterests.map((interest, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                    >
+                      <span>{interest}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveInterest(idx)}
+                        className="hover:text-blue-900 transition-colors p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ROW 4 LEFT: BLOCK 8 - Networking Goals */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
           {/* Header */}
           <div
             onClick={() => toggleBlock('goals')}
-            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                 <Target className="w-4 h-4 text-blue-600" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-sm font-bold text-slate-900 leading-tight">Networking Goals</h2>
-                <p className="text-[11px] text-slate-500 font-medium">Set your networking target frequency and connections.</p>
+                {collapsedBlocks['goals'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {networkingNewConnections} connections per {networkingTargetPeriod}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">Set your networking target frequency and connections.</p>
+                )}
               </div>
             </div>
-            <div className="text-slate-400 hover:text-slate-600 p-1">
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
               {collapsedBlocks['goals'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
             </div>
           </div>
@@ -1819,33 +1749,147 @@ export const ProfilePage: React.FC = () => {
           )}
         </div>
 
-        {/* BLOCK 9: Target Industries & Businesses (Collapsible) */}
-        <div className={`md:col-span-4 bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+        {/* ROW 4 RIGHT: BLOCK 7 - Networking Objectives */}
+        <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+          validationErrors.objectives ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
+        }`}>
+          {/* Header */}
+          <div
+            onClick={() => toggleBlock('objectives')}
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <Zap className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                  <span>Networking Objectives</span>
+                  {validationErrors.objectives && (
+                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200 shrink-0">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Required</span>
+                    </span>
+                  )}
+                </h2>
+                {collapsedBlocks['objectives'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {userGoals.length > 0
+                      ? (userGoals.length <= 2 ? userGoals.join(' · ') : `${userGoals.slice(0, 2).join(' · ')} +${userGoals.length - 2}`)
+                      : 'No objectives added'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">What are you trying to achieve through networking?</p>
+                )}
+              </div>
+            </div>
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
+              {collapsedBlocks['objectives'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </div>
+          </div>
+
+          {/* Body */}
+          {!collapsedBlocks['objectives'] && (
+            <div className="p-5 space-y-4 animate-fadeIn">
+              {validationErrors.objectives && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{validationErrors.objectives}</span>
+                </div>
+              )}
+              {cardError['objectives'] && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                  <span>{cardError['objectives']}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAddGoal} className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={goalInput}
+                    onChange={(e) => setGoalInput(e.target.value)}
+                    placeholder="enter objective..."
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={cardSaving['objectives']}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1 disabled:opacity-50"
+                >
+                  {cardSaving['objectives'] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between pt-1">
+                <h3 className="text-xs font-bold text-slate-900">Your Objectives ({userGoals.length})</h3>
+                <span className="text-[10px] font-bold text-slate-400">Max 5</span>
+              </div>
+
+              {/* Tag Pills */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {userGoals.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic">No objectives added yet.</div>
+                ) : (
+                  userGoals.map((goal, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold animate-fadeIn"
+                    >
+                      <span>{goal}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGoal(idx)}
+                        className="hover:text-blue-900 transition-colors p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ROW 5 LEFT: BLOCK 9 - Target Industries & Businesses */}
+        <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
           validationErrors.targets ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
         }`}>
           {/* Header */}
           <div
             onClick={() => toggleBlock('targets')}
-            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                 <Building2 className="w-4 h-4 text-purple-600" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
-                  <span>Target Industries & Businesses</span>
+                  <span className="truncate">Target Industries & Businesses</span>
                   {validationErrors.targets && (
-                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200">
+                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200 shrink-0">
                       <AlertCircle className="w-3 h-3" />
-                      <span>At least 1 required</span>
+                      <span>Required</span>
                     </span>
                   )}
                 </h2>
-                <p className="text-[11px] text-slate-500 font-medium">Specify industries, company types, or business segments you want to connect with.</p>
+                {collapsedBlocks['targets'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {targetBusinesses.length > 0
+                      ? (targetBusinesses.length <= 2 ? targetBusinesses.join(' · ') : `${targetBusinesses.slice(0, 2).join(' · ')} +${targetBusinesses.length - 2}`)
+                      : 'No target fields added'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">Specify industries, company types, or business segments you want to connect with.</p>
+                )}
               </div>
             </div>
-            <div className="text-slate-400 hover:text-slate-600 p-1">
+            <div className="text-slate-400 hover:text-slate-600 p-1 shrink-0 ml-2">
               {collapsedBlocks['targets'] ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
             </div>
           </div>
@@ -1917,14 +1961,14 @@ export const ProfilePage: React.FC = () => {
           )}
         </div>
 
-        {/* BLOCK 10: Connection Bridges (Collapsible) */}
-        <div className={`md:col-span-4 bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
+        {/* ROW 5 RIGHT: BLOCK 10 - Connection Bridges */}
+        <div className={`bg-white border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden transition-all ${
           validationErrors.bridges ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90'
         }`}>
           {/* Header */}
           <div
             onClick={() => toggleBlock('bridges')}
-            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100"
+            className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors border-b border-slate-100 select-none"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
@@ -1936,13 +1980,19 @@ export const ProfilePage: React.FC = () => {
                   {validationErrors.bridges && (
                     <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md flex items-center gap-1 border border-rose-200 shrink-0">
                       <AlertCircle className="w-3 h-3" />
-                      <span>At least 1 required</span>
+                      <span>Required</span>
                     </span>
                   )}
                 </h2>
-                <p className="text-[11px] text-slate-500 font-medium truncate">
-                  Who can you connect people to? Add key contacts and relationship details.
-                </p>
+                {collapsedBlocks['bridges'] ? (
+                  <p className="text-[11px] text-blue-600 font-bold truncate mt-0.5">
+                    {connectionsOffered.length > 0
+                      ? (connectionsOffered.length <= 2 ? connectionsOffered.map(c => c.personName || c.businessDomain).join(' · ') : `${connectionsOffered.slice(0, 2).map(c => c.personName || c.businessDomain).join(' · ')} +${connectionsOffered.length - 2}`)
+                      : 'No bridges added'}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium truncate">Who can you connect people to? Add key contacts and relationship details.</p>
+                )}
               </div>
             </div>
 
