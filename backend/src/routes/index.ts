@@ -119,6 +119,8 @@ apiRouter.post('/recommendations/:id/convert', RecommendationController.convertT
 apiRouter.get('/feed', FeedController.list);
 apiRouter.post('/feed', FeedController.create);
 apiRouter.post('/feed/:id/like', FeedController.like);
+apiRouter.get('/feed/:id/replies', FeedController.getReplies);
+apiRouter.post('/feed/:id/reply', FeedController.createReply);
 
 // Analytics
 apiRouter.get('/analytics', AnalyticsController.getOverview);

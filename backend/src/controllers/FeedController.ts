@@ -58,4 +58,39 @@ export class FeedController {
       next(err);
     }
   }
+
+  static async getReplies(req: Request, res: Response, next: NextFunction) {
+    try {
+      const postId = parseInt(String(req.params.id), 10);
+      const replies = await FeedRepository.getRepliesForPost(postId);
+      return sendSuccess(res, replies);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async createReply(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.userId;
+      const postId = parseInt(String(req.params.id), 10);
+      const { replyType, targetPerson, content } = req.body;
+
+      const user = await UserRepository.findById(userId);
+
+      const replyId = await FeedRepository.createReply(
+        userId,
+        postId,
+        user?.display_name || 'User',
+        user?.avatar_url || null,
+        replyType || 'wants to meet to',
+        targetPerson || 'Sanjeev Sarma',
+        content || null
+      );
+
+      await logAudit(req, 'FEED_REPLY_CREATED', 'reply', replyId);
+      return sendSuccess(res, { replyId, message: 'Reply added to thread' }, 201);
+    } catch (err) {
+      next(err);
+    }
+  }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -8,9 +8,7 @@ import {
   Share2,
   MessageCircle,
   Image as ImageIcon,
-  ChevronRight,
-  UserCheck,
-  Link2
+  ChevronRight
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Post } from '../types';
@@ -59,32 +57,43 @@ export const FeedPage: React.FC = () => {
   const [replyTargetInputs, setReplyTargetInputs] = useState<Record<number, string>>({});
   const [replyContentInputs, setReplyContentInputs] = useState<Record<number, string>>({});
 
-  // Thread Conversations per post (default seeded with Vinay & Devyani thread)
-  const [postReplies, setPostReplies] = useState<Record<number, ReplyItem[]>>({
-    1: [
-      {
-        id: 'r1',
-        authorName: 'Vinay',
-        replyType: 'wants to meet to',
-        targetPerson: 'Sanjeev Sarma',
-        timeAgo: '2h ago',
-        likesCount: 2,
-      },
-      {
-        id: 'r2',
-        authorName: 'Devyani',
-        replyType: 'can connect to',
-        targetPerson: 'Sanjeev Sarma',
-        timeAgo: '1h ago',
-        likesCount: 3,
-      },
-    ],
-  });
+  // Persisted Thread Conversations per post (synced via backend database API)
+  const [postReplies, setPostReplies] = useState<Record<number, ReplyItem[]>>({});
 
   const { data: posts = [], isLoading } = useQuery<Post[]>({
     queryKey: ['feed'],
     queryFn: () => api.get<Post[]>('/feed'),
   });
+
+  // Fetch replies from API for posts
+  const fetchRepliesForPost = async (postId: number) => {
+    try {
+      const res = await api.get<any[]>(`/feed/${postId}/replies`);
+      if (Array.isArray(res)) {
+        const formatted: ReplyItem[] = res.map((r) => ({
+          id: String(r.reply_id),
+          authorName: r.author_name,
+          replyType: r.reply_type || 'wants to meet to',
+          targetPerson: r.target_person || 'Sanjeev Sarma',
+          content: r.content || '',
+          timeAgo: formatDate(r.created_at, 'relative'),
+          likesCount: 0,
+        }));
+        setPostReplies((prev) => ({ ...prev, [postId]: formatted }));
+      }
+    } catch (err) {
+      console.warn('Failed to fetch post replies:', err);
+    }
+  };
+
+  // Pre-load replies for posts when feed loads
+  useEffect(() => {
+    if (posts && posts.length > 0) {
+      posts.forEach((p) => {
+        fetchRepliesForPost(p.post_id);
+      });
+    }
+  }, [posts]);
 
   const createPostMutation = useMutation({
     mutationFn: (newContent: string) => {
@@ -134,49 +143,27 @@ export const FeedPage: React.FC = () => {
     setActiveReactionPicker(null);
   };
 
-  const handleAddThreadReply = (postId: number, defaultTargetName: string) => {
+  const handleAddThreadReply = async (postId: number, defaultTargetName: string) => {
     const selectedReplyType = replyTypeInputs[postId] || 'wants to meet to';
     const targetPersonName = (replyTargetInputs[postId] || defaultTargetName || 'Sanjeev Sarma').trim();
     const commentText = (replyContentInputs[postId] || '').trim();
 
-    const newReplyItem: ReplyItem = {
-      id: `rep-${Date.now()}`,
-      authorName: user?.displayName || 'User',
-      replyType: selectedReplyType,
-      targetPerson: targetPersonName,
-      content: commentText,
-      timeAgo: 'Just now',
-      likesCount: 0,
-    };
+    try {
+      await api.post(`/feed/${postId}/reply`, {
+        replyType: selectedReplyType,
+        targetPerson: targetPersonName,
+        content: commentText,
+      });
 
-    setPostReplies((prev) => {
-      const currentReplies = prev[postId] || [
-        {
-          id: `r1-${postId}`,
-          authorName: 'Vinay',
-          replyType: 'wants to meet to',
-          targetPerson: targetPersonName,
-          timeAgo: '2h ago',
-          likesCount: 2,
-        },
-        {
-          id: `r2-${postId}`,
-          authorName: 'Devyani',
-          replyType: 'can connect to',
-          targetPerson: targetPersonName,
-          timeAgo: '1h ago',
-          likesCount: 3,
-        },
-      ];
-      return {
-        ...prev,
-        [postId]: [...currentReplies, newReplyItem],
-      };
-    });
+      await fetchRepliesForPost(postId);
 
-    setReplyContentInputs((prev) => ({ ...prev, [postId]: '' }));
-    setExpandedThreadPostId(postId);
-    setActiveReplyPostId(null);
+      setReplyContentInputs((prev) => ({ ...prev, [postId]: '' }));
+      setExpandedThreadPostId(postId);
+      setActiveReplyPostId(null);
+      confetti({ particleCount: 25, spread: 40, origin: { y: 0.8 } });
+    } catch (err) {
+      console.error('Failed to post reply to backend:', err);
+    }
   };
 
   // Logged-in user role & company subtitle
@@ -318,7 +305,7 @@ export const FeedPage: React.FC = () => {
             };
             const topEmojis = Object.keys(reactions.counts);
 
-            // Fetch or seed default thread replies for conversation
+            // Fetch or fallback thread replies for conversation
             const replies: ReplyItem[] = postReplies[post.post_id] || [
               {
                 id: `r1-${post.post_id}`,

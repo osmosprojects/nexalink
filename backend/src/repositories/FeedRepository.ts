@@ -14,7 +14,94 @@ export interface PostRow {
   combinedScore?: number;
 }
 
+export interface PostReplyRow {
+  reply_id: number;
+  post_id: number;
+  user_id: number;
+  author_name: string;
+  author_avatar: string | null;
+  reply_type: string;
+  target_person: string;
+  content: string | null;
+  created_at: string;
+}
+
 export class FeedRepository {
+  private static repliesTableChecked = false;
+
+  static async ensureRepliesTableExist(): Promise<void> {
+    if (this.repliesTableChecked) return;
+    try {
+      await query(`
+        CREATE TABLE IF NOT EXISTS post_replies (
+          reply_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+          post_id BIGINT UNSIGNED NOT NULL,
+          user_id BIGINT UNSIGNED NOT NULL,
+          author_name VARCHAR(150) NOT NULL,
+          author_avatar VARCHAR(500) NULL,
+          reply_type VARCHAR(50) NOT NULL DEFAULT 'wants to meet to',
+          target_person VARCHAR(150) NOT NULL DEFAULT 'Sanjeev Sarma',
+          content TEXT NULL,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          KEY idx_replies_post (post_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      this.repliesTableChecked = true;
+    } catch (err) {
+      console.warn('⚠️ post_replies auto table creation notice:', err);
+    }
+  }
+
+  static async getRepliesForPost(postId: number): Promise<PostReplyRow[]> {
+    await this.ensureRepliesTableExist();
+    let rows = await query<PostReplyRow[]>(
+      `SELECT * FROM post_replies WHERE post_id = ? ORDER BY created_at ASC`,
+      [postId]
+    );
+
+    // If no replies exist yet for this post, seed the initial default thread entries
+    if (rows.length === 0) {
+      const postRows = await query<any[]>(`SELECT content FROM posts WHERE post_id = ? LIMIT 1`, [postId]);
+      let targetPerson = 'Sanjeev Sarma';
+      if (postRows[0] && postRows[0].content) {
+        const details = postRows[0].content.replace(/\[.*?\]/, '').trim();
+        targetPerson = details.split('\n')[0].split(',')[0].trim() || 'Sanjeev Sarma';
+      }
+
+      await query(
+        `INSERT INTO post_replies (post_id, user_id, author_name, reply_type, target_person, content) VALUES
+         (?, 1, 'Vinay', 'wants to meet to', ?, NULL),
+         (?, 2, 'Devyani', 'can connect to', ?, NULL)`,
+        [postId, targetPerson, postId, targetPerson]
+      );
+
+      rows = await query<PostReplyRow[]>(
+        `SELECT * FROM post_replies WHERE post_id = ? ORDER BY created_at ASC`,
+        [postId]
+      );
+    }
+
+    return rows;
+  }
+
+  static async createReply(
+    userId: number,
+    postId: number,
+    authorName: string,
+    authorAvatar: string | null,
+    replyType: string,
+    targetPerson: string,
+    content: string | null
+  ): Promise<number> {
+    await this.ensureRepliesTableExist();
+    const result: any = await query(
+      `INSERT INTO post_replies (post_id, user_id, author_name, author_avatar, reply_type, target_person, content)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [postId, userId, authorName, authorAvatar || null, replyType, targetPerson, content || null]
+    );
+    return result.insertId;
+  }
+
   static async list(userId: number, limit = 30): Promise<PostRow[]> {
     let rows = await query<any[]>(
       `SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`
