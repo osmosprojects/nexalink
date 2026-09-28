@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FeedController = void 0;
 const FeedRepository_1 = require("../repositories/FeedRepository");
 const UserRepository_1 = require("../repositories/UserRepository");
+const ProfileRepository_1 = require("../repositories/ProfileRepository");
 const response_1 = require("../helpers/response");
 const audit_1 = require("../middleware/audit");
 class FeedController {
@@ -23,12 +24,17 @@ class FeedController {
             if (!content)
                 return (0, response_1.sendError)(res, 'Content is required', 400);
             const user = await UserRepository_1.UserRepository.findById(userId);
+            const profile = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
+            const authorTitle = profile?.headline ||
+                (profile?.job_title && profile?.company
+                    ? `${profile.job_title} at ${profile.company}`
+                    : profile?.job_title || profile?.company || 'Employee at Osmos Multimedia Pvt Ltd');
             const postId = await FeedRepository_1.FeedRepository.create(userId, {
                 author_name: user?.display_name || 'User',
-                author_title: 'NexaLink Network Member',
+                author_title: authorTitle,
                 author_avatar: user?.avatar_url || null,
                 content,
-                tags: tags || [],
+                tags: tags || null,
             });
             await (0, audit_1.logAudit)(req, 'FEED_POST_CREATED', 'post', postId);
             return (0, response_1.sendSuccess)(res, { postId, message: 'Post published to networking feed' }, 201);

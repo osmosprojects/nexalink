@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { FeedRepository } from '../repositories/FeedRepository';
 import { UserRepository } from '../repositories/UserRepository';
+import { ProfileRepository } from '../repositories/ProfileRepository';
 import { sendSuccess, sendError } from '../helpers/response';
 import { logAudit } from '../middleware/audit';
 
@@ -23,13 +24,20 @@ export class FeedController {
       if (!content) return sendError(res, 'Content is required', 400);
 
       const user = await UserRepository.findById(userId);
+      const profile = await ProfileRepository.getProfileByUserId(userId);
+
+      const authorTitle =
+        profile?.headline ||
+        (profile?.job_title && profile?.company
+          ? `${profile.job_title} at ${profile.company}`
+          : profile?.job_title || profile?.company || 'Employee at Osmos Multimedia Pvt Ltd');
 
       const postId = await FeedRepository.create(userId, {
         author_name: user?.display_name || 'User',
-        author_title: 'NexaLink Network Member',
+        author_title: authorTitle,
         author_avatar: user?.avatar_url || null,
         content,
-        tags: tags || [],
+        tags: tags || null,
       });
 
       await logAudit(req, 'FEED_POST_CREATED', 'post', postId);
