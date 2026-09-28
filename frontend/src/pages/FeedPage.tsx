@@ -575,8 +575,11 @@ export const FeedPage: React.FC = () => {
                           }
                           className="text-[11px] font-bold px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-800 focus:ring-1 focus:ring-brand-500 cursor-pointer"
                         >
-                          <option value="wants to meet to">🤝 wants to meet to</option>
-                          <option value="can connect to">🌟 can connect to</option>
+                          {isWantToMeet ? (
+                            <option value="can connect to">🌟 can connect to</option>
+                          ) : (
+                            <option value="wants to meet to">🤝 wants to meet to</option>
+                          )}
                         </select>
                       </div>
                     </div>
