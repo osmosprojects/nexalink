@@ -63,13 +63,12 @@ class FeedRepository {
     }
     static async create(userId, data) {
         const result = await (0, db_1.query)(`INSERT INTO posts (user_id, author_name, author_title, author_avatar, content, tags, likes_count)
-       VALUES (?, ?, ?, ?, ?, ?, 0)`, [
+       VALUES (?, ?, ?, ?, ?, NULL, 0)`, [
             userId,
             data.author_name,
             data.author_title || null,
             data.author_avatar || null,
             data.content,
-            JSON.stringify(data.tags || []),
         ]);
         return result.insertId;
     }

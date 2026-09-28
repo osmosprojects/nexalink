@@ -89,17 +89,16 @@ export class FeedRepository {
     return rankedPosts.slice(0, limit);
   }
 
-  static async create(userId: number, data: { author_name: string; author_title?: string | null; author_avatar?: string | null; content: string; tags?: string[] }): Promise<number> {
+  static async create(userId: number, data: { author_name: string; author_title?: string | null; author_avatar?: string | null; content: string; tags?: string[] | null }): Promise<number> {
     const result: any = await query(
       `INSERT INTO posts (user_id, author_name, author_title, author_avatar, content, tags, likes_count)
-       VALUES (?, ?, ?, ?, ?, ?, 0)`,
+       VALUES (?, ?, ?, ?, ?, NULL, 0)`,
       [
         userId,
         data.author_name,
         data.author_title || null,
         data.author_avatar || null,
         data.content,
-        JSON.stringify(data.tags || []),
       ]
     );
     return result.insertId;
