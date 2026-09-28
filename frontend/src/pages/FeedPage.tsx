@@ -349,45 +349,43 @@ export const FeedPage: React.FC = () => {
                 </div>
 
                 {/* ============================================================ */}
-                {/* 2. DESKTOP POST DESIGN (HORIZONTAL TWO-COLUMN LAYOUT) */}
+                {/* 2. DESKTOP POST DESIGN (INLINE LAYOUT) */}
                 {/* ============================================================ */}
-                <div className="hidden md:flex flex-row items-center justify-between gap-6">
-                  {/* Left Column: Author Avatar + Name & Title */}
-                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                <div className="hidden md:flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap">
+                    {/* [Avatar] */}
                     <img
                       src={post.author_avatar || profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
                       alt={post.author_name}
                       onClick={() => navigate('/profile')}
-                      className="w-12 h-12 rounded-full object-cover ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
                       title="View Profile"
                     />
-                    <div className="min-w-0">
-                      <h4
+
+                    {/* Inline Content: Abhishek Tiwari 🤝 wants to meet Sanjeev, CEO, OSMOS Multimedia */}
+                    <div className="flex items-center gap-2 text-xs leading-tight flex-wrap">
+                      <span
                         onClick={() => navigate('/profile')}
-                        className="text-sm font-bold text-slate-900 cursor-pointer hover:text-brand-600 transition-colors truncate"
+                        className="font-bold text-slate-900 text-sm cursor-pointer hover:text-brand-600 transition-colors shrink-0"
                       >
                         {post.author_name}
-                      </h4>
-                      <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{authorRoleTitle}</p>
-                    </div>
-                  </div>
+                      </span>
 
-                  {/* Light Vertical Divider */}
-                  <div className="h-10 w-px bg-slate-200/80 shrink-0" />
+                      {/* 🤝 wants to meet (bold) / 🌟 can connect you to (bold) */}
+                      <span className="font-bold text-blue-700 bg-blue-50/90 px-2 py-0.5 rounded-md border border-blue-200 text-xs inline-flex items-center gap-1 shrink-0">
+                        <span>{intentBadgeIcon}</span>
+                        <span>{intentLabel}</span>
+                      </span>
 
-                  {/* Right Column: Intent Pill + Requirement details (NO AVATAR) */}
-                  <div className="flex-1 bg-slate-50/80 border border-slate-200/70 rounded-2xl p-3 flex flex-col items-start gap-1.5 min-w-0">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold shrink-0">
-                      <span>{intentBadgeIcon}</span>
-                      <span>{intentLabel}</span>
-                    </div>
-                    <div className="text-xs font-semibold text-slate-800 leading-snug truncate w-full">
-                      {details}
+                      {/* Requirement details */}
+                      <span className="font-semibold text-slate-700 text-xs">
+                        {details}
+                      </span>
                     </div>
                   </div>
 
                   {/* Time ago */}
-                  <span className="text-[11px] text-slate-400 font-medium shrink-0 self-start mt-1">
+                  <span className="text-[11px] text-slate-400 font-medium shrink-0">
                     {formatDate(post.created_at, 'relative')}
                   </span>
                 </div>
