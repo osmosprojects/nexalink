@@ -7,23 +7,21 @@ import {
   Sparkles,
   UserPlus,
   X,
-  Check,
-  Building,
   MapPin,
-  Filter,
   Eye,
   Heart,
-  RotateCcw,
-  Briefcase,
   ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
   CheckCircle2,
   Users2,
   Lightbulb,
-  ArrowRight,
   Send,
-  MessageSquareShare
+  MoreHorizontal,
+  ThumbsDown,
+  ShieldAlert,
+  ArrowUpDown,
+  Filter
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Recommendation } from '../types';
@@ -35,31 +33,24 @@ import confetti from 'canvas-confetti';
 const SynergyBreakdownWidget: React.FC<{ rec: Recommendation }> = ({ rec }) => {
   const syn = computeRecommendationSynergy(rec);
   return (
-    <div className="space-y-2 bg-slate-50 border border-slate-200/80 p-3 rounded-2xl">
-      <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
-        <span className="flex items-center gap-1.5 uppercase">
-          <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-          <span>Synergy Radar</span>
-        </span>
-        <span className="text-purple-700 font-extrabold">{syn.overallScore}% Synergy</span>
-      </div>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px]">
-        <div>
-          <div className="flex justify-between text-slate-600 font-medium mb-0.5">
-            <span>Domain Match</span>
-            <span className="font-bold text-slate-800">{syn.domainScore}%</span>
-          </div>
-          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-purple-600 h-full rounded-full" style={{ width: `${syn.domainScore}%` }} />
-          </div>
-        </div>
+    <div className="space-y-1.5 bg-slate-50/80 border border-slate-200/60 p-2.5 rounded-xl text-[10px]">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
         <div>
           <div className="flex justify-between text-slate-600 font-medium mb-0.5">
             <span>Goal Match</span>
             <span className="font-bold text-slate-800">{syn.goalScore}%</span>
           </div>
-          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
             <div className="bg-blue-600 h-full rounded-full" style={{ width: `${syn.goalScore}%` }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-slate-600 font-medium mb-0.5">
+            <span>Domain Match</span>
+            <span className="font-bold text-slate-800">{syn.domainScore}%</span>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
+            <div className="bg-purple-600 h-full rounded-full" style={{ width: `${syn.domainScore}%` }} />
           </div>
         </div>
         <div>
@@ -67,7 +58,7 @@ const SynergyBreakdownWidget: React.FC<{ rec: Recommendation }> = ({ rec }) => {
             <span>Warm Bridge</span>
             <span className="font-bold text-slate-800">{syn.bridgeScore}%</span>
           </div>
-          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
             <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${syn.bridgeScore}%` }} />
           </div>
         </div>
@@ -76,7 +67,7 @@ const SynergyBreakdownWidget: React.FC<{ rec: Recommendation }> = ({ rec }) => {
             <span>Geo Proximity</span>
             <span className="font-bold text-slate-800">{syn.geoScore}%</span>
           </div>
-          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
             <div className="bg-amber-600 h-full rounded-full" style={{ width: `${syn.geoScore}%` }} />
           </div>
         </div>
@@ -93,16 +84,23 @@ export const DiscoverPage: React.FC = () => {
   const [warmIntroTarget, setWarmIntroTarget] = useState<Recommendation | null>(null);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
-  // Recommendation Filter Preferences State (Screen 6)
+  // Recommendation Filter Preferences State
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedLookingFor, setSelectedLookingFor] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
+  // Filter Chips & Sort Controls
+  const [filterChip, setFilterChip] = useState<'all' | 'goals' | 'industry' | 'bridge' | 'location' | 'role'>('all');
+  const [sortBy, setSortBy] = useState<'match' | 'recent' | 'name'>('match');
+
+  // Popover Menu State
+  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Keyboard navigation for Desktop (Arrow keys for swiper, Escape for drawer)
+  // Keyboard navigation for Desktop
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (showFilterDrawer && e.key === 'Escape') {
@@ -139,29 +137,48 @@ export const DiscoverPage: React.FC = () => {
     },
   });
 
-  const filtered = recommendations.filter((r) => {
-    const searchLower = search.trim().toLowerCase();
-    const matchSearch =
-      !searchLower ||
-      r.recommended_name.toLowerCase().includes(searchLower) ||
-      r.recommended_role.toLowerCase().includes(searchLower) ||
-      r.recommended_company.toLowerCase().includes(searchLower) ||
-      r.reason.toLowerCase().includes(searchLower) ||
-      (r.skills && r.skills.some((s) => s.toLowerCase().includes(searchLower)));
+  const filtered = recommendations
+    .filter((r) => {
+      const searchLower = search.trim().toLowerCase();
+      const matchSearch =
+        !searchLower ||
+        r.recommended_name.toLowerCase().includes(searchLower) ||
+        r.recommended_role.toLowerCase().includes(searchLower) ||
+        r.recommended_company.toLowerCase().includes(searchLower) ||
+        r.reason.toLowerCase().includes(searchLower) ||
+        (r.skills && r.skills.some((s) => s.toLowerCase().includes(searchLower)));
 
-    const matchIndustry =
-      selectedIndustries.length === 0 ||
-      selectedIndustries.some((ind) => {
-        const targetInd = ind.toLowerCase();
-        return (
-          r.industry?.toLowerCase().includes(targetInd) ||
-          r.reason.toLowerCase().includes(targetInd) ||
-          (r.skills && r.skills.some((s) => s.toLowerCase().includes(targetInd)))
-        );
-      });
+      const matchIndustry =
+        selectedIndustries.length === 0 ||
+        selectedIndustries.some((ind) => {
+          const targetInd = ind.toLowerCase();
+          return (
+            r.industry?.toLowerCase().includes(targetInd) ||
+            r.reason.toLowerCase().includes(targetInd) ||
+            (r.skills && r.skills.some((s) => s.toLowerCase().includes(targetInd)))
+          );
+        });
 
-    return matchSearch && matchIndustry;
-  });
+      let matchChip = true;
+      if (filterChip === 'goals') {
+        matchChip = r.reason.toLowerCase().includes('goal') || r.reason.toLowerCase().includes('partner');
+      } else if (filterChip === 'industry') {
+        matchChip = Boolean(r.industry) || r.reason.toLowerCase().includes('industry') || r.reason.toLowerCase().includes('domain');
+      } else if (filterChip === 'bridge') {
+        matchChip = r.reason.toLowerCase().includes('bridge') || r.reason.toLowerCase().includes('bni') || r.reason.toLowerCase().includes('mutual') || r.reason.toLowerCase().includes('club');
+      } else if (filterChip === 'location') {
+        matchChip = Boolean(r.location) || r.reason.toLowerCase().includes('mumbai') || r.reason.toLowerCase().includes('pune') || r.reason.toLowerCase().includes('geo');
+      } else if (filterChip === 'role') {
+        matchChip = r.recommended_role.toLowerCase().includes('founder') || r.recommended_role.toLowerCase().includes('ceo') || r.recommended_role.toLowerCase().includes('director') || r.recommended_role.toLowerCase().includes('head');
+      }
+
+      return matchSearch && matchIndustry && matchChip;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'match') return b.score - a.score;
+      if (sortBy === 'name') return a.recommended_name.localeCompare(b.recommended_name);
+      return b.recommendation_id - a.recommendation_id;
+    });
 
   const currentSwiperCard = filtered[swiperIndex] || filtered[0];
 
@@ -184,27 +201,27 @@ export const DiscoverPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 w-full max-w-[1400px] mx-auto px-1 sm:px-4 pb-12">
+    <div className="space-y-5 w-full min-w-0 pb-12">
       
-      {/* 1. TOP HEADER BANNER (Screen 1 & 5) */}
-      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-purple-900/10 space-y-5">
+      {/* 1. TOP HEADER BANNER & SEARCH */}
+      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl shadow-purple-900/10 space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 text-xs font-bold">
               <Sparkles className="w-3.5 h-3.5" />
               <span>AI Discovery & Matchmaking Engine</span>
             </div>
-            <h2 className="text-xl sm:text-3xl font-black tracking-tight">Expand Your Strategic Network</h2>
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight">Expand Your Strategic Network</h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
               NexaLink analyzes your goals, interests, location, and network to suggest high-affinity leaders & peers.
             </p>
           </div>
 
-          {/* View Mode Toggle Switch */}
+          {/* View Mode Switcher */}
           <div className="flex items-center p-1 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shrink-0 self-stretch sm:self-auto justify-center">
             <button
               onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 viewMode === 'list'
                   ? 'bg-white text-slate-900 shadow-md'
                   : 'text-slate-300 hover:text-white'
@@ -215,7 +232,7 @@ export const DiscoverPage: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('swiper')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 viewMode === 'swiper'
                   ? 'bg-white text-slate-900 shadow-md'
                   : 'text-slate-300 hover:text-white'
@@ -227,8 +244,8 @@ export const DiscoverPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Search Bar & Filter Drawer Button */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+        {/* Search Bar & Filter Button */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
             <input
@@ -236,13 +253,13 @@ export const DiscoverPage: React.FC = () => {
               placeholder="Search people by name, company, role, location or interests..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-xs pl-10 pr-4 py-3 bg-white/10 text-white placeholder:text-slate-400 border border-white/20 rounded-2xl focus:bg-white/20 focus:outline-hidden"
+              className="w-full text-xs pl-10 pr-4 py-2.5 bg-white/10 text-white placeholder:text-slate-400 border border-white/20 rounded-xl focus:bg-white/20 focus:outline-hidden"
             />
           </div>
 
           <button
             onClick={() => setShowFilterDrawer(true)}
-            className="w-full sm:w-auto px-4 py-3 bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 shrink-0"
+            className="w-full sm:w-auto px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shrink-0"
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Improve Recommendations</span>
@@ -250,7 +267,7 @@ export const DiscoverPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. SWIPER / QUICK DISCOVER VIEW (Screens 2 & 4 - Desktop Dual Pane Upgrade) */}
+      {/* 2. SWIPER / QUICK DISCOVER VIEW */}
       {viewMode === 'swiper' && (
         <div className="pt-2 pb-6 space-y-4">
           {isLoading ? (
@@ -264,15 +281,13 @@ export const DiscoverPage: React.FC = () => {
           ) : (
             <div className="max-w-6xl mx-auto w-full flex flex-col lg:flex-row items-start justify-center gap-6">
               
-              {/* Left Pane: Interactive Deck Card */}
+              {/* Left Deck Card */}
               <div className="w-full max-w-md mx-auto lg:mx-0 shrink-0 bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden animate-fadeIn relative">
                 
-                {/* Swiper Header Counter */}
                 <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-slate-900/70 backdrop-blur-md text-white text-[11px] font-bold rounded-full border border-white/20">
                   Card {swiperIndex + 1} of {filtered.length}
                 </div>
 
-                {/* Score Badge */}
                 <div className="absolute top-3 right-3 z-10">
                   {(() => {
                     const badge = getScoreBadge(currentSwiperCard.score);
@@ -284,7 +299,6 @@ export const DiscoverPage: React.FC = () => {
                   })()}
                 </div>
 
-                {/* Profile Image & Cover */}
                 <div className="h-64 sm:h-72 bg-gradient-to-br from-slate-100 to-indigo-50 relative flex items-center justify-center overflow-hidden">
                   <img
                     src={currentSwiperCard.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentSwiperCard.recommended_name)}&background=3b82f6&color=fff`}
@@ -306,12 +320,10 @@ export const DiscoverPage: React.FC = () => {
                         <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                         <span className="truncate">{currentSwiperCard.location || 'Mumbai, India'}</span>
                       </span>
-                      <span>• 8+ yrs</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Body: Why this match? */}
                 <div className="p-5 space-y-4">
                   <div className="bg-indigo-50/70 border border-indigo-100 p-4 rounded-2xl space-y-2">
                     <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-900">
@@ -328,7 +340,6 @@ export const DiscoverPage: React.FC = () => {
                     </ul>
                   </div>
 
-                  {/* Skills/Tags */}
                   {currentSwiperCard.skills && currentSwiperCard.skills.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {currentSwiperCard.skills.map((skill, idx) => (
@@ -339,7 +350,6 @@ export const DiscoverPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Desktop Prev / Next Nav Row */}
                   <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs text-slate-500 font-semibold">
                     <button
                       onClick={() => setSwiperIndex((prev) => Math.max(0, prev - 1))}
@@ -349,7 +359,7 @@ export const DiscoverPage: React.FC = () => {
                       <ChevronLeft className="w-4 h-4" />
                       <span>Previous</span>
                     </button>
-                    <span>Use Left/Right to Navigate</span>
+                    <span>Left / Right to Navigate</span>
                     <button
                       onClick={() => setSwiperIndex((prev) => Math.min(filtered.length - 1, prev + 1))}
                       disabled={swiperIndex >= filtered.length - 1}
@@ -360,7 +370,6 @@ export const DiscoverPage: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Action Controls (Tinder-style controls) */}
                   <div className="pt-2 flex items-center justify-between gap-2.5">
                     <button
                       onClick={() => dismissMutation.mutate(currentSwiperCard.recommendation_id)}
@@ -381,7 +390,7 @@ export const DiscoverPage: React.FC = () => {
                     <button
                       onClick={() => connectMutation.mutate(currentSwiperCard.recommendation_id)}
                       disabled={connectMutation.isPending}
-                      className="flex-1 py-3 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 shrink-0"
+                      className="flex-1 py-3 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-bold shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 shrink-0"
                     >
                       <Heart className="w-4 h-4 fill-white" />
                       <span>Interested</span>
@@ -390,10 +399,8 @@ export const DiscoverPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Right Pane: Desktop Deep Analysis & AI Preview Panel */}
+              {/* Right Analysis Panel */}
               <div className="hidden lg:flex flex-col flex-1 bg-white rounded-3xl border border-slate-200 p-6 space-y-6 shadow-xl min-w-0 self-stretch">
-                
-                {/* Header */}
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div className="space-y-1 min-w-0">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold">
@@ -416,7 +423,6 @@ export const DiscoverPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Detailed Reasons */}
                 <div className="space-y-3">
                   <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -424,7 +430,7 @@ export const DiscoverPage: React.FC = () => {
                   </h4>
                   <div className="grid grid-cols-1 gap-2.5">
                     {currentSwiperCard.reason.split('\n').map((bullet, idx) => (
-                      <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 font-medium flex items-start gap-2.5">
+                      <div key={idx} className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 font-medium flex items-start gap-2.5">
                         <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5">
                           ✓
                         </span>
@@ -434,11 +440,9 @@ export const DiscoverPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Multi-Vector Synergy Radar Widget */}
                 <SynergyBreakdownWidget rec={currentSwiperCard} />
 
-                {/* AI Warm Intro Draft Preview */}
-                <div className="space-y-2 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 p-4.5 rounded-2xl border border-purple-100">
+                <div className="space-y-2 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 p-4 rounded-2xl border border-purple-100">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-extrabold text-purple-900 flex items-center gap-1.5 uppercase">
                       <Sparkles className="w-3.5 h-3.5 text-purple-600" />
@@ -452,36 +456,6 @@ export const DiscoverPage: React.FC = () => {
                     "Hi {currentSwiperCard.recommended_name.split(' ')[0]}, I noticed your work in {currentSwiperCard.industry || 'the industry'} and your expertise in {currentSwiperCard.skills?.slice(0, 2).join(', ') || 'strategic growth'}. I'd love to connect and share insights."
                   </p>
                 </div>
-
-                {/* Upcoming Recommendations Deck Navigator */}
-                <div className="space-y-3 pt-2 border-t border-slate-100 mt-auto">
-                  <div className="flex items-center justify-between text-xs font-extrabold text-slate-700">
-                    <span>Upcoming Discover Deck ({filtered.length} profiles)</span>
-                    <span className="text-[11px] text-slate-400 font-normal">Click to preview card</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                    {filtered.slice(0, 7).map((card, idx) => (
-                      <button
-                        key={card.recommendation_id}
-                        onClick={() => setSwiperIndex(idx)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold shrink-0 transition-all border ${
-                          idx === swiperIndex
-                            ? 'bg-purple-600 text-white border-purple-600 shadow-md scale-105'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        <img
-                          src={card.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(card.recommended_name)}&background=3b82f6&color=fff`}
-                          alt={card.recommended_name}
-                          className="w-5 h-5 rounded-full object-cover shrink-0"
-                        />
-                        <span className="truncate max-w-[100px]">{card.recommended_name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
               </div>
 
             </div>
@@ -489,65 +463,106 @@ export const DiscoverPage: React.FC = () => {
         </div>
       )}
 
-      {/* 3. RECOMMENDED FOR YOU LIST VIEW (Screens 1 & 5) */}
+      {/* 3. RECOMMENDED FOR YOU LIST VIEW */}
       {viewMode === 'list' && (
-        <>
-          <div className="flex items-center justify-between pt-2">
-            <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-              <span>Recommended for You</span>
-              <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full hidden sm:inline">
-                Based on your networking goals & interests
+        <div className="space-y-4">
+          
+          {/* Header Controls: Filter Chips & Sort Dropdown */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+            
+            {/* Title & Count */}
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-base font-black text-slate-900 tracking-tight">
+                Recommended for You
+              </h3>
+              <span className="text-xs font-extrabold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+                {filtered.length} matches aligned
               </span>
-            </h3>
+            </div>
+
+            {/* Filter Chips Bar & Sort */}
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'all', label: 'All' },
+                  { id: 'goals', label: 'Goals' },
+                  { id: 'industry', label: 'Industry' },
+                  { id: 'bridge', label: 'Warm Network' },
+                  { id: 'location', label: 'Location' },
+                  { id: 'role', label: 'Role' },
+                ].map((chip) => (
+                  <button
+                    key={chip.id}
+                    onClick={() => setFilterChip(chip.id as any)}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
+                      filterChip === chip.id
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="h-5 w-px bg-slate-200 hidden sm:block mx-1" />
+
+              {/* Sort Selector */}
+              <div className="flex items-center gap-1 text-xs text-slate-500 font-semibold ml-auto sm:ml-0">
+                <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700 focus:outline-hidden"
+                >
+                  <option value="match">Sort: Best Match</option>
+                  <option value="recent">Sort: Recent</option>
+                  <option value="name">Sort: Name (A-Z)</option>
+                </select>
+              </div>
+            </div>
+
           </div>
 
+          {/* Cards Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 animate-pulse">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5 animate-pulse">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-64 bg-slate-200 rounded-3xl" />
+                <div key={i} className="h-72 bg-slate-200 rounded-2xl" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             /* Empty State */
-            <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/90 p-8 space-y-4 max-w-2xl mx-auto shadow-sm">
+            <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/90 p-8 space-y-4 max-w-2xl mx-auto shadow-xs">
               <div className="w-16 h-16 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
                 <Users2 className="w-8 h-8 text-purple-600" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">No strong matches yet</h3>
+              <h3 className="text-lg font-bold text-slate-900">No strong matches found</h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto font-medium leading-relaxed">
-                We couldn't find enough people matching your exact networking criteria right now.
+                We couldn't find matches matching your specific filter criteria right now.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
-                  onClick={() => setShowFilterDrawer(true)}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-brand-600/20 transition-all"
+                  onClick={() => {
+                    setFilterChip('all');
+                    setSearch('');
+                    setSelectedIndustries([]);
+                  }}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all"
                 >
-                  Update Networking Preferences
+                  Clear Filters
                 </button>
                 <button
-                  onClick={() => navigate('/connections')}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition-colors"
+                  onClick={() => setShowFilterDrawer(true)}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
                 >
-                  Explore All People
+                  Update Preferences
                 </button>
-              </div>
-
-              {/* Tips */}
-              <div className="mt-6 pt-6 border-t border-slate-100 text-left max-w-md mx-auto space-y-2">
-                <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Lightbulb className="w-4 h-4 text-amber-500" />
-                  <span>Tips to get better matches:</span>
-                </h4>
-                <ul className="text-xs text-slate-600 space-y-1 pl-5 list-disc font-medium">
-                  <li>Add more specific focus interests in your Profile.</li>
-                  <li>Expand target cities and location preferences.</li>
-                  <li>Add your active networking groups or alumni clubs.</li>
-                </ul>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
               {filtered.map((rec) => {
                 const scoreBadge = getScoreBadge(rec.score);
                 const reasonsList = rec.reason.split('\n').map((b) => b.replace(/^✓\s*/, ''));
@@ -555,85 +570,100 @@ export const DiscoverPage: React.FC = () => {
                 return (
                   <div
                     key={rec.recommendation_id}
-                    className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-card hover:shadow-soft hover:border-purple-300 transition-all flex flex-col justify-between space-y-4 group min-w-0"
+                    className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs hover:shadow-md hover:border-purple-300 transition-all flex flex-col justify-between space-y-3 group min-w-0 h-full relative"
                   >
-                    <div className="space-y-3.5 min-w-0">
-                      {/* Top Bar: Synergy Header & Score Badge */}
+                    <div className="space-y-3 min-w-0">
+                      
+                      {/* Top Bar: Match Score & Rating Badge */}
                       <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
-                        <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-purple-700">
+                        <div className="flex items-center gap-1.5 text-xs font-black text-purple-700">
                           <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                          <span>{rec.score}% Synergy</span>
+                          <span>{rec.score}% Match</span>
                         </div>
                         <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border shadow-2xs ${scoreBadge.bg}`}>
                           {scoreBadge.label}
                         </span>
                       </div>
 
-                      {/* Main Info Row: Avatar & Unclipped User Details */}
-                      <div className="flex items-center gap-3.5 min-w-0 pt-0.5">
+                      {/* User Info Row */}
+                      <div className="flex items-center gap-3 min-w-0">
                         <img
                           src={rec.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(rec.recommended_name)}&background=3b82f6&color=fff`}
                           alt={rec.recommended_name}
-                          className="w-14 h-14 rounded-2xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform shrink-0"
+                          className="w-12 h-12 rounded-xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform shrink-0"
                         />
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-sm font-extrabold text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1.5 min-w-0 leading-tight">
+                          <h4 className="text-sm font-black text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1.5 min-w-0 leading-tight">
                             <span className="truncate">{rec.recommended_name}</span>
                             <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 inline" />
                           </h4>
                           <p className="text-xs text-slate-700 font-bold truncate mt-0.5">{rec.recommended_role}</p>
                           <p className="text-[11px] text-slate-500 font-semibold truncate">{rec.recommended_company}</p>
-                          <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-1 truncate">
+                          <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
                             <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                             <span className="truncate">{rec.location || 'Mumbai, India'}</span>
                           </p>
                         </div>
                       </div>
 
-                      {/* Tags */}
+                      {/* Skill Badges */}
                       {rec.skills && rec.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {rec.skills.map((skill, idx) => (
-                            <span key={idx} className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-100/80">
+                        <div className="flex flex-wrap gap-1">
+                          {rec.skills.slice(0, 3).map((skill, idx) => (
+                            <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-100/80">
                               {skill}
                             </span>
                           ))}
+                          {rec.skills.length > 3 && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">
+                              +{rec.skills.length - 3}
+                            </span>
+                          )}
                         </div>
                       )}
 
-                      {/* Why this match? Box */}
-                      <div className="bg-gradient-to-r from-indigo-50/80 to-purple-50/50 p-3.5 rounded-2xl border border-indigo-100/80 space-y-1.5">
-                        <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-900 uppercase tracking-wider">
-                          <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                          <span>Why this match?</span>
+                      {/* Concise Why This Match Box */}
+                      <div className="bg-gradient-to-r from-indigo-50/70 to-purple-50/40 p-2.5 rounded-xl border border-indigo-100/70 space-y-1">
+                        <div className="flex items-center justify-between text-[10px] font-extrabold text-indigo-900 uppercase tracking-wider">
+                          <span className="flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-indigo-600 shrink-0" />
+                            <span>Why this match?</span>
+                          </span>
+                          <button
+                            onClick={() => setSelectedProfile(rec)}
+                            className="text-purple-600 hover:text-purple-800 text-[10px] font-bold lowercase hover:underline cursor-pointer"
+                          >
+                            See details →
+                          </button>
                         </div>
-                        <ul className="space-y-1.5 text-xs text-indigo-950 font-medium">
-                          {reasonsList.map((bullet, idx) => (
-                            <li key={idx} className="flex items-start gap-1.5 leading-snug">
-                              <span className="text-emerald-600 font-extrabold shrink-0 mt-0.5">✓</span>
-                              <span className="break-words">{bullet}</span>
+                        <ul className="space-y-1 text-[11px] text-indigo-950 font-medium leading-tight">
+                          {reasonsList.slice(0, 2).map((bullet, idx) => (
+                            <li key={idx} className="flex items-start gap-1">
+                              <span className="text-emerald-600 font-extrabold shrink-0">✓</span>
+                              <span className="line-clamp-1">{bullet}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
 
-                      {/* Synergy Breakdown Vector */}
+                      {/* 4-Vector Breakdown Widget */}
                       <SynergyBreakdownWidget rec={rec} />
                     </div>
 
-                    {/* Card Actions: Clean, Unclipped Action Buttons */}
-                    <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+                    {/* Action Toolbar */}
+                    <div className="pt-2.5 border-t border-slate-100 flex items-center gap-1.5 relative">
                       <button
                         onClick={() => setSelectedProfile(rec)}
-                        className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors shrink-0"
+                        className="flex-1 py-2 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 min-w-0"
                         title="View Profile Details"
                       >
-                        <Eye className="w-4 h-4 text-slate-600" />
+                        <Eye className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                        <span>View</span>
                       </button>
 
                       <button
                         onClick={() => setWarmIntroTarget(rec)}
-                        className="px-3 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0"
+                        className="flex-1 py-2 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 min-w-0"
                         title="Request Warm Intro via mutual connection"
                       >
                         <Send className="w-3.5 h-3.5 text-purple-600 shrink-0" />
@@ -643,29 +673,88 @@ export const DiscoverPage: React.FC = () => {
                       <button
                         onClick={() => connectMutation.mutate(rec.recommendation_id)}
                         disabled={connectMutation.isPending}
-                        className="flex-1 py-2.5 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-600/20 flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 min-w-0"
+                        className="flex-1 py-2 px-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-1 transition-all active:scale-95 disabled:opacity-50 min-w-0"
                       >
                         <UserPlus className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">Connect</span>
                       </button>
 
-                      <button
-                        onClick={() => dismissMutation.mutate(rec.recommendation_id)}
-                        className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
-                        title="Dismiss Recommendation"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      {/* Popover Menu Trigger */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setActiveMenuId(activeMenuId === rec.recommendation_id ? null : rec.recommendation_id)}
+                          className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
+                          title="More Actions"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+
+                        {activeMenuId === rec.recommendation_id && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-20"
+                              onClick={() => setActiveMenuId(null)}
+                            />
+                            <div className="absolute right-0 bottom-full mb-2 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-30 text-xs text-slate-700 animate-fadeIn">
+                              <button
+                                onClick={() => {
+                                  setActiveMenuId(null);
+                                  setSelectedProfile(rec);
+                                }}
+                                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 font-medium"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-slate-500" />
+                                <span>View Profile</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setActiveMenuId(null);
+                                  setWarmIntroTarget(rec);
+                                }}
+                                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 font-medium"
+                              >
+                                <Send className="w-3.5 h-3.5 text-purple-600" />
+                                <span>Request Intro</span>
+                              </button>
+
+                              <div className="my-1 border-t border-slate-100" />
+
+                              <button
+                                onClick={() => {
+                                  setActiveMenuId(null);
+                                  dismissMutation.mutate(rec.recommendation_id);
+                                }}
+                                className="w-full px-3 py-2 text-left hover:bg-rose-50 text-rose-600 flex items-center gap-2 font-medium"
+                              >
+                                <ThumbsDown className="w-3.5 h-3.5 text-rose-500" />
+                                <span>Not Interested</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setActiveMenuId(null);
+                                  dismissMutation.mutate(rec.recommendation_id);
+                                }}
+                                className="w-full px-3 py-2 text-left hover:bg-slate-50 text-slate-500 flex items-center gap-2 font-medium"
+                              >
+                                <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
+                                <span>Hide / Report</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </>
+        </div>
       )}
 
-      {/* 4. COMPLETE USER PROFILE MODAL */}
+      {/* 4. USER PROFILE MODAL */}
       {selectedProfile && (
         <UserProfileModal
           user={selectedProfile}
@@ -689,7 +778,7 @@ export const DiscoverPage: React.FC = () => {
         />
       )}
 
-      {/* 5. "IMPROVE RECOMMENDATIONS" FILTER DRAWER */}
+      {/* 5. FILTER DRAWER */}
       {showFilterDrawer && (
         <div 
           className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-end animate-fadeIn"
@@ -726,7 +815,7 @@ export const DiscoverPage: React.FC = () => {
                         onClick={() => toggleFilter(goal, selectedGoals, setSelectedGoals)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                           isSelected
-                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                            ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
                             : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
@@ -749,7 +838,7 @@ export const DiscoverPage: React.FC = () => {
                         onClick={() => toggleFilter(lf, selectedLookingFor, setSelectedLookingFor)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                           isSelected
-                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                             : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
@@ -772,7 +861,7 @@ export const DiscoverPage: React.FC = () => {
                         onClick={() => toggleFilter(ind, selectedIndustries, setSelectedIndustries)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                           isSelected
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                             : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
@@ -795,7 +884,7 @@ export const DiscoverPage: React.FC = () => {
                         onClick={() => toggleFilter(loc, selectedLocations, setSelectedLocations)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                           isSelected
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
                             : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
@@ -807,7 +896,7 @@ export const DiscoverPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Bottom Save Action */}
+            {/* Save Preferences Button */}
             <div className="pt-4 border-t border-slate-100">
               <button
                 onClick={() => {

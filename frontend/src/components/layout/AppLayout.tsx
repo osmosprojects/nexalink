@@ -62,7 +62,7 @@ export const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] w-full min-w-0 overflow-x-hidden">
+    <div className="flex h-screen bg-[#F8FAFC] w-full min-w-0 overflow-hidden">
       {/* Desktop Left Sidebar */}
       <Sidebar
         onOpenQuickAdd={() => {
@@ -82,10 +82,10 @@ export const AppLayout: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pb-28 sm:pb-32 lg:pb-8">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Mandatory Onboarding Notice Banner if profile is not completed */}
         {!isProfileComplete && (
-          <div className="bg-gradient-to-r from-brand-600 via-purple-600 to-indigo-700 text-white px-4 py-3 sm:px-6 shadow-md">
+          <div className="bg-gradient-to-r from-brand-600 via-purple-600 to-indigo-700 text-white px-4 py-3 sm:px-6 shadow-md shrink-0">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
               <div className="flex items-center gap-2.5">
                 <div className="p-1.5 bg-white/20 rounded-xl backdrop-blur-sm shrink-0">
@@ -129,7 +129,7 @@ export const AppLayout: React.FC = () => {
         />
 
         {/* Page Content Body */}
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-[1536px] w-full mx-auto min-w-0 overflow-x-hidden">
+        <main className="flex-1 p-3 sm:p-5 lg:p-6 w-full mx-auto min-w-0 overflow-y-auto">
           <Outlet context={{ openQuickAdd: () => setIsQuickAddOpen(true) }} />
         </main>
       </div>

@@ -60,7 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-slate-900 text-slate-300 h-screen sticky top-0 border-r border-slate-800 z-30 select-none">
+    <aside className="hidden lg:flex flex-col w-64 bg-slate-900 text-slate-300 h-screen shrink-0 border-r border-slate-800 z-30 select-none">
       {/* Brand Header */}
       <div className="p-5 flex items-center justify-between border-b border-slate-800/80">
         <div 
