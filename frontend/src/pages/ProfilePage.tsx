@@ -934,7 +934,7 @@ export const ProfilePage: React.FC = () => {
                     )}
                   </div>
                   <p className="text-[11px] text-slate-400 font-medium">
-                    JPG, PNG or WEBP • Max 5 MB • 300x300px (min)
+                    PNG, JPG, WEBP, AVIF, SVG, HEIC or GIF • Max 5 MB
                   </p>
                 </div>
               </div>

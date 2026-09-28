@@ -18,13 +18,28 @@ class UploadController {
                 return (0, response_1.sendError)(res, 'No image data provided', 400, 'IMAGE_REQUIRED');
             }
             // Extract mime type and base64 data
-            const matches = imageBase64.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+            const matches = imageBase64.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/s);
             let base64Data = imageBase64;
             let ext = 'png';
             if (matches) {
-                const mimeType = matches[1];
-                base64Data = matches[2];
-                ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+                const mimeType = matches[1].toLowerCase();
+                base64Data = matches[2].trim();
+                const subtype = mimeType.split('/')[1] || 'png';
+                if (subtype.includes('svg')) {
+                    ext = 'svg';
+                }
+                else if (subtype.includes('icon')) {
+                    ext = 'ico';
+                }
+                else if (subtype.includes('heic') || subtype.includes('heif')) {
+                    ext = 'heic';
+                }
+                else if (subtype === 'jpeg') {
+                    ext = 'jpg';
+                }
+                else {
+                    ext = subtype.replace(/[^a-z0-9]/g, '') || 'png';
+                }
             }
             const filename = `avatar-${userId}-${Date.now()}.${ext}`;
             const targetDirs = [
