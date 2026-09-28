@@ -5,7 +5,6 @@ import {
   Rss,
   Heart,
   Send,
-  Share2,
   MessageCircle,
   Image as ImageIcon,
   ChevronRight
@@ -55,6 +54,7 @@ export const FeedPage: React.FC = () => {
   // Reply Composer Form State per post
   const [replyTypeInputs, setReplyTypeInputs] = useState<Record<number, 'wants to meet to' | 'can connect to'>>({});
   const [replyTargetInputs, setReplyTargetInputs] = useState<Record<number, string>>({});
+  const [replyContentInputs, setReplyContentInputs] = useState<Record<number, string>>({});
 
   // Persisted Thread Conversations per post (synced via backend database API)
   const [postReplies, setPostReplies] = useState<Record<number, ReplyItem[]>>({});
@@ -74,7 +74,7 @@ export const FeedPage: React.FC = () => {
           authorName: r.author_name,
           replyType: r.reply_type || 'wants to meet to',
           targetPerson: r.target_person || 'Sanjeev Sarma',
-          content: null,
+          content: r.content || null,
           timeAgo: formatDate(r.created_at, 'relative'),
           likesCount: 0,
         }));
@@ -142,19 +142,21 @@ export const FeedPage: React.FC = () => {
     setActiveReactionPicker(null);
   };
 
-  const handleAddThreadReply = async (postId: number, defaultTargetName: string) => {
-    const selectedReplyType = replyTypeInputs[postId] || 'wants to meet to';
+  const handleAddThreadReply = async (postId: number, defaultTargetName: string, defaultReplyType: 'wants to meet to' | 'can connect to') => {
+    const selectedReplyType = replyTypeInputs[postId] || defaultReplyType;
     const targetPersonName = (replyTargetInputs[postId] || defaultTargetName || 'Sanjeev Sarma').trim();
+    const commentText = (replyContentInputs[postId] || '').trim();
 
     try {
       await api.post(`/feed/${postId}/reply`, {
         replyType: selectedReplyType,
         targetPerson: targetPersonName,
-        content: null,
+        content: commentText || null,
       });
 
       await fetchRepliesForPost(postId);
 
+      setReplyContentInputs((prev) => ({ ...prev, [postId]: '' }));
       setExpandedThreadPostId(postId);
       setActiveReplyPostId(null);
       confetti({ particleCount: 25, spread: 40, origin: { y: 0.8 } });
@@ -302,12 +304,20 @@ export const FeedPage: React.FC = () => {
             };
             const topEmojis = Object.keys(reactions.counts);
 
-            // Fetch thread replies dynamically from database
+            // Default response intent condition:
+            // Wants to meet -> Can connect to
+            // Can connect to -> Wants to meet
+            const defaultResponseIntent: 'wants to meet to' | 'can connect to' = isWantToMeet
+              ? 'can connect to'
+              : 'wants to meet to';
+            const actionButtonText = isWantToMeet ? 'Can connect to' : 'Wants to meet';
+            const actionButtonIcon = isWantToMeet ? '🌟' : '🤝';
+
             const replies: ReplyItem[] = postReplies[post.post_id] || [];
 
             const isThreadExpanded = expandedThreadPostId === post.post_id;
             const isReplyComposerActive = activeReplyPostId === post.post_id;
-            const currentReplyType = replyTypeInputs[post.post_id] || 'wants to meet to';
+            const currentReplyType = replyTypeInputs[post.post_id] || defaultResponseIntent;
 
             return (
               <div
@@ -437,36 +447,27 @@ export const FeedPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Actions: Reply & Share */}
-                  <div className="flex items-center gap-4 text-slate-500">
+                  {/* Actions: Intent-based Action Button (Can connect to / Wants to meet) - Share button removed */}
+                  <div className="flex items-center gap-4 text-slate-600">
                     <button
                       type="button"
                       onClick={() => {
-                        setActiveReplyPostId(activeReplyPostId === post.post_id ? null : post.post_id);
-                        if (!isThreadExpanded) {
-                          setExpandedThreadPostId(post.post_id);
-                        }
-                      }}
-                      className="flex items-center gap-1.5 hover:text-slate-900 font-semibold cursor-pointer transition-colors"
-                    >
-                      <MessageCircle className="w-4 h-4 text-slate-400" />
-                      <span>Reply</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({ title: 'NexaLink Feed Post', text: details, url: window.location.href });
+                        if (activeReplyPostId === post.post_id) {
+                          setActiveReplyPostId(null);
                         } else {
-                          navigator.clipboard.writeText(window.location.href);
-                          alert('Post link copied to clipboard!');
+                          setActiveReplyPostId(post.post_id);
+                          if (!replyTypeInputs[post.post_id]) {
+                            setReplyTypeInputs((prev) => ({ ...prev, [post.post_id]: defaultResponseIntent }));
+                          }
+                          if (!isThreadExpanded) {
+                            setExpandedThreadPostId(post.post_id);
+                          }
                         }
                       }}
-                      className="flex items-center gap-1.5 hover:text-slate-900 font-semibold cursor-pointer transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/80 font-bold cursor-pointer transition-all active:scale-95"
                     >
-                      <Share2 className="w-4 h-4 text-slate-400" />
-                      <span>Share</span>
+                      <span>{actionButtonIcon}</span>
+                      <span>{actionButtonText}</span>
                     </button>
                   </div>
                 </div>
@@ -541,6 +542,10 @@ export const FeedPage: React.FC = () => {
                             </div>
                             <span className="text-[10px] text-slate-400 font-medium">{rep.timeAgo}</span>
                           </div>
+
+                          {rep.content && (
+                            <p className="text-slate-700 font-medium leading-relaxed pt-0.5">{rep.content}</p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -552,7 +557,7 @@ export const FeedPage: React.FC = () => {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      handleAddThreadReply(post.post_id, targetPersonInPost);
+                      handleAddThreadReply(post.post_id, targetPersonInPost, defaultResponseIntent);
                     }}
                     className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-3 animate-fadeIn"
                   >
@@ -589,9 +594,21 @@ export const FeedPage: React.FC = () => {
                         }
                         className="flex-1 text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-1 focus:ring-brand-500"
                       />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Optional comment details..."
+                        value={replyContentInputs[post.post_id] || ''}
+                        onChange={(e) =>
+                          setReplyContentInputs((prev) => ({ ...prev, [post.post_id]: e.target.value }))
+                        }
+                        className="flex-1 text-xs px-3.5 py-2 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-1 focus:ring-brand-500"
+                      />
                       <button
                         type="submit"
-                        className="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs"
+                        className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs"
                       >
                         Reply to Thread
                       </button>
