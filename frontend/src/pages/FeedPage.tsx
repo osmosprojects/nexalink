@@ -561,27 +561,8 @@ export const FeedPage: React.FC = () => {
                     }}
                     className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-3 animate-fadeIn"
                   >
-                    <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <div className="border-b border-slate-200/60 pb-2">
                       <span className="text-xs font-bold text-slate-800">Add Thread Reply</span>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[11px] font-bold text-slate-600">Intent:</label>
-                        <select
-                          value={currentReplyType}
-                          onChange={(e) =>
-                            setReplyTypeInputs((prev) => ({
-                              ...prev,
-                              [post.post_id]: e.target.value as 'wants to meet to' | 'can connect to',
-                            }))
-                          }
-                          className="text-[11px] font-bold px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-800 focus:ring-1 focus:ring-brand-500 cursor-pointer"
-                        >
-                          {isWantToMeet ? (
-                            <option value="can connect to">🌟 can connect to</option>
-                          ) : (
-                            <option value="wants to meet to">🤝 wants to meet to</option>
-                          )}
-                        </select>
-                      </div>
                     </div>
 
                     <div className="flex items-center gap-2">
