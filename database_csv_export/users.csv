@@ -1,0 +1,9 @@
+user_id,email,password_hash,display_name,avatar_url,status,created_at,updated_at
+1,sanjeev.sarma@nexalink.com,$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq,Sanjeev Sarma,NULL,active,2026-09-21 11:29:42,2026-09-28 11:50:36
+2,geeta.rathod@nexalink.com,$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq,Geeta Rathod,NULL,active,2026-09-21 11:29:42,2026-09-22 05:38:14
+3,vinay.mishra@nexalink.com,$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq,Vinay Mishra,NULL,active,2026-09-21 11:29:42,2026-09-22 05:38:18
+4,abhinav.n@nexalink.com,$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq,Abhinav N,NULL,active,2026-09-21 11:29:42,2026-09-22 05:38:21
+5,devyani@nexalink.com,$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq,Devyani,NULL,active,2026-09-21 11:29:42,2026-09-22 05:38:25
+7,hitesh.mishra@nexalink.com,$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq,Hitesh Mishra,NULL,active,2026-09-21 11:29:42,2026-09-22 05:38:31
+8,mayur.tiwari@nexalink.com,$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq,Mayur Tiwari,NULL,active,2026-09-21 11:29:42,2026-09-22 05:38:34
+9,abhishek.tiwari@nexalink.com,$2a$10$Irgq.60J3tfUJW1TiM24LOeSvvGWRdBZsxF31BndOoptjhFApS3kq,Abhishek Tiwari,NULL,active,2026-09-21 11:29:42,2026-09-28 11:50:36

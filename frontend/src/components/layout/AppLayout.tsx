@@ -62,7 +62,7 @@ export const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC] w-full min-w-0 overflow-x-hidden">
       {/* Desktop Left Sidebar */}
       <Sidebar
         onOpenQuickAdd={() => {

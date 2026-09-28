@@ -558,39 +558,43 @@ export const DiscoverPage: React.FC = () => {
                     className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-card hover:shadow-soft hover:border-purple-300 transition-all flex flex-col justify-between space-y-4 group min-w-0"
                   >
                     <div className="space-y-3.5 min-w-0">
-                      {/* Top Row: Avatar & Basic Info */}
-                      <div className="flex items-start justify-between gap-3 min-w-0">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={rec.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(rec.recommended_name)}&background=3b82f6&color=fff`}
-                            alt={rec.recommended_name}
-                            className="w-14 h-14 rounded-2xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <h4 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1 min-w-0">
-                              <span className="truncate">{rec.recommended_name}</span>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                            </h4>
-                            <p className="text-xs text-slate-600 font-bold truncate">{rec.recommended_role}</p>
-                            <p className="text-[11px] text-slate-400 font-semibold truncate">{rec.recommended_company}</p>
-                            <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
-                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                              <span className="truncate">{rec.location || 'Mumbai, India'} • 8+ yrs</span>
-                            </p>
-                          </div>
+                      {/* Top Bar: Synergy Header & Score Badge */}
+                      <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                        <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-purple-700">
+                          <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                          <span>{rec.score}% Synergy</span>
                         </div>
-
-                        {/* Match Score Badge */}
-                        <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border shadow-2xs shrink-0 ${scoreBadge.bg}`}>
+                        <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border shadow-2xs ${scoreBadge.bg}`}>
                           {scoreBadge.label}
                         </span>
                       </div>
 
+                      {/* Main Info Row: Avatar & Unclipped User Details */}
+                      <div className="flex items-center gap-3.5 min-w-0 pt-0.5">
+                        <img
+                          src={rec.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(rec.recommended_name)}&background=3b82f6&color=fff`}
+                          alt={rec.recommended_name}
+                          className="w-14 h-14 rounded-2xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform shrink-0"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-extrabold text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1.5 min-w-0 leading-tight">
+                            <span className="truncate">{rec.recommended_name}</span>
+                            <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 inline" />
+                          </h4>
+                          <p className="text-xs text-slate-700 font-bold truncate mt-0.5">{rec.recommended_role}</p>
+                          <p className="text-[11px] text-slate-500 font-semibold truncate">{rec.recommended_company}</p>
+                          <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-1 truncate">
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span className="truncate">{rec.location || 'Mumbai, India'}</span>
+                          </p>
+                        </div>
+                      </div>
+
                       {/* Tags */}
                       {rec.skills && rec.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1.5 pt-1">
                           {rec.skills.map((skill, idx) => (
-                            <span key={idx} className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-100">
+                            <span key={idx} className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-100/80">
                               {skill}
                             </span>
                           ))}
@@ -599,15 +603,15 @@ export const DiscoverPage: React.FC = () => {
 
                       {/* Why this match? Box */}
                       <div className="bg-gradient-to-r from-indigo-50/80 to-purple-50/50 p-3.5 rounded-2xl border border-indigo-100/80 space-y-1.5">
-                        <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-900 uppercase">
+                        <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-900 uppercase tracking-wider">
                           <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                           <span>Why this match?</span>
                         </div>
-                        <ul className="space-y-1 text-xs text-indigo-950 font-medium">
+                        <ul className="space-y-1.5 text-xs text-indigo-950 font-medium">
                           {reasonsList.map((bullet, idx) => (
-                            <li key={idx} className="flex items-start gap-1.5">
-                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                              <span className="leading-snug">{bullet}</span>
+                            <li key={idx} className="flex items-start gap-1.5 leading-snug">
+                              <span className="text-emerald-600 font-extrabold shrink-0 mt-0.5">✓</span>
+                              <span className="break-words">{bullet}</span>
                             </li>
                           ))}
                         </ul>
@@ -617,29 +621,29 @@ export const DiscoverPage: React.FC = () => {
                       <SynergyBreakdownWidget rec={rec} />
                     </div>
 
-                    {/* Card Actions */}
-                    <div className="pt-2 border-t border-slate-100 flex items-center gap-2 min-w-0">
+                    {/* Card Actions: Clean, Unclipped Action Buttons */}
+                    <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
                       <button
                         onClick={() => setSelectedProfile(rec)}
-                        className="flex-1 py-2 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 min-w-0 shrink-0"
+                        className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors shrink-0"
+                        title="View Profile Details"
                       >
-                        <Eye className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                        <span className="truncate">View</span>
+                        <Eye className="w-4 h-4 text-slate-600" />
                       </button>
 
                       <button
                         onClick={() => setWarmIntroTarget(rec)}
-                        className="flex-1 py-2 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 min-w-0 shrink-0"
+                        className="px-3 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0"
                         title="Request Warm Intro via mutual connection"
                       >
                         <Send className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                        <span className="truncate">Intro</span>
+                        <span>Intro</span>
                       </button>
 
                       <button
                         onClick={() => connectMutation.mutate(rec.recommendation_id)}
                         disabled={connectMutation.isPending}
-                        className="flex-1 py-2 px-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-600/20 flex items-center justify-center gap-1 transition-all active:scale-95 disabled:opacity-50 min-w-0 shrink-0"
+                        className="flex-1 py-2.5 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-600/20 flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 min-w-0"
                       >
                         <UserPlus className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">Connect</span>
@@ -647,8 +651,8 @@ export const DiscoverPage: React.FC = () => {
 
                       <button
                         onClick={() => dismissMutation.mutate(rec.recommendation_id)}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
-                        title="Dismiss"
+                        className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
+                        title="Dismiss Recommendation"
                       >
                         <X className="w-4 h-4" />
                       </button>

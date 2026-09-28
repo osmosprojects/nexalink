@@ -1,0 +1,70 @@
+audit_id,user_id,action,entity_type,entity_id,metadata,ip_address,user_agent,created_at
+1,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-21 11:34:10
+2,NULL,USER_LOGIN,user,4,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-21 11:39:35
+3,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-21 11:51:55
+4,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-21 11:52:01
+5,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-21 11:52:32
+6,1,PERSONA_UPDATED,persona,1,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-21 11:52:32
+7,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-21 11:52:46
+8,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-21 12:01:45
+9,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-21 12:07:11
+10,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-21 12:07:11
+11,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-21 12:07:11
+12,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-21 12:07:26
+13,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-21 12:17:04
+14,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-21 12:46:15
+15,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-21 12:46:37
+16,NULL,USER_LOGIN,user,4,NULL,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",2026-09-21 18:18:23
+17,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 03:06:26
+18,NULL,DEMO_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 05:12:14
+19,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-22 05:21:52
+20,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Edg/153.0.0.0 Mobile Safari/537.36",2026-09-22 05:46:07
+21,NULL,USER_LOGIN,user,6,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Edg/153.0.0.0 Mobile Safari/537.36",2026-09-22 05:46:48
+22,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 05:54:25
+23,NULL,USER_LOGIN,user,6,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 07:09:27
+24,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 07:12:22
+25,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 07:12:28
+26,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 10:26:00
+27,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 10:39:31
+28,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 10:40:32
+29,NULL,DEMO_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-22 10:52:09
+30,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Edg/153.0.0.0 Mobile Safari/537.36",2026-09-22 11:28:44
+31,NULL,USER_LOGIN,user,6,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Edg/153.0.0.0 Mobile Safari/537.36",2026-09-22 11:29:29
+34,NULL,USER_LOGIN,user,4,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 13:35:52
+35,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 13:36:48
+36,NULL,USER_LOGIN,user,6,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-22 13:37:14
+37,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 04:33:50
+38,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 04:35:59
+39,NULL,USER_LOGIN,user,6,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",2026-09-23 04:39:05
+42,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 04:51:34
+43,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 06:26:41
+44,1,PROFILE_UPDATED,profile,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 06:26:50
+45,NULL,USER_LOGIN,user,6,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 06:34:58
+50,NULL,USER_LOGIN,user,6,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 07:50:58
+52,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Edg/153.0.0.0 Mobile Safari/537.36",2026-09-23 08:31:19
+53,NULL,DEMO_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Edg/153.0.0.0 Mobile Safari/537.36",2026-09-23 08:35:19
+54,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (iPad; CPU OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 08:37:48
+55,NULL,USER_LOGIN,user,6,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-23 10:13:13
+60,NULL,USER_LOGIN,user,9,NULL,127.0.0.1,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",2026-09-23 10:34:13
+61,NULL,USER_LOGOUT,user,NULL,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 10:52:12
+62,NULL,USER_LOGIN,user,1,NULL,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",2026-09-23 10:52:29
+63,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:54:04
+64,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:54:13
+65,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:54:20
+66,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:54:36
+67,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:54:39
+68,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:54:43
+69,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:54:53
+70,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:54:58
+71,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:55:07
+72,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:55:11
+73,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:55:18
+74,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:55:33
+75,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:55:37
+76,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:55:52
+77,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:56:48
+78,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:56:51
+79,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:57:05
+80,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:57:18
+81,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:57:50
+82,9,PROFILE_UPDATED,profile,9,NULL,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",2026-09-23 10:58:12
