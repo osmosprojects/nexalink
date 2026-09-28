@@ -107,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
       )}
 
       {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-6">
+      <div className="flex-1 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 py-2 space-y-4">
         {!isProfileComplete ? (
           <div className="space-y-2">
             <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-brand-400">Required Setup</p>
