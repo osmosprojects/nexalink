@@ -127,6 +127,109 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
+ * GET /api/discover/profile/:targetUserId
+ * Fetches full public/network profile for modal display.
+ */
+router.get('/profile/:targetUserId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const targetUserId = parseInt(String(req.params.targetUserId), 10);
+    if (!targetUserId || isNaN(targetUserId)) {
+      return res.status(400).json({ success: false, message: 'Valid targetUserId is required' });
+    }
+
+    const rows = await query<any[]>(
+      `SELECT 
+         u.user_id, u.display_name, u.email, u.avatar_url, u.status,
+         p.headline, p.bio, p.company, p.job_title, p.location, p.industry, 
+         p.website, p.linkedin_url, p.phone, p.timezone, p.skills, p.interests, p.networking_goals,
+         per.persona_name, per.communication_style, per.preferred_people, per.networking_goal AS persona_goal
+       FROM users u
+       LEFT JOIN user_profiles p ON u.user_id = p.user_id
+       LEFT JOIN user_personas per ON u.user_id = per.user_id
+       WHERE u.user_id = ? AND u.status = 'active'
+       LIMIT 1`,
+      [targetUserId]
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Profile not found' });
+    }
+
+    const row = rows[0];
+
+    // Parse JSON fields
+    const parsedSkills = typeof row.skills === 'string' ? JSON.parse(row.skills) : row.skills || {};
+    const parsedInterestsRaw = typeof row.interests === 'string' ? JSON.parse(row.interests) : row.interests || [];
+    const parsedGoals = typeof row.networking_goals === 'string' ? JSON.parse(row.networking_goals) : row.networking_goals || [];
+
+    // Extract bridge objects & interest string arrays
+    let bridges: any[] = [];
+    let interestStrings: string[] = [];
+
+    if (Array.isArray(parsedInterestsRaw)) {
+      if (parsedInterestsRaw.length > 0 && typeof parsedInterestsRaw[0] === 'object' && parsedInterestsRaw[0] !== null) {
+        bridges = parsedInterestsRaw;
+      } else if (parsedInterestsRaw.length > 0 && typeof parsedInterestsRaw[0] === 'string') {
+        interestStrings = parsedInterestsRaw;
+      }
+    }
+
+    if (bridges.length === 0 && Array.isArray(parsedSkills.connectionsOffered)) {
+      bridges = parsedSkills.connectionsOffered;
+    }
+
+    if (interestStrings.length === 0 && Array.isArray(parsedSkills.interests)) {
+      interestStrings = parsedSkills.interests;
+    }
+
+    const profileData = {
+      userId: row.user_id,
+      displayName: row.display_name,
+      email: row.email,
+      avatarUrl: row.avatar_url,
+      headline: row.headline || 'Strategic Professional',
+      company: row.company || 'NexaLink Member',
+      jobTitle: row.job_title || row.headline || 'Professional',
+      domain: row.industry || parsedSkills.domain || 'Technology & Services',
+      bio: row.bio || parsedSkills.servicesOffered || 'No bio provided.',
+      location: row.location || parsedSkills.currentCity || 'Mumbai, India',
+      currentCity: parsedSkills.currentCity || row.location || 'Mumbai, India',
+      targetCities: Array.isArray(parsedSkills.targetCities) ? parsedSkills.targetCities : [],
+      phone: row.phone,
+      website: row.website,
+      linkedinUrl: row.linkedin_url,
+      networkingGroups: Array.isArray(parsedSkills.networkingGroup)
+        ? parsedSkills.networkingGroup
+        : typeof parsedSkills.networkingGroup === 'string' && parsedSkills.networkingGroup.trim()
+        ? [parsedSkills.networkingGroup]
+        : [],
+      hobbies: Array.isArray(parsedSkills.hobbies) ? parsedSkills.hobbies : [],
+      interests: interestStrings,
+      goals: Array.isArray(parsedSkills.goals) ? parsedSkills.goals : [],
+      targetBusinesses: Array.isArray(parsedGoals)
+        ? parsedGoals
+        : Array.isArray(parsedSkills.targetBusinesses)
+        ? parsedSkills.targetBusinesses
+        : [],
+      connectionsOffered: bridges,
+      persona: {
+        name: row.persona_name,
+        communicationStyle: row.communication_style,
+        preferredPeople: row.preferred_people,
+        goal: row.persona_goal,
+      }
+    };
+
+    return res.json({
+      success: true,
+      data: profileData,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/discover/skip/:userId
  * Dismisses candidate profile for fatigue handling.
  */

@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   UserPlus,
-  MessageSquare,
-  MoreHorizontal,
   MapPin,
   Briefcase,
   Sparkles,
   Target,
   Users,
-  Building,
+  Building2,
   CheckCircle2,
-  Calendar,
-  Share2,
-  Award,
   Send,
   Copy,
-  Check
+  Check,
+  Compass,
+  Heart,
+  Globe,
+  Linkedin,
+  Phone,
+  Mail,
+  Zap,
+  Link2,
+  User,
+  Shield,
+  Loader2
 } from 'lucide-react';
+import { api } from '../../lib/api';
 import { Recommendation } from '../../types';
 
 interface UserProfileModalProps {
@@ -33,20 +40,57 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   onConnect,
   onRequestIntro,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'icebreakers' | 'experience' | 'interests' | 'more'>('overview');
-  const [connected, setConnected] = useState(user.status === 'connected');
+  const [activeTab, setActiveTab] = useState<'overview' | 'identity' | 'bridges' | 'icebreakers'>('overview');
+  const [connected, setConnected] = useState(user?.status === 'connected');
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [fullProfile, setFullProfile] = useState<any | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  const targetUserId = user?.targetUserId || user?.user_id || user?.userId;
+
+  // Fetch complete profile parameters from backend if targetUserId is available
+  useEffect(() => {
+    if (targetUserId) {
+      setLoadingProfile(true);
+      api.get<{ success: boolean; data: any }>(`/discover/profile/${targetUserId}`)
+        .then((res) => {
+          if (res?.data) {
+            setFullProfile(res.data);
+          }
+        })
+        .catch(() => {
+          // Fallback to locally passed recommendation object
+        })
+        .finally(() => {
+          setLoadingProfile(false);
+        });
+    }
+  }, [targetUserId]);
 
   if (!user) return null;
 
-  const initials = user.recommended_name
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  // Resolved Display Values
+  const displayName = fullProfile?.displayName || user.recommended_name || user.name || 'User';
+  const role = fullProfile?.jobTitle || user.recommended_role || user.role || 'Strategic Professional';
+  const company = fullProfile?.company || user.recommended_company || 'NexaLink Member';
+  const domain = fullProfile?.domain || user.industry || user.domain || 'Technology & Services';
+  const location = fullProfile?.location || user.location || 'Mumbai, India';
+  const bio = fullProfile?.bio || user.bio || user.servicesOffered || 'Provides domain leadership and key services to drive growth.';
+  const avatarUrl = fullProfile?.avatarUrl || user.avatar_url || user.avatarUrl;
+  const email = fullProfile?.email || user.email;
+  const phone = fullProfile?.phone || user.phone;
+  const website = fullProfile?.website || user.website;
+  const linkedinUrl = fullProfile?.linkedinUrl || user.linkedin_url;
 
-  const skillsList: string[] = Array.isArray(user.skills) ? user.skills : [];
+  // Tag Lists
+  const networkingGroups: string[] = fullProfile?.networkingGroups || (Array.isArray(user.networkingGroups) ? user.networkingGroups : []);
+  const hobbies: string[] = fullProfile?.hobbies || (Array.isArray(user.hobbies) ? user.hobbies : []);
+  const interests: string[] = fullProfile?.interests || (Array.isArray(user.skills) ? user.skills : []);
+  const targetCities: string[] = fullProfile?.targetCities || [];
+  const targetBusinesses: string[] = fullProfile?.targetBusinesses || [];
+  const goals: string[] = fullProfile?.goals || [];
+  const connectionsOffered: any[] = fullProfile?.connectionsOffered || (Array.isArray(user.connectionsOffered) ? user.connectionsOffered : []);
+
   const reasonsBullets: string[] = typeof user.reason === 'string'
     ? user.reason.split('\n').map((r: string) => r.replace(/^✓\s*/, '').trim()).filter(Boolean)
     : [];
@@ -60,41 +104,49 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
-      <div className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 relative text-slate-900 animate-slideUp">
+      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 relative text-slate-900 animate-slideUp">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-500 hover:text-slate-800 hover:bg-white transition-all shadow-md"
+          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-500 hover:text-slate-800 hover:bg-white transition-all shadow-md cursor-pointer"
+          title="Close (Esc)"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Top Cover Banner */}
-        <div className="h-32 sm:h-40 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 relative rounded-t-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-60" />
+        {/* Top Banner Cover */}
+        <div className="h-32 sm:h-36 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 relative rounded-t-3xl overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-500/20 via-transparent to-transparent opacity-60" />
         </div>
 
-        {/* Profile Card Header Info */}
+        {/* Profile Header Block */}
         <div className="px-6 pb-4 relative">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-14 sm:-mt-16 mb-4">
-            <div className="relative">
-              <img
-                src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.recommended_name)}&background=3b82f6&color=fff`}
-                alt={user.recommended_name}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-4 ring-white shadow-xl bg-white"
-              />
+            {/* Profile Photo */}
+            <div className="relative shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover ring-4 ring-white shadow-xl bg-white"
+                />
+              ) : (
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-600 ring-4 ring-white shadow-xl flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">
+                  {displayName.slice(0, 2).toUpperCase()}
+                </div>
+              )}
               <div className="absolute bottom-1 right-1 p-1 bg-blue-600 text-white rounded-full ring-2 ring-white">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
 
-            {/* Action Buttons Header */}
+            {/* Header Action Buttons */}
             <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto pt-2 sm:pt-0">
               {onRequestIntro && (
                 <button
                   onClick={() => onRequestIntro(user)}
-                  className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
+                  className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
                   title="Request Warm Intro via mutual connection"
                 >
                   <Send className="w-4 h-4 text-purple-600" />
@@ -105,7 +157,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <button
                 onClick={handleConnectClick}
                 disabled={connected}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95 ${
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95 ${
                   connected
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/20'
@@ -126,36 +178,34 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
               <button
                 onClick={() => setActiveTab('icebreakers')}
-                className="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold transition-all shadow-md shadow-purple-500/20 flex items-center gap-1.5"
+                className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-500/20 flex items-center gap-1.5"
               >
                 <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                <span>AI Icebreakers</span>
+                <span>AI Hooks</span>
               </button>
             </div>
           </div>
 
-          {/* User Details Headline */}
-          <div className="space-y-1">
-            <h3 className="text-xl font-black text-slate-900 flex items-center gap-1.5">
-              <span>{user.recommended_name}</span>
-              <span className="text-blue-600 font-normal">
-                <CheckCircle2 className="w-4 h-4 inline" />
-              </span>
+          {/* Identity Headline & Sub-header */}
+          <div className="space-y-1 min-w-0">
+            <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2 truncate">
+              <span>{displayName}</span>
+              <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 inline" />
             </h3>
-            <p className="text-xs font-bold text-slate-700">{user.recommended_role} • {user.recommended_company}</p>
-            <div className="flex items-center gap-3 text-xs text-slate-500 font-medium pt-1">
+            <p className="text-xs font-bold text-slate-700 truncate">{role} • {company}</p>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium pt-1">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                <span>{user.location || 'Mumbai, India'}</span>
+                <span>{location}</span>
               </span>
-              <span className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md text-[11px] font-bold text-slate-600">
-                <Briefcase className="w-3 h-3 text-slate-500" />
-                <span>8+ years experience</span>
+              <span className="flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-0.5 rounded-md text-[11px] font-bold">
+                <Compass className="w-3 h-3 text-purple-600" />
+                <span>{domain}</span>
               </span>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
+          {/* Navigation Tabs (Matching Profile Sections) */}
           <div className="flex border-b border-slate-100 mt-5 space-x-6 text-xs font-bold text-slate-500 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
@@ -165,7 +215,28 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   : 'border-transparent hover:text-slate-800'
               }`}
             >
-              Overview
+              Overview & Synergy
+            </button>
+            <button
+              onClick={() => setActiveTab('identity')}
+              className={`pb-3 border-b-2 transition-colors ${
+                activeTab === 'identity'
+                  ? 'border-brand-600 text-brand-600'
+                  : 'border-transparent hover:text-slate-800'
+              }`}
+            >
+              Identity & Info
+            </button>
+            <button
+              onClick={() => setActiveTab('bridges')}
+              className={`pb-3 border-b-2 transition-colors flex items-center gap-1.5 ${
+                activeTab === 'bridges'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent hover:text-slate-800'
+              }`}
+            >
+              <Link2 className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Connection Bridges ({connectionsOffered.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('icebreakers')}
@@ -178,145 +249,299 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-purple-600" />
               <span>AI Icebreakers</span>
             </button>
-            <button
-              onClick={() => setActiveTab('experience')}
-              className={`pb-3 border-b-2 transition-colors ${
-                activeTab === 'experience'
-                  ? 'border-brand-600 text-brand-600'
-                  : 'border-transparent hover:text-slate-800'
-              }`}
-            >
-              Experience
-            </button>
-            <button
-              onClick={() => setActiveTab('interests')}
-              className={`pb-3 border-b-2 transition-colors ${
-                activeTab === 'interests'
-                  ? 'border-brand-600 text-brand-600'
-                  : 'border-transparent hover:text-slate-800'
-              }`}
-            >
-              Interests
-            </button>
           </div>
         </div>
 
-        {/* Tab Content Body */}
-        <div className="p-6 pt-2 space-y-5">
+        {/* Tab Body */}
+        <div className="p-6 pt-2 space-y-6">
+          {loadingProfile && (
+            <div className="p-3 bg-purple-50 border border-purple-100 rounded-xl text-xs font-bold text-purple-700 flex items-center justify-center gap-2 animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+              <span>Syncing full network profile parameter details...</span>
+            </div>
+          )}
+
+          {/* TAB 1: OVERVIEW & SYNERGY */}
           {activeTab === 'overview' && (
             <>
               {/* Why Match Explanation Callout */}
               {reasonsBullets.length > 0 && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-100 space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-extrabold text-blue-900">
-                    <Sparkles className="w-4 h-4 text-blue-600" />
-                    <span>Why You Match ({user.score || 92}% Match)</span>
+                <div className="bg-gradient-to-r from-indigo-50/90 to-purple-50/70 p-4 rounded-2xl border border-indigo-100 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-900 uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span>Why You Match ({user.score || 85}% Synergy Match)</span>
                   </div>
-                  <ul className="space-y-1 text-xs text-blue-950 font-medium">
+                  <ul className="space-y-1.5 text-xs text-indigo-950 font-medium">
                     {reasonsBullets.map((r, idx) => (
                       <li key={idx} className="flex items-start gap-1.5">
-                        <span className="text-emerald-600 font-bold">✓</span>
-                        <span>{r}</span>
+                        <span className="text-emerald-600 font-extrabold shrink-0 mt-0.5">✓</span>
+                        <span className="leading-snug">{r}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              {/* Services We Offer Section */}
+              {/* 1. Services We Offer / Bio */}
               <div className="space-y-1.5">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Services We Offer</h4>
-                <p className="text-xs text-slate-700 leading-relaxed font-normal">
-                  {user.bio || user.servicesOffered || 'Provides strategic enterprise solutions, domain leadership, and key services to drive growth and scale.'}
+                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Services We Offer / Bio</span>
+                </h4>
+                <p className="text-xs text-slate-700 leading-relaxed font-normal bg-slate-50 p-3.5 rounded-2xl border border-slate-200/70">
+                  {bio}
                 </p>
               </div>
 
-              {/* Networking Goals */}
+              {/* 2. Networking Groups */}
               <div className="space-y-1.5">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Networking Goals</h4>
+                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Networking Groups ({networkingGroups.length})</span>
+                </h4>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold">
-                    Strategic Partnerships
-                  </span>
-                  <span className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold">
-                    Mentorship & Growth
-                  </span>
+                  {networkingGroups.length === 0 ? (
+                    <span className="text-xs text-slate-400 italic">No networking groups specified</span>
+                  ) : (
+                    networkingGroups.map((grp, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold">
+                        {grp}
+                      </span>
+                    ))
+                  )}
                 </div>
               </div>
 
-              {/* Looking For */}
-              <div className="space-y-1.5">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Looking For</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Founders', 'Investors', 'Growth Leaders', 'AI Advisors'].map((tag, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold">
-                      {tag}
+              {/* 3. Focus Interests & Hobbies Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Focus Interests */}
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Focus Interests ({interests.length})</span>
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {interests.length === 0 ? (
+                      <span className="text-xs text-slate-400 italic">No focus interests listed</span>
+                    ) : (
+                      interests.map((interest, idx) => (
+                        <span key={idx} className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-100 rounded-lg text-xs font-semibold">
+                          {interest}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Hobbies */}
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Heart className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Hobbies ({hobbies.length})</span>
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {hobbies.length === 0 ? (
+                      <span className="text-xs text-slate-400 italic">No hobbies listed</span>
+                    ) : (
+                      hobbies.map((hb, idx) => (
+                        <span key={idx} className="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-lg text-xs font-semibold">
+                          {hb}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Networking Locations */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Networking Locations</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-bold block">Current City</span>
+                    <span className="font-bold text-slate-800">{location}</span>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-bold block">Target Expansion Cities</span>
+                    <span className="font-bold text-slate-800">
+                      {targetCities.length > 0 ? targetCities.join(', ') : 'Open to global networking'}
                     </span>
-                  ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Can Offer */}
-              <div className="space-y-1.5">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Can Offer</h4>
+              {/* 5. Target Industries & Objectives */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Target Industries & Networking Objectives</span>
+                </h4>
                 <div className="flex flex-wrap gap-2">
-                  {['Product Strategy', 'SaaS Experience', 'Investor Network', 'GTM Execution'].map((offer, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold">
-                      {offer}
-                    </span>
-                  ))}
+                  {(targetBusinesses.length > 0 ? targetBusinesses : goals).length === 0 ? (
+                    <span className="text-xs text-slate-400 italic">No target business objectives specified</span>
+                  ) : (
+                    (targetBusinesses.length > 0 ? targetBusinesses : goals).map((target, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold">
+                        {target}
+                      </span>
+                    ))
+                  )}
                 </div>
               </div>
 
-              {/* Focus Interests */}
-              <div className="space-y-1.5">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Focus Interests</h4>
-                <div className="flex flex-wrap gap-2">
-                  {(skillsList.length > 0 ? skillsList : ['AI', 'SaaS', 'Digital Transformation', 'Startups']).map((interest, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-xl text-xs font-medium">
-                      {interest}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Details Grid */}
-              <div className="pt-2 border-t border-slate-100 space-y-2">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Brand & Role Details</h4>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold block">Brand / Company</span>
-                    <span className="font-bold text-slate-800">{user.recommended_company || user.company || 'N/A'}</span>
+              {/* 6. Connection Bridges Preview Callout */}
+              <div 
+                onClick={() => setActiveTab('bridges')}
+                className="p-4 bg-gradient-to-r from-indigo-900 to-purple-900 text-white rounded-2xl flex items-center justify-between cursor-pointer hover:shadow-lg transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
+                    <Link2 className="w-5 h-5 text-indigo-300" />
                   </div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold block">Role</span>
-                    <span className="font-bold text-slate-800">{user.recommended_role || user.role || user.job_title || 'N/A'}</span>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold block">Domain</span>
-                    <span className="font-bold text-slate-800">{user.domain || user.industry || 'Technology & SaaS'}</span>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold block">Location</span>
-                    <span className="font-bold text-slate-800">{user.location || 'Mumbai, India'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mutual Connections */}
-              <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <Users className="w-4 h-4 text-indigo-600" />
                   <div>
-                    <h5 className="text-xs font-bold text-indigo-950">Mutual Connections</h5>
-                    <p className="text-[11px] text-indigo-700">3 people in your common network</p>
+                    <h5 className="text-xs font-bold text-white">Connection Bridges ({connectionsOffered.length})</h5>
+                    <p className="text-[11px] text-indigo-200">
+                      {connectionsOffered.length > 0
+                        ? `Offers ${connectionsOffered.length} direct warm introduction bridges`
+                        : 'Explore network bridge details'}
+                    </p>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-indigo-600 cursor-pointer hover:underline">View</span>
+                <span className="text-xs font-bold bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl transition-colors">
+                  View Bridge Details →
+                </span>
               </div>
             </>
           )}
 
+          {/* TAB 2: PERSONAL & PROFESSIONAL IDENTITY */}
+          {activeTab === 'identity' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 pb-2">
+                  <User className="w-4 h-4 text-purple-600" />
+                  <span>Personal & Professional Identity</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 block">Full Name</span>
+                    <span className="font-extrabold text-slate-900">{displayName}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 block">Role / Job Title</span>
+                    <span className="font-extrabold text-slate-900">{role}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 block">Brand / Company</span>
+                    <span className="font-extrabold text-slate-900">{company}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 block">Industry / Domain</span>
+                    <span className="font-extrabold text-slate-900">{domain}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information & Links */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 pb-2">
+                  <Globe className="w-4 h-4 text-emerald-600" />
+                  <span>Verified Contact & Profiles</span>
+                </h4>
+
+                <div className="space-y-2 text-xs">
+                  {email && (
+                    <div className="flex items-center gap-2.5 text-slate-700">
+                      <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                      <span className="font-semibold">{email}</span>
+                    </div>
+                  )}
+                  {phone && (
+                    <div className="flex items-center gap-2.5 text-slate-700">
+                      <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                      <span className="font-semibold">{phone}</span>
+                    </div>
+                  )}
+                  {linkedinUrl && (
+                    <div className="flex items-center gap-2.5">
+                      <Linkedin className="w-4 h-4 text-blue-600 shrink-0" />
+                      <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 hover:underline truncate">
+                        {linkedinUrl}
+                      </a>
+                    </div>
+                  )}
+                  {website && (
+                    <div className="flex items-center gap-2.5">
+                      <Globe className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <a href={website} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-600 hover:underline truncate">
+                        {website}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: CONNECTION BRIDGES OFFERED */}
+          {activeTab === 'bridges' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-indigo-50/80 p-4 rounded-2xl border border-indigo-100 space-y-1">
+                <div className="flex items-center gap-1.5 text-indigo-900 font-extrabold text-xs uppercase tracking-wider">
+                  <Link2 className="w-4 h-4 text-indigo-600" />
+                  <span>Connection Bridges Offered ({connectionsOffered.length})</span>
+                </div>
+                <p className="text-[11px] text-indigo-800">
+                  People and decision-makers in {displayName}'s immediate network available for warm introductions.
+                </p>
+              </div>
+
+              {connectionsOffered.length === 0 ? (
+                <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-200 p-6 space-y-2">
+                  <Link2 className="w-8 h-8 text-slate-300 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700">No Connection Bridges Listed</p>
+                  <p className="text-[11px] text-slate-400">This member hasn't published specific network bridge contacts yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {connectionsOffered.map((bridge: any, idx: number) => (
+                    <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2 hover:border-indigo-300 transition-all">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h5 className="font-extrabold text-slate-900 text-sm">{bridge.personName || bridge.name || 'Warm Contact'}</h5>
+                          <p className="text-xs font-semibold text-slate-700">{bridge.role || bridge.jobTitle || 'Executive'}</p>
+                          <p className="text-[11px] text-slate-500 font-medium">{bridge.orgName || bridge.company || 'Company'}</p>
+                        </div>
+                        <span className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-100 rounded-lg text-[10px] font-extrabold uppercase">
+                          {bridge.businessDomain || bridge.domain || 'Technology'}
+                        </span>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-[11px] text-slate-500 gap-2">
+                        {bridge.city && (
+                          <span className="flex items-center gap-1 font-medium">
+                            <MapPin className="w-3 h-3 text-slate-400" />
+                            <span>{bridge.city}</span>
+                          </span>
+                        )}
+                        {bridge.relationship && (
+                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-semibold">
+                            Relationship: {bridge.relationship}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: AI ICEBREAKERS */}
           {activeTab === 'icebreakers' && (
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-purple-900 to-indigo-900 p-4 rounded-2xl text-white space-y-1">
@@ -324,7 +549,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   <span>AI Conversation Starter Studio</span>
                 </div>
-                <h4 className="text-sm font-bold">Personalized Icebreakers for {user.recommended_name}</h4>
+                <h4 className="text-sm font-bold">Personalized Icebreakers for {displayName}</h4>
                 <p className="text-[11px] text-purple-200">
                   Select and copy a customized conversation starter to launch your warm conversation.
                 </p>
@@ -333,15 +558,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               {[
                 {
                   label: '🎯 Strategic Industry Synergy',
-                  text: `Hi ${user.recommended_name.split(' ')[0]}, I loved seeing your focus on ${user.industry || 'technology & growth'} at ${user.recommended_company}. I'm currently expanding partnerships in this domain and would love to connect and swap insights!`,
+                  text: `Hi ${displayName.split(' ')[0]}, I loved seeing your focus on ${domain} at ${company}. I'm currently expanding partnerships in this domain and would love to connect and swap insights!`,
                 },
                 {
                   label: '🤝 Common Network & Goal Hook',
-                  text: `Hi ${user.recommended_name.split(' ')[0]}, I noticed our mutual focus on ${skillsList.slice(0, 2).join(' & ') || 'innovation and strategy'}. I'm actively exploring new synergies and would be very glad to connect with a fellow leader in ${user.location || 'the network'}.`,
+                  text: `Hi ${displayName.split(' ')[0]}, I noticed our mutual focus on ${interests.slice(0, 2).join(' & ') || 'innovation and strategy'}. I'm actively exploring new synergies and would be very glad to connect with a fellow leader in ${location}.`,
                 },
                 {
-                  label: '☕ Casual Coffee Chat / Advisory',
-                  text: `Hi ${user.recommended_name.split(' ')[0]}, your background as ${user.recommended_role} at ${user.recommended_company} really caught my eye. If you ever have 10 minutes for a quick virtual coffee chat, I'd love to learn more about your trajectory!`,
+                  label: '☕ Casual Virtual Coffee / Advisory',
+                  text: `Hi ${displayName.split(' ')[0]}, your background as ${role} at ${company} really caught my eye. If you ever have 10 minutes for a quick virtual coffee chat, I'd love to learn more about your trajectory!`,
                 }
               ].map((item, idx) => (
                 <div key={idx} className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
@@ -373,33 +598,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   </p>
                 </div>
               ))}
-            </div>
-          )}
-
-          {activeTab === 'experience' && (
-            <div className="space-y-4 text-xs">
-              <div className="border-l-2 border-brand-500 pl-4 space-y-1">
-                <h5 className="font-bold text-slate-900 text-sm">{user.recommended_role}</h5>
-                <p className="font-semibold text-slate-600">{user.recommended_company}</p>
-                <p className="text-[11px] text-slate-400">2021 - Present • 3+ yrs</p>
-                <p className="text-slate-600 pt-1">Leading product strategy and scaling enterprise revenue.</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'interests' && (
-            <div className="flex flex-wrap gap-2 text-xs">
-              {['Artificial Intelligence', 'SaaS Scale', 'Angel Investing', 'Product Growth', 'Cloud Architecture'].map((item, idx) => (
-                <span key={idx} className="px-3 py-1.5 bg-purple-50 text-purple-800 rounded-xl font-semibold border border-purple-100">
-                  {item}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'more' && (
-            <div className="text-xs space-y-2 text-slate-600">
-              <p>Verified profile parameters synced with NexaLink Matchmaking Engine.</p>
             </div>
           )}
         </div>

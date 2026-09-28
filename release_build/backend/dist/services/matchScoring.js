@@ -179,7 +179,32 @@ function calculateMatchScore(userA = {}, userB = {}) {
         totalScore += targetBizResult.score;
         reasons.push(`Same target industry focus (${targetBizResult.overlaps[0]})`);
     }
-    // 4. Intent / Goal Alignment (Up to 20 pts)
+    // 4. Services We Offer & Domain Synergy (Up to 20 pts)
+    const bioB = String(userB.bio || metaB.servicesOffered || '');
+    if (bioB && (targetBizA.length || goalsA.length)) {
+        const targetsAndGoalsText = [...targetBizA, ...goalsA].join(' ').toLowerCase();
+        const servicesText = bioB.toLowerCase();
+        const tokens = targetsAndGoalsText.split(/[\s,&\/-]+/).filter((t) => t.length > 2);
+        const matchedServices = tokens.filter((t) => servicesText.includes(t));
+        if (matchedServices.length > 0) {
+            totalScore += 15;
+            reasons.push(`Offers services matching your target focus ("${matchedServices[0]}")`);
+        }
+    }
+    const domainB = String(userB.industry || metaB.domain || '').toLowerCase();
+    const domainA = String(userA.industry || metaA.domain || '').toLowerCase();
+    if (domainB && (targetBizA.length || domainA)) {
+        const targetsA = targetBizA.map((t) => String(t).toLowerCase());
+        if (domainA && domainA === domainB) {
+            totalScore += 15;
+            reasons.push(`Both operating in the ${userB.industry || metaB.domain} domain`);
+        }
+        else if (targetsA.some((t) => t.includes(domainB) || domainB.includes(t))) {
+            totalScore += 15;
+            reasons.push(`Domain (${userB.industry || metaB.domain}) matches your target industry focus`);
+        }
+    }
+    // 5. Intent / Goal Alignment (Up to 20 pts)
     const goalResult = matchGoalsFreeText(goalsA, goalsB);
     totalScore += goalResult.score;
     if (goalResult.overlaps.length > 0) {
