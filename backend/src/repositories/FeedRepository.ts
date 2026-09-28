@@ -20,7 +20,8 @@ export class FeedRepository {
       `SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`
     );
 
-    // If posts table has no entries, auto-generate welcome network posts from active members
+    // Auto-generate welcome network posts disabled on TRUNCATE
+    /*
     if (rows.length === 0) {
       const members = await query<any[]>(
         `SELECT u.user_id, u.display_name, u.avatar_url, p.headline, p.company, p.skills, p.networking_goals
@@ -48,6 +49,7 @@ export class FeedRepository {
         `SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`
       );
     }
+    */
 
     if (rows.length === 0) return [];
 

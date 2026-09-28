@@ -22,7 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import confetti from 'canvas-confetti';
 
 export const FeedPage: React.FC = () => {
-  const [postType, setPostType] = useState<'I want to meet' | 'I can introduce'>('I want to meet');
+  const [postType, setPostType] = useState<'I want to meet' | 'I can connect You to'>('I want to meet');
   const [content, setContent] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -75,7 +75,7 @@ export const FeedPage: React.FC = () => {
           />
           <div className="flex-1 min-w-0">
             <h3 className="text-xs font-bold text-slate-900">Share networking requirement & update</h3>
-            <p className="text-[11px] text-slate-500 font-medium">Post what you need or who you can introduce to your network</p>
+            <p className="text-[11px] text-slate-500 font-medium">Post what you need or who you can connect others to in your network</p>
           </div>
         </div>
 
@@ -88,18 +88,18 @@ export const FeedPage: React.FC = () => {
             <select
               id="requirement-type"
               value={postType}
-              onChange={(e) => setPostType(e.target.value as 'I want to meet' | 'I can introduce')}
+              onChange={(e) => setPostType(e.target.value as 'I want to meet' | 'I can connect You to')}
               className="text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden cursor-pointer"
             >
               <option value="I want to meet">🤝 I want to meet</option>
-              <option value="I can introduce">🌟 I can introduce</option>
+              <option value="I can connect You to">🌟 I can connect You to</option>
             </select>
           </div>
 
-          {/* Text Area for Typing */}
+          {/* Text Area for Typing with Name, Role, Industry guidance */}
           <textarea
             rows={3}
-            placeholder="Share networking requirement & update..."
+            placeholder="Name, Role, Industry — Share details of your requirement or connection..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full text-xs p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium leading-relaxed text-slate-900 resize-none"
@@ -141,10 +141,10 @@ export const FeedPage: React.FC = () => {
         <div className="space-y-4">
           {posts.map((post) => {
             const isWantToMeet = post.content.startsWith('[I want to meet]');
-            const isCanIntroduce = post.content.startsWith('[I can introduce]');
+            const isCanConnect = post.content.startsWith('[I can connect You to]') || post.content.startsWith('[I can introduce]');
             let displayContent = post.content;
             if (isWantToMeet) displayContent = post.content.replace('[I want to meet]', '').trim();
-            if (isCanIntroduce) displayContent = post.content.replace('[I can introduce]', '').trim();
+            if (isCanConnect) displayContent = post.content.replace('[I can connect You to]', '').replace('[I can introduce]', '').trim();
 
             return (
               <div
@@ -166,9 +166,9 @@ export const FeedPage: React.FC = () => {
                             🤝 I want to meet
                           </span>
                         )}
-                        {isCanIntroduce && (
+                        {isCanConnect && (
                           <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md border border-emerald-200">
-                            🌟 I can introduce
+                            🌟 I can connect You to
                           </span>
                         )}
                       </div>
