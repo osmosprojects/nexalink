@@ -376,18 +376,37 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
           </div>
 
-          {/* SECTION 6: NETWORKING OBJECTIVES / TARGET INDUSTRIES */}
+          {/* SECTION 6: NETWORKING OBJECTIVES */}
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 space-y-3">
             <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2.5">
               <Zap className="w-4 h-4 text-amber-500" />
-              <span>Networking Objectives & Target Industries</span>
+              <span>Networking Objectives</span>
             </h4>
             <div className="flex flex-wrap gap-2">
-              {(targetBusinesses.length > 0 ? targetBusinesses : goals).length === 0 ? (
-                <span className="text-xs text-slate-400 italic">No target objectives specified</span>
+              {goals.length === 0 ? (
+                <span className="text-xs text-slate-400 italic">No networking objectives specified</span>
               ) : (
-                (targetBusinesses.length > 0 ? targetBusinesses : goals).map((target, idx) => (
+                goals.map((goal, idx) => (
                   <span key={idx} className="px-3.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-bold">
+                    {goal}
+                  </span>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* SECTION 7: TARGET INDUSTRIES & BUSINESSES */}
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 space-y-3">
+            <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <Building2 className="w-4 h-4 text-blue-600" />
+              <span>Target Industries & Businesses</span>
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {targetBusinesses.length === 0 ? (
+                <span className="text-xs text-slate-400 italic">No target industries or businesses specified</span>
+              ) : (
+                targetBusinesses.map((target, idx) => (
+                  <span key={idx} className="px-3.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold">
                     {target}
                   </span>
                 ))
@@ -395,14 +414,36 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          {/* SECTION 7: CONNECTION BRIDGES OFFERED */}
+          {/* SECTION 8: NETWORKING GOALS (Target Frequency & Quantity) */}
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 space-y-3">
+            <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <Target className="w-4 h-4 text-emerald-600" />
+              <span>Networking Goals</span>
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-0.5">
+                <span className="text-[10px] text-slate-400 font-bold block uppercase">Goal Frequency</span>
+                <span className="font-bold text-slate-800 capitalize">
+                  {fullProfile?.networkingTargetPeriod || user?.networkingTargetPeriod || 'Weekly'} Target
+                </span>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-0.5">
+                <span className="text-[10px] text-slate-400 font-bold block uppercase">Target New Connections</span>
+                <span className="font-bold text-slate-800">
+                  {fullProfile?.networkingNewConnections || user?.networkingNewConnections || 5} new connections
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 9: CONNECTION BRIDGES OFFERED */}
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                 <Link2 className="w-4 h-4 text-indigo-600" />
-                <span>Connection Bridges Offered ({connectionsOffered.length})</span>
+                <span>Connection Bridges ({connectionsOffered.length})</span>
               </h4>
-              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md">
                 Warm Introductions
               </span>
             </div>
