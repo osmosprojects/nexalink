@@ -31,7 +31,7 @@ export interface ReplyItem {
   authorName: string;
   replyType: 'wants to meet to' | 'can connect to';
   targetPerson: string;
-  content?: string;
+  content?: string | null;
   timeAgo: string;
   likesCount: number;
 }
@@ -55,7 +55,6 @@ export const FeedPage: React.FC = () => {
   // Reply Composer Form State per post
   const [replyTypeInputs, setReplyTypeInputs] = useState<Record<number, 'wants to meet to' | 'can connect to'>>({});
   const [replyTargetInputs, setReplyTargetInputs] = useState<Record<number, string>>({});
-  const [replyContentInputs, setReplyContentInputs] = useState<Record<number, string>>({});
 
   // Persisted Thread Conversations per post (synced via backend database API)
   const [postReplies, setPostReplies] = useState<Record<number, ReplyItem[]>>({});
@@ -75,7 +74,7 @@ export const FeedPage: React.FC = () => {
           authorName: r.author_name,
           replyType: r.reply_type || 'wants to meet to',
           targetPerson: r.target_person || 'Sanjeev Sarma',
-          content: r.content || '',
+          content: null,
           timeAgo: formatDate(r.created_at, 'relative'),
           likesCount: 0,
         }));
@@ -146,18 +145,16 @@ export const FeedPage: React.FC = () => {
   const handleAddThreadReply = async (postId: number, defaultTargetName: string) => {
     const selectedReplyType = replyTypeInputs[postId] || 'wants to meet to';
     const targetPersonName = (replyTargetInputs[postId] || defaultTargetName || 'Sanjeev Sarma').trim();
-    const commentText = (replyContentInputs[postId] || '').trim();
 
     try {
       await api.post(`/feed/${postId}/reply`, {
         replyType: selectedReplyType,
         targetPerson: targetPersonName,
-        content: commentText,
+        content: null,
       });
 
       await fetchRepliesForPost(postId);
 
-      setReplyContentInputs((prev) => ({ ...prev, [postId]: '' }));
       setExpandedThreadPostId(postId);
       setActiveReplyPostId(null);
       confetti({ particleCount: 25, spread: 40, origin: { y: 0.8 } });
@@ -544,10 +541,6 @@ export const FeedPage: React.FC = () => {
                             </div>
                             <span className="text-[10px] text-slate-400 font-medium">{rep.timeAgo}</span>
                           </div>
-
-                          {rep.content && (
-                            <p className="text-slate-700 font-medium leading-relaxed pt-0.5">{rep.content}</p>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -596,21 +589,9 @@ export const FeedPage: React.FC = () => {
                         }
                         className="flex-1 text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-1 focus:ring-brand-500"
                       />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        placeholder="Optional comment details..."
-                        value={replyContentInputs[post.post_id] || ''}
-                        onChange={(e) =>
-                          setReplyContentInputs((prev) => ({ ...prev, [post.post_id]: e.target.value }))
-                        }
-                        className="flex-1 text-xs px-3.5 py-2 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-1 focus:ring-brand-500"
-                      />
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs"
+                        className="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs"
                       >
                         Reply to Thread
                       </button>

@@ -73,7 +73,7 @@ export class FeedController {
     try {
       const userId = req.user!.userId;
       const postId = parseInt(String(req.params.id), 10);
-      const { replyType, targetPerson, content } = req.body;
+      const { replyType, targetPerson } = req.body;
 
       const user = await UserRepository.findById(userId);
 
@@ -84,7 +84,7 @@ export class FeedController {
         user?.avatar_url || null,
         replyType || 'wants to meet to',
         targetPerson || 'Sanjeev Sarma',
-        content || null
+        null
       );
 
       await logAudit(req, 'FEED_REPLY_CREATED', 'reply', replyId);
