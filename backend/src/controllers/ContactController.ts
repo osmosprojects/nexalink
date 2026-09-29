@@ -84,7 +84,7 @@ export class ContactController {
       }
 
       const safeFirstName = first_name || last_name || 'Connection';
-      const safeLastName = first_name && last_name ? last_name : (first_name ? '.' : '');
+      const safeLastName = first_name && last_name ? last_name : '';
 
       const contactId = await ContactRepository.create(userId, {
         first_name: safeFirstName,

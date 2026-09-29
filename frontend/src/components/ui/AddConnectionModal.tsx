@@ -350,7 +350,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
     try {
       const nameParts = fullName.trim().split(/\s+/);
       const first_name = nameParts[0] || '';
-      const last_name = nameParts.slice(1).join(' ') || (first_name ? '.' : '');
+      const last_name = nameParts.slice(1).join(' ') || '';
 
       // Clean repeatable rows
       const validConnectables = connectableRows

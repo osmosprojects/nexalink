@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Contact, Tag } from '../types';
-import { formatDate, getRelationshipTypeBadge } from '../lib/utils';
+import { formatDate, getRelationshipTypeBadge, formatFullName } from '../lib/utils';
 import { Avatar } from '../components/ui/Avatar';
 
 export const ContactsPage: React.FC = () => {
@@ -246,12 +246,12 @@ export const ContactsPage: React.FC = () => {
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar
                         src={contact.avatar_url}
-                        name={`${contact.first_name || ''} ${contact.last_name || ''}`.trim()}
+                        name={formatFullName(contact.first_name, contact.last_name)}
                         className="w-12 h-12 rounded-2xl ring-1 ring-slate-200 shrink-0 group-hover:scale-105 transition-transform"
                       />
                       <div className="min-w-0">
                         <h4 className="text-sm font-bold text-slate-900 group-hover:text-brand-600 truncate transition-colors">
-                          {contact.first_name} {contact.last_name}
+                          {formatFullName(contact.first_name, contact.last_name)}
                         </h4>
                         <p className="text-xs text-slate-500 truncate font-medium">
                           {contact.job_title || 'Professional'}
@@ -355,11 +355,11 @@ export const ContactsPage: React.FC = () => {
                         <div className="flex items-center gap-3">
                           <Avatar
                             src={c.avatar_url}
-                            name={`${c.first_name || ''} ${c.last_name || ''}`.trim()}
+                            name={formatFullName(c.first_name, c.last_name)}
                             className="w-9 h-9 rounded-full ring-1 ring-slate-200"
                           />
                           <div>
-                            <p className="font-bold text-slate-900">{c.first_name} {c.last_name}</p>
+                            <p className="font-bold text-slate-900">{formatFullName(c.first_name, c.last_name)}</p>
                             <p className="text-[11px] text-slate-500">{c.job_title} · {c.company}</p>
                           </div>
                         </div>

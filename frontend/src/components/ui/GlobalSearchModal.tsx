@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Avatar } from './Avatar';
+import { formatFullName } from '../../lib/utils';
 
 interface GlobalSearchModalProps {
   isOpen: boolean;
@@ -144,12 +145,12 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                     <div className="flex items-center gap-3">
                       <Avatar
                         src={c.avatar_url}
-                        name={`${c.first_name || ''} ${c.last_name || ''}`.trim()}
+                        name={formatFullName(c.first_name, c.last_name)}
                         className="w-8 h-8 rounded-full ring-1 ring-slate-200"
                       />
                       <div>
                         <p className="text-xs font-bold text-slate-800 group-hover:text-brand-700">
-                          {c.first_name} {c.last_name}
+                          {formatFullName(c.first_name, c.last_name)}
                         </p>
                         <p className="text-[11px] text-slate-500">
                           {c.job_title ? `${c.job_title} · ` : ''}{c.company || 'Personal Contact'}

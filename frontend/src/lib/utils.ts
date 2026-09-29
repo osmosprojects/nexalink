@@ -60,3 +60,73 @@ export function getRelationshipTypeBadge(type: string) {
   };
   return map[type] || map.other;
 }
+
+export function formatFullName(firstName?: string | null, lastName?: string | null): string {
+  const first = firstName ? firstName.trim() : '';
+  const last = lastName && lastName.trim() !== '.' ? lastName.trim() : '';
+  if (first && last) return `${first} ${last}`;
+  return first || last || 'Connection';
+}
+
+export interface ExtendedContactNotes {
+  whereMet?: string | null;
+  businessFocus?: string | null;
+  otherNetworks?: string[];
+  connectablePersons?: Array<{
+    personName?: string;
+    company?: string;
+    businessDomain?: string;
+    role?: string;
+  }>;
+  personalDetails?: string[];
+  hobbies?: string[];
+  milestones?: Array<{
+    type?: string;
+    date?: string;
+    note?: string;
+  }>;
+  meetingIntelligence?: string | null;
+  followUpTask?: string | null;
+}
+
+export function parseContactNotes(notesStr?: string | null): {
+  cleanNotes: string;
+  extendedData: ExtendedContactNotes | null;
+} {
+  if (!notesStr) return { cleanNotes: '', extendedData: null };
+
+  let extendedData: ExtendedContactNotes | null = null;
+  let text = notesStr;
+
+  const jsonStartIndex = notesStr.indexOf('{');
+  const jsonEndIndex = notesStr.lastIndexOf('}');
+  if (jsonStartIndex !== -1 && jsonEndIndex > jsonStartIndex) {
+    const possibleJson = notesStr.substring(jsonStartIndex, jsonEndIndex + 1);
+    try {
+      const parsed = JSON.parse(possibleJson);
+      if (typeof parsed === 'object' && parsed !== null) {
+        extendedData = parsed;
+        text = (notesStr.substring(0, jsonStartIndex) + notesStr.substring(jsonEndIndex + 1)).trim();
+      }
+    } catch {
+      // Not valid JSON
+    }
+  }
+
+  if (extendedData) {
+    const lines = text.split(/\n+/).filter((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return false;
+      if (/^\[(Meeting Intelligence|Where Met|Business Focus|Personal Details|Hobbies)\]:/.test(trimmed)) {
+        return false;
+      }
+      return true;
+    });
+    text = lines.join('\n\n');
+  }
+
+  return {
+    cleanNotes: text.trim(),
+    extendedData,
+  };
+}

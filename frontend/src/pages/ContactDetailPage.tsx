@@ -19,12 +19,13 @@ import {
   Edit3,
   Copy,
   Check,
-  Loader2
+  Loader2,
+  Users
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Contact, Interaction, Meeting, Task, Note } from '../types';
 import { Avatar } from '../components/ui/Avatar';
-import { formatDate, getRelationshipTypeBadge } from '../lib/utils';
+import { formatDate, getRelationshipTypeBadge, formatFullName, parseContactNotes } from '../lib/utils';
 import { QuickAddModal } from '../components/ui/QuickAddModal';
 import confetti from 'canvas-confetti';
 
@@ -148,13 +149,13 @@ export const ContactDetailPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
             <Avatar
               src={contact.avatar_url}
-              name={`${contact.first_name || ''} ${contact.last_name || ''}`.trim()}
+              name={formatFullName(contact.first_name, contact.last_name)}
               className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl ring-4 ring-brand-50 shadow-md shrink-0"
             />
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-                  {contact.first_name} {contact.last_name}
+                  {formatFullName(contact.first_name, contact.last_name)}
                 </h2>
                 <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase ${badge.bg}`}>
                   {badge.label}
@@ -285,92 +286,231 @@ export const ContactDetailPage: React.FC = () => {
 
       {/* TAB CONTENT */}
       {/* 1. OVERVIEW TAB */}
-      {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            {/* Notes & Summary */}
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Relationship Notes & Context</h4>
-              <p className="text-xs text-slate-700 leading-relaxed font-normal whitespace-pre-wrap">
-                {contact.notes || 'No notes added yet. Use the note tab to record background and context.'}
-              </p>
-            </div>
-
-            {/* Recent Timeline Preview */}
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recent Interactions</h4>
-                <button
-                  onClick={() => setActiveTab('timeline')}
-                  className="text-xs font-bold text-brand-600 hover:underline"
-                >
-                  View full timeline →
-                </button>
+      {activeTab === 'overview' && (() => {
+        const { cleanNotes, extendedData } = parseContactNotes(contact.notes);
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Notes & Summary */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Relationship Notes & Context</h4>
+                <p className="text-xs text-slate-700 leading-relaxed font-normal whitespace-pre-wrap">
+                  {cleanNotes || 'No additional plain text notes added. See structured context below.'}
+                </p>
               </div>
 
-              {interactions.length === 0 ? (
-                <p className="text-xs text-slate-400 py-4 text-center">No interactions recorded yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {interactions.slice(0, 3).map((inter) => (
-                    <div key={inter.interaction_id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/50 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">{inter.title}</span>
-                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">
-                          {inter.interaction_type}
-                        </span>
+              {/* Extended Structured Intelligence Sections */}
+              {extendedData && (
+                <div className="space-y-6">
+                  {/* 1. People They Can Connect You With */}
+                  {extendedData.connectablePersons && extendedData.connectablePersons.length > 0 && (
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                            People They Can Connect You With ({extendedData.connectablePersons.length})
+                          </h4>
+                          <p className="text-[11px] text-slate-500">Valuable warm introductions available via this contact</p>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-slate-500">{formatDate(inter.interaction_date, 'long')}</p>
-                      {inter.outcome && <p className="text-xs text-slate-600 mt-1"><span className="font-semibold">Outcome:</span> {inter.outcome}</p>}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {extendedData.connectablePersons.map((p, idx) => (
+                          <div key={idx} className="p-3.5 rounded-2xl bg-purple-50/50 border border-purple-100 flex flex-col justify-between space-y-2">
+                            <div>
+                              <span className="text-xs font-bold text-purple-950">{p.personName || 'Connection Candidate'}</span>
+                              {p.role && <p className="text-[11px] text-slate-600 font-medium">{p.role}</p>}
+                              {p.company && <p className="text-[11px] text-purple-700 font-semibold">{p.company}</p>}
+                            </div>
+                            {p.businessDomain && (
+                              <div className="pt-1">
+                                <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+                                  {p.businessDomain}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* 2. Personal Details & Hobbies */}
+                  {((extendedData.personalDetails && extendedData.personalDetails.length > 0) ||
+                    (extendedData.hobbies && extendedData.hobbies.length > 0)) && (
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Personal Details & Hobbies</h4>
+                      
+                      {extendedData.personalDetails && extendedData.personalDetails.length > 0 && (
+                        <div className="space-y-1.5">
+                          <span className="text-[11px] font-semibold text-slate-500">Personal Background & Notes:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {extendedData.personalDetails.map((detail, idx) => (
+                              <span key={idx} className="text-xs px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 font-medium border border-slate-200/70">
+                                {detail}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {extendedData.hobbies && extendedData.hobbies.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
+                          <span className="text-[11px] font-semibold text-slate-500">Interests & Hobbies:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {extendedData.hobbies.map((hobby, idx) => (
+                              <span key={idx} className="text-xs px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 font-semibold border border-amber-200/70">
+                                ⚽ {hobby}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3. Important Dates & Milestones */}
+                  {extendedData.milestones && extendedData.milestones.length > 0 && (
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Important Dates & Milestones</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {extendedData.milestones.map((m, idx) => (
+                          <div key={idx} className="p-3.5 rounded-2xl bg-amber-50/50 border border-amber-100 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-amber-900">{m.type}</span>
+                              {m.date && <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">{m.date}</span>}
+                            </div>
+                            {m.note && <p className="text-xs text-slate-700 font-medium">{m.note}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. Where Met & Business Focus */}
+                  {(extendedData.whereMet || extendedData.businessFocus || extendedData.meetingIntelligence) && (
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-3">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Context & Meeting Intelligence</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        {extendedData.whereMet && (
+                          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/60">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block">Where You Met</span>
+                            <span className="font-semibold text-slate-900">{extendedData.whereMet}</span>
+                          </div>
+                        )}
+                        {extendedData.businessFocus && (
+                          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/60">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block">Business Focus</span>
+                            <span className="font-semibold text-slate-900">{extendedData.businessFocus}</span>
+                          </div>
+                        )}
+                        {extendedData.meetingIntelligence && (
+                          <div className="sm:col-span-2 p-3 rounded-2xl bg-blue-50/50 border border-blue-100">
+                            <span className="text-[10px] uppercase font-bold text-blue-800 block">Meeting Intelligence Summary</span>
+                            <p className="text-xs text-slate-800 mt-0.5">{extendedData.meetingIntelligence}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 5. Follow-up Task */}
+                  {extendedData.followUpTask && (
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-2">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Scheduled Follow-up Action</h4>
+                      <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-bold text-emerald-950 block">{extendedData.followUpTask}</span>
+                          {contact.next_follow_up_at && (
+                            <span className="text-[11px] font-medium text-emerald-700">Due: {formatDate(contact.next_follow_up_at, 'short')}</span>
+                          )}
+                        </div>
+                        <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg bg-emerald-600 text-white">Pending</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Contact Details Side card */}
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact Information</h4>
-              <div className="space-y-3 text-xs">
-                {contact.email && (
-                  <div className="flex items-center gap-2.5 text-slate-700">
-                    <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                    <a href={`mailto:${contact.email}`} className="text-brand-600 hover:underline truncate">
-                      {contact.email}
-                    </a>
-                  </div>
-                )}
-                {contact.phone && (
-                  <div className="flex items-center gap-2.5 text-slate-700">
-                    <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span>{contact.phone}</span>
-                  </div>
-                )}
-                {contact.linkedin_url && (
-                  <div className="flex items-center gap-2.5 text-slate-700">
-                    <Linkedin className="w-4 h-4 text-brand-600 shrink-0" />
-                    <a href={contact.linkedin_url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline truncate">
-                      LinkedIn Profile
-                    </a>
+              {/* Recent Timeline Preview */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recent Interactions</h4>
+                  <button
+                    onClick={() => setActiveTab('timeline')}
+                    className="text-xs font-bold text-brand-600 hover:underline"
+                  >
+                    View full timeline →
+                  </button>
+                </div>
+
+                {interactions.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-4 text-center">No interactions recorded yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {interactions.slice(0, 3).map((inter) => (
+                      <div key={inter.interaction_id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/50 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-900">{inter.title}</span>
+                          <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                            {inter.interaction_type}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500">{formatDate(inter.interaction_date, 'long')}</p>
+                        {inter.outcome && <p className="text-xs text-slate-600 mt-1"><span className="font-semibold">Outcome:</span> {inter.outcome}</p>}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="pt-4 border-t border-slate-100">
-                <button
-                  onClick={() => deleteMutation.mutate()}
-                  className="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete Contact</span>
-                </button>
+            {/* Contact Details Side card */}
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact Information</h4>
+                <div className="space-y-3 text-xs">
+                  {contact.email && (
+                    <div className="flex items-center gap-2.5 text-slate-700">
+                      <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                      <a href={`mailto:${contact.email}`} className="text-brand-600 hover:underline truncate">
+                        {contact.email}
+                      </a>
+                    </div>
+                  )}
+                  {contact.phone && (
+                    <div className="flex items-center gap-2.5 text-slate-700">
+                      <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                      <span>{contact.phone}</span>
+                    </div>
+                  )}
+                  {contact.linkedin_url && (
+                    <div className="flex items-center gap-2.5 text-slate-700">
+                      <Linkedin className="w-4 h-4 text-brand-600 shrink-0" />
+                      <a href={contact.linkedin_url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline truncate">
+                        LinkedIn Profile
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <button
+                    onClick={() => deleteMutation.mutate()}
+                    className="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Contact</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 2. TIMELINE TAB (Guide Section 18) */}
       {activeTab === 'timeline' && (
