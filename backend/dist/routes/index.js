@@ -101,6 +101,9 @@ exports.apiRouter.post('/recommendations/:id/convert', RecommendationController_
 // Networking Feed
 exports.apiRouter.get('/feed', FeedController_1.FeedController.list);
 exports.apiRouter.post('/feed', FeedController_1.FeedController.create);
+exports.apiRouter.get('/feed/:id/can-connect', FeedController_1.FeedController.getCanConnectPaths);
+exports.apiRouter.get('/feed/can-connect/:id', FeedController_1.FeedController.getCanConnectPaths);
+exports.apiRouter.get('/feed/can-connect', FeedController_1.FeedController.getCanConnectPaths);
 exports.apiRouter.post('/feed/:id/like', FeedController_1.FeedController.like);
 exports.apiRouter.get('/feed/:id/replies', FeedController_1.FeedController.getReplies);
 exports.apiRouter.post('/feed/:id/reply', FeedController_1.FeedController.createReply);

@@ -108,6 +108,10 @@ class FeedRepository {
         ]);
         return result.insertId;
     }
+    static async findById(postId) {
+        const rows = await (0, db_1.query)(`SELECT * FROM posts WHERE post_id = ?`, [postId]);
+        return rows[0] || null;
+    }
     static async like(userId, postId) {
         await (0, db_1.query)(`UPDATE posts SET likes_count = likes_count + 1 WHERE post_id = ?`, [postId]);
     }
