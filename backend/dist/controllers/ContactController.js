@@ -7,6 +7,10 @@ const InteractionRepository_1 = require("../repositories/InteractionRepository")
 const MeetingRepository_1 = require("../repositories/MeetingRepository");
 const TaskRepository_1 = require("../repositories/TaskRepository");
 const NoteRepository_1 = require("../repositories/NoteRepository");
+const UserRepository_1 = require("../repositories/UserRepository");
+const ProfileRepository_1 = require("../repositories/ProfileRepository");
+const FeedRepository_1 = require("../repositories/FeedRepository");
+const db_1 = require("../config/db");
 const response_1 = require("../helpers/response");
 const audit_1 = require("../middleware/audit");
 class ContactController {
@@ -88,8 +92,27 @@ class ContactController {
                 tagNames,
             });
             await TagRepository_1.TagRepository.syncContactWarmth(userId, contactId);
-            const isPublicVal = req.body.is_public || req.body.isPublic || (req.body.privacyTag && req.body.privacyTag.includes('Public')) || (tagNames && Array.isArray(tagNames) && tagNames.some((t) => t.includes('Public')));
-            await TagRepository_1.TagRepository.setContactPrivacy(userId, contactId, isPublicVal || false);
+            const isPublicVal = Boolean(req.body.is_public || req.body.isPublic || (req.body.privacyTag && req.body.privacyTag.includes('Public')) || (tagNames && Array.isArray(tagNames) && tagNames.some((t) => t.includes('Public'))));
+            await TagRepository_1.TagRepository.setContactPrivacy(userId, contactId, isPublicVal);
+            if (isPublicVal) {
+                try {
+                    const user = await UserRepository_1.UserRepository.findById(userId);
+                    const profile = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
+                    const authorTitle = profile?.headline || (profile?.job_title && profile?.company ? `${profile.job_title} at ${profile.company}` : profile?.job_title || profile?.company || 'Network Member');
+                    const targetDetails = `${safeFirstName}${safeLastName ? ` ${safeLastName}` : ''}${job_title ? `, ${job_title}` : ''}${company ? `, ${company}` : ''}`;
+                    const postContent = `[can connect you to] ${targetDetails}`;
+                    await FeedRepository_1.FeedRepository.create(userId, {
+                        author_name: user?.display_name || 'Connection Owner',
+                        author_title: authorTitle,
+                        author_avatar: user?.avatar_url || null,
+                        content: postContent,
+                        tags: null,
+                    });
+                }
+                catch (feedErr) {
+                    console.warn('Auto feed post error during contact creation:', feedErr);
+                }
+            }
             const contact = await ContactRepository_1.ContactRepository.getById(userId, contactId);
             await (0, audit_1.logAudit)(req, 'CONTACT_CREATED', 'contact', contactId);
             return (0, response_1.sendSuccess)(res, contact, 201);
@@ -107,6 +130,7 @@ class ContactController {
             const existing = await ContactRepository_1.ContactRepository.getById(userId, contactId);
             if (!existing)
                 return (0, response_1.sendError)(res, 'Contact not found', 404);
+            await ContactRepository_1.ContactRepository.update(userId, contactId, req.body);
             if (req.body.warmthTag || req.body.warmth) {
                 const warmthVal = req.body.warmthTag || req.body.warmth;
                 await TagRepository_1.TagRepository.setContactWarmth(userId, contactId, warmthVal);
@@ -114,8 +138,35 @@ class ContactController {
             if (req.body.privacyTag !== undefined || req.body.is_public !== undefined || req.body.isPublic !== undefined) {
                 const isPub = req.body.privacyTag ? req.body.privacyTag.includes('Public') : Boolean(req.body.is_public || req.body.isPublic);
                 await TagRepository_1.TagRepository.setContactPrivacy(userId, contactId, isPub);
+                // RULE: If changed to Public from CRM, auto-post connection to Network Feed!
+                if (isPub) {
+                    try {
+                        const contact = await ContactRepository_1.ContactRepository.getById(userId, contactId);
+                        if (contact) {
+                            const user = await UserRepository_1.UserRepository.findById(userId);
+                            const profile = await ProfileRepository_1.ProfileRepository.getProfileByUserId(userId);
+                            const authorTitle = profile?.headline || (profile?.job_title && profile?.company ? `${profile.job_title} at ${profile.company}` : profile?.job_title || profile?.company || 'Network Member');
+                            const last = contact.last_name && contact.last_name !== '.' ? ` ${contact.last_name}` : '';
+                            const nameStr = `${contact.first_name || ''}${last}`.trim();
+                            const targetDetails = `${nameStr}${contact.job_title ? `, ${contact.job_title}` : ''}${contact.company ? `, ${contact.company}` : ''}`;
+                            const postContent = `[can connect you to] ${targetDetails}`;
+                            const existingPosts = await (0, db_1.query)(`SELECT post_id FROM posts WHERE user_id = ? AND content LIKE ? LIMIT 1`, [userId, `%${nameStr}%`]);
+                            if (existingPosts.length === 0) {
+                                await FeedRepository_1.FeedRepository.create(userId, {
+                                    author_name: user?.display_name || 'Connection Owner',
+                                    author_title: authorTitle,
+                                    author_avatar: user?.avatar_url || null,
+                                    content: postContent,
+                                    tags: null,
+                                });
+                            }
+                        }
+                    }
+                    catch (feedErr) {
+                        console.warn('Auto feed post error during contact update:', feedErr);
+                    }
+                }
             }
-            await ContactRepository_1.ContactRepository.update(userId, contactId, req.body);
             const updated = await ContactRepository_1.ContactRepository.getById(userId, contactId);
             await (0, audit_1.logAudit)(req, 'CONTACT_UPDATED', 'contact', contactId);
             return (0, response_1.sendSuccess)(res, updated);

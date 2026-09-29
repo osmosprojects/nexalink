@@ -18,6 +18,7 @@ import {
   Check,
   ChevronDown
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import confetti from 'canvas-confetti';
@@ -100,6 +101,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
   const [followUpTask, setFollowUpTask] = useState('');
 
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Feed Posting State
   const [isPostingToFeed, setIsPostingToFeed] = useState(false);
@@ -207,6 +209,8 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
   };
 
   const handleDone = () => {
+    queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    queryClient.invalidateQueries({ queryKey: ['feed'] });
     onClose();
     if (onSuccess && savedContact?.contact_id) {
       onSuccess(savedContact.contact_id);
@@ -454,6 +458,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
 
       const res = await api.post<any>('/contacts', payload);
 
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
       setIsSaving(false);
       setSavedContact(res);
 
@@ -573,6 +578,8 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                         if (savedContact?.contact_id) {
                           await api.put(`/contacts/${savedContact.contact_id}`, { privacyTag: '🌐 Public Connection' });
                         }
+                        queryClient.invalidateQueries({ queryKey: ['contacts'] });
+                        queryClient.invalidateQueries({ queryKey: ['feed'] });
                         setHasPostedToFeed(true);
                         try {
                           confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
@@ -601,7 +608,17 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                   <button
                     type="button"
                     disabled={isPostingToFeed}
-                    onClick={() => setHasPostedToFeed(false)}
+                    onClick={async () => {
+                      if (savedContact?.contact_id) {
+                        try {
+                          await api.put(`/contacts/${savedContact.contact_id}`, { privacyTag: '🔒 Private Network' });
+                          queryClient.invalidateQueries({ queryKey: ['contacts'] });
+                        } catch (e) {
+                          console.warn('Privacy tag setting error:', e);
+                        }
+                      }
+                      handleDone();
+                    }}
                     className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
                     No, Thanks
