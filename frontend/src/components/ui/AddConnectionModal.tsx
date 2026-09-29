@@ -296,17 +296,16 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
 
   // Check for duplicates before submit
   const checkDuplicateAndSave = async (bypassDuplicateCheck = false) => {
-    if (!validateForm()) {
-      if (errors.fullName) {
-        nameInputRef.current?.focus();
-      }
+    const isValid = validateForm();
+    if (!isValid) {
+      nameInputRef.current?.focus();
       return;
     }
 
     setIsSaving(true);
 
-    try {
-      if (!bypassDuplicateCheck) {
+    if (!bypassDuplicateCheck) {
+      try {
         // Query existing contacts for duplicate check
         const contactsRes = await api.get<any>('/contacts?limit=100');
         const existingList = Array.isArray(contactsRes?.items)
@@ -337,13 +336,12 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
           setPossibleDuplicate(match);
           return;
         }
+      } catch (dupErr) {
+        console.warn('Duplicate check notice:', dupErr);
       }
-
-      await executeSave();
-    } catch (err: any) {
-      console.error('Failed to check duplicate or save contact:', err);
-      setIsSaving(false);
     }
+
+    await executeSave();
   };
 
   // Save execution
@@ -352,7 +350,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
     try {
       const nameParts = fullName.trim().split(/\s+/);
       const first_name = nameParts[0] || '';
-      const last_name = nameParts.slice(1).join(' ') || '';
+      const last_name = nameParts.slice(1).join(' ') || (first_name ? '.' : '');
 
       // Clean repeatable rows
       const validConnectables = connectableRows
@@ -636,6 +634,14 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
         ) : (
           /* FORM BODY */
           <div className="p-4 sm:p-6 md:p-8 overflow-y-auto space-y-6 bg-slate-50/50 flex-1">
+            {/* General Error Banner */}
+            {errors.fullName && (
+              <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-bold text-rose-700 flex items-center gap-2 animate-fadeIn">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <span>{errors.fullName}</span>
+              </div>
+            )}
+
             {/* ROW 1: Relationship & Network Membership */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* SECTION 1 — RELATIONSHIP */}

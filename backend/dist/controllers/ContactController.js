@@ -65,12 +65,14 @@ class ContactController {
         try {
             const userId = req.user.userId;
             const { first_name, last_name, email, phone, company, job_title, location, website, linkedin_url, avatar_url, relationship_type, relationship_strength, next_follow_up_at, notes, tagNames } = req.body;
-            if (!first_name || !last_name) {
-                return (0, response_1.sendError)(res, 'First name and last name are required', 400);
+            if (!first_name && !last_name) {
+                return (0, response_1.sendError)(res, 'Name is required', 400);
             }
+            const safeFirstName = first_name || last_name || 'Connection';
+            const safeLastName = first_name && last_name ? last_name : (first_name ? '.' : '');
             const contactId = await ContactRepository_1.ContactRepository.create(userId, {
-                first_name,
-                last_name,
+                first_name: safeFirstName,
+                last_name: safeLastName,
                 email,
                 phone,
                 company,
