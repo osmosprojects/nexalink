@@ -19,6 +19,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
 import confetti from 'canvas-confetti';
 
 interface ConnectableRow {
@@ -97,6 +98,12 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
   const [followUpDate, setFollowUpDate] = useState('');
   const [followUpTask, setFollowUpTask] = useState('');
 
+  const { user } = useAuth();
+
+  // Feed Posting State
+  const [isPostingToFeed, setIsPostingToFeed] = useState(false);
+  const [hasPostedToFeed, setHasPostedToFeed] = useState(false);
+
   // UI States
   const [errors, setErrors] = useState<{ fullName?: string; email?: string; phone?: string }>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -132,6 +139,8 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
       setPossibleDuplicate(null);
       setShowDiscardConfirm(false);
       setSavedContact(null);
+      setIsPostingToFeed(false);
+      setHasPostedToFeed(false);
 
       setTimeout(() => {
         nameInputRef.current?.focus();
@@ -465,13 +474,14 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
           </button>
         </div>
 
-        {/* SUCCESS VIEW */}
+        {/* SUCCESS VIEW & FEED SHARE PROMPT */}
         {savedContact ? (
-          <div className="p-8 sm:p-12 text-center space-y-6 overflow-y-auto flex-1 flex flex-col items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 animate-bounce">
+          <div className="p-6 sm:p-10 text-center space-y-6 overflow-y-auto flex-1 flex flex-col items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 animate-bounce shrink-0">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <div className="space-y-2 max-w-md">
+
+            <div className="space-y-1 max-w-md">
               <h3 className="text-xl font-black text-slate-900">✓ Connection Added</h3>
               <p className="text-sm font-bold text-slate-800">
                 {fullName}
@@ -480,7 +490,92 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 {role ? `${role} · ` : ''}{company || 'Personal Connection'}
               </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+
+            {/* FEED SHARE PROMPT BOX */}
+            <div className="w-full max-w-lg bg-gradient-to-br from-indigo-50/80 via-blue-50/50 to-purple-50/80 border border-indigo-200/80 p-5 rounded-2xl space-y-4 text-left shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <h4 className="text-sm font-bold text-slate-900">
+                    Share on Network Feed?
+                  </h4>
+                  <p className="text-xs text-slate-600">
+                    Would you like to post this connection to notify your network?
+                  </p>
+                </div>
+              </div>
+
+              {/* Feed Post Preview Card */}
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-bold text-slate-900">{user?.displayName || 'Abhishek Tiwari'}</span>
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px] flex items-center gap-1 border border-amber-200">
+                    <span>🌟</span>
+                    <span>can connect you to</span>
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-slate-800 pl-1">
+                  {fullName}{role ? `, ${role}` : ''}{company ? `, ${company}` : ''}
+                </p>
+              </div>
+
+              {/* Share Actions */}
+              {hasPostedToFeed ? (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 animate-fadeIn">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>✓ Posted to Network Feed successfully!</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={isPostingToFeed}
+                    onClick={async () => {
+                      setIsPostingToFeed(true);
+                      try {
+                        const targetDetails = `${fullName}${role ? `, ${role}` : ''}${company ? `, ${company}` : ''}`;
+                        const postContent = `[can connect you to] ${targetDetails}`;
+                        await api.post('/feed', { content: postContent, tags: null });
+                        setHasPostedToFeed(true);
+                        try {
+                          confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+                        } catch {}
+                      } catch (feedErr) {
+                        console.error('Failed to post to feed:', feedErr);
+                      } finally {
+                        setIsPostingToFeed(false);
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                  >
+                    {isPostingToFeed ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Posting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span>Yes, Post to Feed</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isPostingToFeed}
+                    onClick={() => setHasPostedToFeed(false)}
+                    className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    No, Thanks
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => {
@@ -496,7 +591,18 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  onClose();
+                  navigate('/feed');
+                }}
+                className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              >
+                View Network Feed
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   setSavedContact(null);
+                  setHasPostedToFeed(false);
                   setFullName('');
                   setPhone('');
                   setEmail('');
@@ -505,6 +611,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                   setBusinessFocus('');
                   setWhereMet('');
                   setNetworks([]);
+                  setNetworkInput('');
                   setConnectableRows([]);
                   setPersonalDetails([]);
                   setHobbies([]);
@@ -605,7 +712,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 </div>
               </div>
 
-              {/* SECTION 3 — NETWORK MEMBERSHIP */}
+              {/* SECTION 2 — NETWORK MEMBERSHIP */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
@@ -619,53 +726,36 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-1 relative">
-                  {/* Selected Tags Display */}
-                  <div className="flex flex-wrap gap-1.5 min-h-[38px] p-2 bg-slate-50 border border-slate-200/80 rounded-xl focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
-                    {networks.map((net) => (
-                      <span
-                        key={net}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 shadow-2xs animate-fadeIn"
-                      >
-                        <span>{net}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeNetworkTag(net)}
-                          className="text-slate-400 hover:text-slate-700 ml-0.5 p-0.5 hover:bg-slate-100 rounded transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-
-                    <div className="flex-1 min-w-[140px] flex items-center gap-1">
-                      <input
-                        type="text"
-                        value={networkInput}
-                        onChange={(e) => {
-                          setNetworkInput(e.target.value);
-                          setIsNetworkDropdownOpen(true);
-                        }}
-                        onFocus={() => setIsNetworkDropdownOpen(true)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            if (networkInput.trim()) {
-                              addNetworkTag(networkInput);
-                            }
+                <div className="space-y-3 pt-1">
+                  {/* Text Input + Add Button */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={networkInput}
+                      onChange={(e) => setNetworkInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (networkInput.trim()) {
+                            addNetworkTag(networkInput);
                           }
-                        }}
-                        placeholder={networks.length === 0 ? 'Select network(s) or type custom...' : 'Add more...'}
-                        className="w-full text-xs bg-transparent outline-none text-slate-800 placeholder:text-slate-400"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
-                        className="text-slate-400 hover:text-slate-600 p-1"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                        }
+                      }}
+                      placeholder="Type network name (e.g. TiE Mumbai, IIT Alumni)..."
+                      className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (networkInput.trim()) {
+                          addNetworkTag(networkInput);
+                        }
+                      }}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add</span>
+                    </button>
                   </div>
 
                   {networkDuplicateWarning && (
@@ -674,41 +764,29 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     </p>
                   )}
 
-                  {/* Dropdown Options */}
-                  {isNetworkDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1.5 space-y-1">
-                      {NETWORK_PRESETS.filter(
-                        (p) =>
-                          !networks.includes(p) &&
-                          p.toLowerCase().includes(networkInput.toLowerCase())
-                      ).map((preset) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => addNetworkTag(preset)}
-                          className="w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-colors"
+                  {/* Added Network Chips Display Below Text Input */}
+                  <div className="flex flex-wrap gap-2 pt-1 min-h-[32px]">
+                    {networks.length === 0 ? (
+                      <p className="text-[11px] text-slate-400 italic">No networks added yet.</p>
+                    ) : (
+                      networks.map((net) => (
+                        <span
+                          key={net}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-bold text-blue-800 shadow-2xs animate-fadeIn"
                         >
-                          + {preset}
-                        </button>
-                      ))}
-                      {networkInput.trim() &&
-                        !NETWORK_PRESETS.some(
-                          (p) => p.toLowerCase() === networkInput.trim().toLowerCase()
-                        ) && (
+                          <span>{net}</span>
                           <button
                             type="button"
-                            onClick={() => addNetworkTag(networkInput)}
-                            className="w-full text-left px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border-t border-slate-100"
+                            onClick={() => removeNetworkTag(net)}
+                            className="text-blue-400 hover:text-rose-600 p-0.5 hover:bg-blue-100/80 rounded transition-colors"
+                            title="Remove network"
                           >
-                            + Create "{networkInput.trim()}"
+                            <X className="w-3.5 h-3.5" />
                           </button>
-                        )}
-                    </div>
-                  )}
-
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    e.g. Alumni network, Business group, Industry association, etc.
-                  </p>
+                        </span>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
