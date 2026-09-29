@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { ConnectablePerson } from '../types';
+import { Avatar } from '../components/ui/Avatar';
 import {
   User,
   Mail,
@@ -903,13 +904,11 @@ export const ProfilePage: React.FC = () => {
           {!collapsedBlocks['photo'] && (
             <div className="p-5 space-y-4 animate-fadeIn">
               <div className="flex flex-col sm:flex-row items-center gap-5">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt={formData.name || 'User'} className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-12 h-12 text-slate-300" />
-                  )}
-                </div>
+                <Avatar
+                  src={avatarUrl}
+                  name={formData.name || user?.displayName}
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-slate-200 shrink-0"
+                />
 
                 <div className="flex-1 space-y-2.5 text-center sm:text-left">
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">

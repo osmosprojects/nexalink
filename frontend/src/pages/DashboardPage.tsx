@@ -30,6 +30,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../lib/utils';
 import { generateAutoConnectRecommendations } from '../lib/matchmakingEngine';
 import confetti from 'canvas-confetti';
+import { Avatar } from '../components/ui/Avatar';
 
 const SAMPLE_NETWORK_MEMBERS = [
   {
@@ -37,7 +38,7 @@ const SAMPLE_NETWORK_MEMBERS = [
     displayName: 'Sanjeev Sarma',
     jobTitle: 'Strategic Director & Tech Advisor',
     company: 'NexaLink Enterprise',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    avatarUrl: null,
     targetBusinesses: ['SaaS', 'FinTech', 'AI Software'],
     connectionsOffered: [
       {
@@ -65,7 +66,7 @@ const SAMPLE_NETWORK_MEMBERS = [
     displayName: 'Geeta Rathod',
     jobTitle: 'VP of Talent & Culture',
     company: 'Innovate HR',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    avatarUrl: null,
     targetBusinesses: ['HealthTech', 'Human Resources'],
     connectionsOffered: [
       {
@@ -84,7 +85,7 @@ const SAMPLE_NETWORK_MEMBERS = [
     displayName: 'Devyani',
     jobTitle: 'Head of Product Design',
     company: 'Creative Labs',
-    avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    avatarUrl: null,
     targetBusinesses: ['Product Design / UX', 'FinTech'],
     connectionsOffered: [
       {
@@ -392,10 +393,10 @@ export const DashboardPage: React.FC = () => {
                     {/* Top Row: User Avatar & Score Badge */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={rec.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(rec.userName)}&background=6366f1&color=fff`}
-                          alt={rec.userName}
-                          className="w-11 h-11 rounded-2xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform"
+                        <Avatar
+                          src={rec.userAvatar}
+                          name={rec.userName}
+                          className="w-11 h-11 rounded-2xl ring-2 ring-purple-100 group-hover:scale-105 transition-transform"
                         />
                         <div>
                           <h4 className="text-xs font-bold text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1.5">
@@ -555,10 +556,10 @@ export const DashboardPage: React.FC = () => {
                   className="flex items-start justify-between p-3.5 rounded-2xl bg-slate-50/60 hover:bg-brand-50/50 border border-slate-200/50 transition-all cursor-pointer group"
                 >
                   <div className="flex items-start gap-3">
-                    <img
-                      src={inter.contact_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-                      alt={inter.contact_name}
-                      className="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 mt-0.5"
+                    <Avatar
+                      src={inter.contact_avatar}
+                      name={inter.contact_name}
+                      className="w-9 h-9 rounded-full ring-1 ring-slate-200 mt-0.5"
                     />
                     <div>
                       <div className="flex items-center gap-2">
@@ -656,10 +657,10 @@ export const DashboardPage: React.FC = () => {
                   className="p-3.5 rounded-2xl bg-slate-50/80 hover:bg-purple-50/50 border border-slate-200/60 transition-all space-y-2"
                 >
                   <div className="flex items-center gap-3">
-                    <img
-                      src={rec.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-                      alt={rec.recommended_name}
-                      className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-200"
+                    <Avatar
+                      src={rec.avatar_url}
+                      name={rec.recommended_name}
+                      className="w-10 h-10 rounded-full ring-1 ring-slate-200"
                     />
                     <div className="min-w-0">
                       <h5 className="text-xs font-bold text-slate-900 truncate">{rec.recommended_name}</h5>

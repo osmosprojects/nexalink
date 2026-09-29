@@ -10,6 +10,7 @@ import {
   Building2
 } from 'lucide-react';
 import { CanConnectPerson } from '../../types';
+import { Avatar } from './Avatar';
 
 interface ProfilePreviewModalProps {
   person: CanConnectPerson | null;
@@ -67,10 +68,10 @@ export const ProfilePreviewModal: React.FC<ProfilePreviewModalProps> = ({
         <div className="my-4 flex-1 overflow-y-auto space-y-5">
           {/* Main Info Header */}
           <div className="flex items-start gap-4">
-            <img
-              src={person.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-              alt={person.name}
-              className="w-16 h-16 rounded-full object-cover ring-4 ring-brand-100 shadow-md shrink-0"
+            <Avatar
+              src={person.avatarUrl}
+              name={person.name}
+              className="w-16 h-16 rounded-full ring-4 ring-brand-100 shadow-md shrink-0"
             />
             <div className="space-y-1 min-w-0 flex-1">
               <h3 className="text-lg font-bold text-slate-900 leading-snug truncate">

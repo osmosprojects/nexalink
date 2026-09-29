@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { CanConnectPerson } from '../../types';
+import { Avatar } from './Avatar';
 
 interface CanConnectDrawerProps {
   isOpen: boolean;
@@ -261,10 +262,10 @@ export const CanConnectDrawer: React.FC<CanConnectDrawerProps> = ({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={person.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-                      alt={person.name}
-                      className="w-11 h-11 rounded-full object-cover ring-2 ring-slate-200 group-hover:ring-brand-500 transition-all shrink-0"
+                    <Avatar
+                      src={person.avatarUrl}
+                      name={person.name}
+                      className="w-11 h-11 rounded-full ring-2 ring-slate-200 group-hover:ring-brand-500 transition-all shrink-0"
                     />
                     <div className="min-w-0">
                       <h4 className="text-sm font-bold text-slate-900 group-hover:text-brand-600 transition-colors truncate">

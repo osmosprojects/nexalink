@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Contact, Interaction, Meeting, Task, Note } from '../types';
+import { Avatar } from '../components/ui/Avatar';
 import { formatDate, getRelationshipTypeBadge } from '../lib/utils';
 import { QuickAddModal } from '../components/ui/QuickAddModal';
 import confetti from 'canvas-confetti';
@@ -145,10 +146,10 @@ export const ContactDetailPage: React.FC = () => {
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-card space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-            <img
-              src={contact.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-              alt={contact.first_name}
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover ring-4 ring-brand-50 shadow-md"
+            <Avatar
+              src={contact.avatar_url}
+              name={`${contact.first_name || ''} ${contact.last_name || ''}`.trim()}
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl ring-4 ring-brand-50 shadow-md shrink-0"
             />
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">

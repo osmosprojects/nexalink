@@ -21,6 +21,7 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Avatar } from '../ui/Avatar';
 
 interface SidebarProps {
   onOpenQuickAdd: () => void;
@@ -277,17 +278,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
         {/* User Card */}
         <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between px-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            {user?.avatarUrl || profile?.avatar_url ? (
-              <img
-                src={user?.avatarUrl || profile?.avatar_url || ''}
-                alt={user?.displayName || 'User'}
-                className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-700 shrink-0"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 shrink-0">
-                <UserCheck className="w-4 h-4 text-slate-400" />
-              </div>
-            )}
+            <Avatar
+              src={user?.avatarUrl || profile?.avatar_url}
+              name={user?.displayName}
+              className="w-8 h-8 rounded-full ring-1 ring-slate-700 shrink-0"
+            />
             <div className="min-w-0">
               <p className="text-xs font-bold text-white truncate">{user?.displayName || 'User'}</p>
               <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>

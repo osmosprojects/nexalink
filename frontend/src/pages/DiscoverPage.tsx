@@ -27,6 +27,7 @@ import { api } from '../lib/api';
 import { Recommendation } from '../types';
 import { computeRecommendationSynergy } from '../lib/matchmakingEngine';
 import { UserProfileModal } from '../components/ui/UserProfileModal';
+import { Avatar } from '../components/ui/Avatar';
 import { WarmIntroModal } from '../components/ui/WarmIntroModal';
 import confetti from 'canvas-confetti';
 
@@ -300,10 +301,10 @@ export const DiscoverPage: React.FC = () => {
                 </div>
 
                 <div className="h-64 sm:h-72 bg-gradient-to-br from-slate-100 to-indigo-50 relative flex items-center justify-center overflow-hidden">
-                  <img
-                    src={currentSwiperCard.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentSwiperCard.recommended_name)}&background=3b82f6&color=fff`}
-                    alt={currentSwiperCard.recommended_name}
-                    className="w-full h-full object-cover"
+                  <Avatar
+                    src={currentSwiperCard.avatar_url}
+                    name={currentSwiperCard.recommended_name}
+                    className="w-full h-full rounded-none text-4xl"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent" />
                   
@@ -587,10 +588,10 @@ export const DiscoverPage: React.FC = () => {
 
                       {/* User Info Row */}
                       <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src={rec.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(rec.recommended_name)}&background=3b82f6&color=fff`}
-                          alt={rec.recommended_name}
-                          className="w-12 h-12 rounded-xl object-cover ring-2 ring-purple-100 group-hover:scale-105 transition-transform shrink-0"
+                        <Avatar
+                          src={rec.avatar_url}
+                          name={rec.recommended_name}
+                          className="w-12 h-12 rounded-xl ring-2 ring-purple-100 group-hover:scale-105 transition-transform shrink-0"
                         />
                         <div className="min-w-0 flex-1">
                           <h4 className="text-sm font-black text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-1.5 min-w-0 leading-tight">

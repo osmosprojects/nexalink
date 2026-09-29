@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Recommendation } from '../../types';
+import { Avatar } from './Avatar';
 
 interface UserProfileModalProps {
   user: Recommendation | any;
@@ -122,17 +123,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             
             {/* Profile Photo */}
             <div className="relative shrink-0">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={displayName}
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover ring-4 ring-white shadow-xl bg-white"
-                />
-              ) : (
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-600 ring-4 ring-white shadow-xl flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">
-                  {displayName.slice(0, 2).toUpperCase()}
-                </div>
-              )}
+              <Avatar
+                src={avatarUrl}
+                name={displayName}
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl ring-4 ring-white shadow-xl"
+              />
               <div className="absolute bottom-1 right-1 p-1 bg-blue-600 text-white rounded-full ring-2 ring-white">
                 <CheckCircle2 className="w-4 h-4" />
               </div>

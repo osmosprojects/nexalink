@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Plus, Sparkles, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Avatar } from '../ui/Avatar';
 
 interface NavbarProps {
   title?: string;
@@ -91,17 +92,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => navigate('/profile')}
           className="cursor-pointer pl-1 shrink-0"
         >
-          {user?.avatarUrl || profile?.avatar_url ? (
-            <img
-              src={user?.avatarUrl || profile?.avatar_url || ''}
-              alt={user?.displayName || 'Profile'}
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-200/80 hover:ring-brand-500 transition-all"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500 hover:ring-2 hover:ring-brand-500 transition-all">
-              <User className="w-4 h-4 text-slate-500" />
-            </div>
-          )}
+          <Avatar
+            src={user?.avatarUrl || profile?.avatar_url}
+            name={user?.displayName}
+            className="w-8 h-8 rounded-full ring-2 ring-slate-200/80 hover:ring-brand-500 transition-all cursor-pointer"
+          />
         </div>
       </div>
     </header>

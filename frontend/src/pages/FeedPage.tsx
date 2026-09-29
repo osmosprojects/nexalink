@@ -18,6 +18,7 @@ import confetti from 'canvas-confetti';
 import { CanConnectDrawer } from '../components/ui/CanConnectDrawer';
 import { ProfilePreviewModal } from '../components/ui/ProfilePreviewModal';
 import { WarmIntroModal } from '../components/ui/WarmIntroModal';
+import { Avatar } from '../components/ui/Avatar';
 
 // Feature flags for networking card UI
 const SHOW_REACTIONS = false;
@@ -258,11 +259,11 @@ export const FeedPage: React.FC = () => {
       <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
         {/* Profile Pic, Name, Role & Company Header */}
         <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-          <img
-            src={user?.avatarUrl || profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-            alt={user?.displayName || 'User'}
+          <Avatar
+            src={user?.avatarUrl || profile?.avatar_url}
+            name={user?.displayName}
             onClick={() => navigate('/profile')}
-            className="w-11 h-11 rounded-full object-cover ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
+            className="w-11 h-11 rounded-full ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
             title="View Profile"
           />
           <div className="flex-1 min-w-0">
@@ -410,11 +411,11 @@ export const FeedPage: React.FC = () => {
                 {/* 2. DESKTOP POST DESIGN */}
                 <div className="hidden md:flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap">
-                    <img
-                      src={post.author_avatar || profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-                      alt={post.author_name}
+                    <Avatar
+                      src={post.author_avatar}
+                      name={post.author_name}
                       onClick={() => navigate('/profile')}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
+                      className="w-10 h-10 rounded-full ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
                       title="View Profile"
                     />
 
@@ -500,11 +501,11 @@ export const FeedPage: React.FC = () => {
                         {replies.length > 0 ? (
                           <div className="flex items-center -space-x-2 overflow-hidden">
                             {replies.slice(0, 3).map((r, idx) => (
-                              <img
+                              <Avatar
                                 key={idx}
-                                src={r.authorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-                                alt={r.authorName}
-                                className="inline-block h-6 w-6 rounded-full ring-2 ring-white object-cover"
+                                src={r.authorAvatar}
+                                name={r.authorName}
+                                className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
                               />
                             ))}
                             {replies.length > 3 && (

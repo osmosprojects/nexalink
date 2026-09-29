@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Recommendation } from '../../types';
 import confetti from 'canvas-confetti';
+import { Avatar } from './Avatar';
 
 interface WarmIntroModalProps {
   user: Recommendation | any;
@@ -86,10 +87,10 @@ export const WarmIntroModal: React.FC<WarmIntroModalProps> = ({
             <>
               {/* Bridge Target Box */}
               <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex items-center gap-3">
-                <img
-                  src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.recommended_name)}&background=3b82f6&color=fff`}
-                  alt={user.recommended_name}
-                  className="w-12 h-12 rounded-2xl object-cover ring-2 ring-purple-200 shrink-0"
+                <Avatar
+                  src={user.avatar_url}
+                  name={user.recommended_name}
+                  className="w-12 h-12 rounded-2xl ring-2 ring-purple-200 shrink-0"
                 />
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded uppercase tracking-wide">

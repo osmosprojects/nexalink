@@ -22,6 +22,7 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Avatar } from '../ui/Avatar';
 
 interface BottomNavProps {
   onOpenQuickAdd: () => void;
@@ -136,17 +137,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
           <div className="bg-white rounded-t-3xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto space-y-4 animate-slideUp">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                {user?.avatarUrl || profile?.avatar_url ? (
-                  <img
-                    src={user?.avatarUrl || profile?.avatar_url || ''}
-                    alt={user?.displayName || 'User'}
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-brand-500/20"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-500">
-                    <UserCheck className="w-5 h-5 text-slate-500" />
-                  </div>
-                )}
+                <Avatar
+                  src={user?.avatarUrl || profile?.avatar_url}
+                  name={user?.displayName}
+                  className="w-10 h-10 rounded-full ring-2 ring-brand-500/20"
+                />
                 <div>
                   <h4 className="text-sm font-bold text-slate-900">{user?.displayName || 'User'}</h4>
                   <p className="text-xs text-slate-500">{user?.email}</p>

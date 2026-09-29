@@ -19,6 +19,7 @@ import {
 import { api } from '../lib/api';
 import { Contact, Tag } from '../types';
 import { formatDate, getRelationshipTypeBadge } from '../lib/utils';
+import { Avatar } from '../components/ui/Avatar';
 
 export const ContactsPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -242,10 +243,10 @@ export const ContactsPage: React.FC = () => {
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={contact.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-                        alt={contact.first_name}
-                        className="w-12 h-12 rounded-2xl object-cover ring-1 ring-slate-200 shrink-0 group-hover:scale-105 transition-transform"
+                      <Avatar
+                        src={contact.avatar_url}
+                        name={`${contact.first_name || ''} ${contact.last_name || ''}`.trim()}
+                        className="w-12 h-12 rounded-2xl ring-1 ring-slate-200 shrink-0 group-hover:scale-105 transition-transform"
                       />
                       <div className="min-w-0">
                         <h4 className="text-sm font-bold text-slate-900 group-hover:text-brand-600 truncate transition-colors">
@@ -351,10 +352,10 @@ export const ContactsPage: React.FC = () => {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={c.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-                            alt={c.first_name}
-                            className="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200"
+                          <Avatar
+                            src={c.avatar_url}
+                            name={`${c.first_name || ''} ${c.last_name || ''}`.trim()}
+                            className="w-9 h-9 rounded-full ring-1 ring-slate-200"
                           />
                           <div>
                             <p className="font-bold text-slate-900">{c.first_name} {c.last_name}</p>
