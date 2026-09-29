@@ -78,6 +78,12 @@ export interface ExtendedContactNotes {
     businessDomain?: string;
     role?: string;
   }>;
+  wantToMeetPersons?: Array<{
+    personName?: string;
+    company?: string;
+    businessDomain?: string;
+    role?: string;
+  }>;
   personalDetails?: string[];
   hobbies?: string[];
   milestones?: Array<{

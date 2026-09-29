@@ -89,6 +89,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
 
   // Repeatable Rows
   const [connectableRows, setConnectableRows] = useState<ConnectableRow[]>([]);
+  const [wantToMeetRows, setWantToMeetRows] = useState<ConnectableRow[]>([]);
   const [personalDetails, setPersonalDetails] = useState<DetailRow[]>([]);
   const [hobbies, setHobbies] = useState<DetailRow[]>([]);
   const [milestones, setMilestones] = useState<MilestoneRow[]>([]);
@@ -128,6 +129,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
       setNetworks([]);
       setNetworkInput('');
       setConnectableRows([]);
+      setWantToMeetRows([]);
       setPersonalDetails([]);
       setHobbies([]);
       setMilestones([]);
@@ -182,6 +184,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
       whereMet.trim() !== '' ||
       networks.length > 0 ||
       connectableRows.some((r) => r.name || r.company || r.domain || r.role) ||
+      wantToMeetRows.some((r) => r.name || r.company || r.domain || r.role) ||
       personalDetails.some((d) => d.value) ||
       hobbies.some((h) => h.value) ||
       milestones.some((m) => m.date || m.note) ||
@@ -274,6 +277,23 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
     setConnectableRows(connectableRows.filter((r) => r.id !== id));
   };
 
+  const addWantToMeetRow = () => {
+    setWantToMeetRows([
+      ...wantToMeetRows,
+      { id: String(Date.now()), name: '', company: '', domain: '', role: '' },
+    ]);
+  };
+
+  const updateWantToMeetRow = (id: string, field: keyof ConnectableRow, val: string) => {
+    setWantToMeetRows(
+      wantToMeetRows.map((r) => (r.id === id ? { ...r, [field]: val } : r))
+    );
+  };
+
+  const removeWantToMeetRow = (id: string) => {
+    setWantToMeetRows(wantToMeetRows.filter((r) => r.id !== id));
+  };
+
   const addPersonalDetail = () => {
     setPersonalDetails([...personalDetails, { id: String(Date.now()), value: '' }]);
   };
@@ -362,6 +382,15 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
           role: r.role.trim(),
         }));
 
+      const validWantToMeet = wantToMeetRows
+        .filter((r) => r.name.trim() || r.company.trim() || r.domain.trim() || r.role.trim())
+        .map((r) => ({
+          personName: r.name.trim(),
+          company: r.company.trim(),
+          businessDomain: r.domain.trim(),
+          role: r.role.trim(),
+        }));
+
       const validDetails = personalDetails
         .map((d) => d.value.trim())
         .filter(Boolean);
@@ -384,6 +413,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
         businessFocus: businessFocus.trim() || null,
         otherNetworks: networks,
         connectablePersons: validConnectables,
+        wantToMeetPersons: validWantToMeet,
         personalDetails: validDetails,
         hobbies: validHobbies,
         milestones: validMilestones,
@@ -1045,9 +1075,98 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
               )}
             </div>
 
+            {/* ROW 3.5: People They Want to Meet */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900">5. People They Want to Meet</h3>
+                    <p className="text-[11px] text-slate-500 leading-none mt-0.5">
+                      Specify who this connection is looking to meet or connect with
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addWantToMeetRow}
+                  className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Person</span>
+                </button>
+              </div>
+
+              {wantToMeetRows.length === 0 ? (
+                <div className="text-center py-4 bg-slate-50/60 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs">
+                  No target connections added yet. Click "+ Add Person" to specify who this connection wants to meet.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {/* Desktop Column Header */}
+                  <div className="hidden md:grid grid-cols-12 gap-2 text-[11px] font-bold text-slate-500 px-1">
+                    <span className="col-span-3">Person Name / Target</span>
+                    <span className="col-span-3">Company / Organization</span>
+                    <span className="col-span-3">Business Domain / Sector</span>
+                    <span className="col-span-2">Role / Title</span>
+                    <span className="col-span-1 text-center">Delete</span>
+                  </div>
+
+                  {wantToMeetRows.map((row) => (
+                    <div
+                      key={row.id}
+                      className="grid grid-cols-1 md:grid-cols-12 gap-2 p-2.5 md:p-1.5 bg-slate-50 md:bg-white rounded-xl border border-slate-200/80 items-center animate-fadeIn"
+                    >
+                      <input
+                        type="text"
+                        value={row.name}
+                        onChange={(e) => updateWantToMeetRow(row.id, 'name', e.target.value)}
+                        placeholder="e.g. Sanjeev, AI Founders"
+                        className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-amber-500"
+                      />
+                      <input
+                        type="text"
+                        value={row.company}
+                        onChange={(e) => updateWantToMeetRow(row.id, 'company', e.target.value)}
+                        placeholder="e.g. Google, Seed Startups"
+                        className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-amber-500"
+                      />
+                      <input
+                        type="text"
+                        value={row.domain}
+                        onChange={(e) => updateWantToMeetRow(row.id, 'domain', e.target.value)}
+                        placeholder="e.g. SaaS, Venture Capital"
+                        className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-amber-500"
+                      />
+                      <input
+                        type="text"
+                        value={row.role}
+                        onChange={(e) => updateWantToMeetRow(row.id, 'role', e.target.value)}
+                        placeholder="e.g. CEO, Angel Investor"
+                        className="col-span-1 md:col-span-2 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-amber-500"
+                      />
+                      <div className="col-span-1 flex justify-center pt-1 md:pt-0">
+                        <button
+                          type="button"
+                          onClick={() => removeWantToMeetRow(row.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Remove Row"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* ROW 4: Personal Details & Hobbies */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* SECTION 5 — PERSONAL DETAILS */}
+              {/* SECTION 6 — PERSONAL DETAILS */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                   <div className="flex items-center gap-2.5">
@@ -1055,7 +1174,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                       <Heart className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold text-slate-900">5. Personal Details</h3>
+                      <h3 className="text-xs font-bold text-slate-900">6. Personal Details</h3>
                       <p className="text-[11px] text-slate-500 leading-none mt-0.5">
                         Notes about their personal life, family, preferences, etc.
                       </p>

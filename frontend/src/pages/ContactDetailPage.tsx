@@ -21,7 +21,8 @@ import {
   Check,
   Loader2,
   Users,
-  Globe
+  Globe,
+  Target
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Contact, Interaction, Meeting, Task, Note } from '../types';
@@ -444,6 +445,42 @@ export const ContactDetailPage: React.FC = () => {
                             {p.businessDomain && (
                               <div className="pt-1">
                                 <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+                                  {p.businessDomain}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2. People They Want to Meet */}
+                  {extendedData.wantToMeetPersons && extendedData.wantToMeetPersons.length > 0 && (
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                          <Target className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                            People They Want to Meet ({extendedData.wantToMeetPersons.length})
+                          </h4>
+                          <p className="text-[11px] text-slate-500">People or target profiles this contact is looking to connect with</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {extendedData.wantToMeetPersons.map((p, idx) => (
+                          <div key={idx} className="p-3.5 rounded-2xl bg-amber-50/50 border border-amber-200/80 flex flex-col justify-between space-y-2">
+                            <div>
+                              <span className="text-xs font-bold text-amber-950">{p.personName || 'Target Person'}</span>
+                              {p.role && <p className="text-[11px] text-slate-600 font-medium">{p.role}</p>}
+                              {p.company && <p className="text-[11px] text-amber-800 font-semibold">{p.company}</p>}
+                            </div>
+                            {p.businessDomain && (
+                              <div className="pt-1">
+                                <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">
                                   {p.businessDomain}
                                 </span>
                               </div>
