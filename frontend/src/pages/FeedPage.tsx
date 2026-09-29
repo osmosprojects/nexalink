@@ -28,7 +28,7 @@ const EMOJI_OPTIONS = [
 export interface ReplyItem {
   id: string;
   authorName: string;
-  replyType: 'wants to meet to' | 'can connect to';
+  replyType: 'wants to meet to' | 'can connect' | 'can connect to';
   targetPerson: string;
   content?: string | null;
   timeAgo: string;
@@ -52,7 +52,7 @@ export const FeedPage: React.FC = () => {
   const [expandedThreadPostId, setExpandedThreadPostId] = useState<number | null>(null);
 
   // Reply Composer Form State per post
-  const [replyTypeInputs, setReplyTypeInputs] = useState<Record<number, 'wants to meet to' | 'can connect to'>>({});
+  const [replyTypeInputs, setReplyTypeInputs] = useState<Record<number, 'wants to meet to' | 'can connect' | 'can connect to'>>({});
   const [replyTargetInputs, setReplyTargetInputs] = useState<Record<number, string>>({});
   const [replyContentInputs, setReplyContentInputs] = useState<Record<number, string>>({});
 
@@ -142,7 +142,7 @@ export const FeedPage: React.FC = () => {
     setActiveReactionPicker(null);
   };
 
-  const handleAddThreadReply = async (postId: number, defaultTargetName: string, defaultReplyType: 'wants to meet to' | 'can connect to') => {
+  const handleAddThreadReply = async (postId: number, defaultTargetName: string, defaultReplyType: 'wants to meet to' | 'can connect' | 'can connect to') => {
     const selectedReplyType = replyTypeInputs[postId] || defaultReplyType;
     const targetPersonName = (replyTargetInputs[postId] || defaultTargetName || 'Sanjeev Sarma').trim();
     const commentText = (replyContentInputs[postId] || '').trim();
@@ -307,8 +307,8 @@ export const FeedPage: React.FC = () => {
             // Default response intent condition:
             // Wants to meet -> Can Connect
             // Can Connect -> Wants to meet
-            const defaultResponseIntent: 'wants to meet to' | 'can connect to' = isWantToMeet
-              ? 'can connect to'
+            const defaultResponseIntent: 'wants to meet to' | 'can connect' | 'can connect to' = isWantToMeet
+              ? 'can connect'
               : 'wants to meet to';
             const actionButtonText = isWantToMeet ? 'Can Connect' : 'Wants to meet';
             const actionButtonIcon = isWantToMeet ? '🌟' : '🤝';
@@ -501,7 +501,7 @@ export const FeedPage: React.FC = () => {
                     <div className="flex items-center gap-2 pt-1 text-slate-800">
                       <span className="font-bold text-slate-900">{replies[0].authorName}</span>
                       <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
-                        {replies[0].replyType === 'can connect to' ? '🌟 can connect to' : '🤝 wants to meet to'} {replies[0].targetPerson}
+                        {replies[0].replyType === 'can connect' || replies[0].replyType === 'can connect to' ? '🌟 can connect' : '🤝 wants to meet to'} {replies[0].targetPerson}
                       </span>
                     </div>
                   </div>
@@ -539,12 +539,12 @@ export const FeedPage: React.FC = () => {
                               <span className="font-bold text-slate-900 text-xs">{rep.authorName}</span>
                               <span
                                 className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${
-                                  rep.replyType === 'can connect to'
+                                  rep.replyType === 'can connect' || rep.replyType === 'can connect to'
                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                     : 'bg-blue-50 text-blue-700 border-blue-200'
                                 }`}
                               >
-                                {rep.replyType === 'can connect to' ? '🌟 can connect to' : '🤝 wants to meet to'}{' '}
+                                {rep.replyType === 'can connect' || rep.replyType === 'can connect to' ? '🌟 can connect' : '🤝 wants to meet to'}{' '}
                                 {rep.targetPerson}
                               </span>
                             </div>
@@ -575,7 +575,7 @@ export const FeedPage: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-700 shrink-0">
-                        {user?.displayName || 'User'} {currentReplyType}:
+                        {user?.displayName || 'User'} {currentReplyType === 'can connect' || currentReplyType === 'can connect to' ? 'can connect' : 'wants to meet to'}:
                       </span>
                       <input
                         type="text"
