@@ -1,13 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, Plus, Sparkles, User } from 'lucide-react';
+import { Search, Bell, Plus, Sparkles, User, UserPlus, Target } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 
 interface NavbarProps {
   title?: string;
   subtitle?: string;
-  onOpenQuickAdd: () => void;
+  onOpenQuickAdd?: () => void;
+  onOpenAddPerson?: () => void;
+  onOpenAddGoal?: () => void;
   onOpenSearch: () => void;
   unreadCount?: number;
 }
@@ -16,6 +18,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   title = 'Dashboard',
   subtitle,
   onOpenQuickAdd,
+  onOpenAddPerson,
+  onOpenAddGoal,
   onOpenSearch,
   unreadCount = 0,
 }) => {
@@ -58,13 +62,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
 
 
-            {/* Quick Add Button */}
+            {/* Header Actions: Add Person & Add Goal */}
             <button
-              onClick={onOpenQuickAdd}
-              className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold py-2 px-2.5 sm:px-3.5 rounded-xl shadow-sm hover:shadow-md hover:shadow-brand-600/20 active:scale-95 transition-all shrink-0"
+              onClick={onOpenAddPerson || onOpenQuickAdd}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 sm:px-3.5 rounded-xl shadow-xs hover:shadow-md hover:shadow-blue-600/20 active:scale-95 transition-all shrink-0 cursor-pointer"
+              title="Add New Connection"
             >
-              <Plus className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Add</span>
+              <UserPlus className="w-4 h-4 shrink-0" />
+              <span>Add Person</span>
+            </button>
+
+            <button
+              onClick={onOpenAddGoal || onOpenQuickAdd}
+              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2 px-3 sm:px-3.5 rounded-xl shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
+              title="Add Goal"
+            >
+              <Target className="w-4 h-4 shrink-0 text-blue-400" />
+              <span className="hidden sm:inline">Add Goal</span>
             </button>
 
             {/* Notification Bell */}

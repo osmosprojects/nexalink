@@ -14,7 +14,8 @@ import {
   Mail,
   Linkedin,
   ChevronRight,
-  UserCheck
+  UserCheck,
+  UserPlus
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Contact, Tag } from '../types';
@@ -90,10 +91,10 @@ export const ContactsPage: React.FC = () => {
 
             <button
               onClick={() => openQuickAdd?.()}
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition-all"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
-              <span>Add Contact</span>
+              <UserPlus className="w-4 h-4" />
+              <span>Add Person</span>
             </button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { BottomNav } from './BottomNav';
 import { QuickAddModal } from '../ui/QuickAddModal';
+import { AddConnectionModal } from '../ui/AddConnectionModal';
 import { GlobalSearchModal } from '../ui/GlobalSearchModal';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
@@ -29,7 +30,9 @@ const routeTitleMap: Record<string, { title: string; subtitle: string }> = {
 };
 
 export const AppLayout: React.FC = () => {
+  const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [quickAddTab, setQuickAddTab] = useState<'contact' | 'interaction' | 'meeting' | 'task' | 'goal' | 'note'>('goal');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { user, profile, persona, isProfileComplete, isLoading } = useAuth();
   const location = useLocation();
@@ -111,12 +114,27 @@ export const AppLayout: React.FC = () => {
         <Navbar
           title={pageMeta.title}
           subtitle={pageMeta.subtitle}
+          onOpenAddPerson={() => {
+            if (!isProfileComplete) {
+              navigate('/profile');
+              return;
+            }
+            setIsAddPersonOpen(true);
+          }}
+          onOpenAddGoal={() => {
+            if (!isProfileComplete) {
+              navigate('/profile');
+              return;
+            }
+            setQuickAddTab('goal');
+            setIsQuickAddOpen(true);
+          }}
           onOpenQuickAdd={() => {
             if (!isProfileComplete) {
               navigate('/profile');
               return;
             }
-            setIsQuickAddOpen(true);
+            setIsAddPersonOpen(true);
           }}
           onOpenSearch={() => {
             if (!isProfileComplete) {
@@ -130,7 +148,7 @@ export const AppLayout: React.FC = () => {
 
         {/* Page Content Body */}
         <main className="flex-1 p-3 sm:p-5 lg:p-6 w-full mx-auto min-w-0 overflow-y-auto">
-          <Outlet context={{ openQuickAdd: () => setIsQuickAddOpen(true) }} />
+          <Outlet context={{ openQuickAdd: () => setIsAddPersonOpen(true), openAddPerson: () => setIsAddPersonOpen(true) }} />
         </main>
       </div>
 
@@ -141,14 +159,26 @@ export const AppLayout: React.FC = () => {
             navigate('/profile');
             return;
           }
-          setIsQuickAddOpen(true);
+          setIsAddPersonOpen(true);
         }}
       />
 
-      {/* Global Quick Add Modal */}
+      {/* Add New Connection Modal (Add Person) */}
+      {isProfileComplete && (
+        <AddConnectionModal
+          isOpen={isAddPersonOpen}
+          onClose={() => setIsAddPersonOpen(false)}
+          onSuccess={() => {
+            refetchNotifs();
+          }}
+        />
+      )}
+
+      {/* Global Quick Add Modal (Goal / Interaction / Meeting / etc.) */}
       {isProfileComplete && (
         <QuickAddModal
           isOpen={isQuickAddOpen}
+          defaultTab={quickAddTab}
           onClose={() => setIsQuickAddOpen(false)}
           onSuccess={() => {
             refetchNotifs();
