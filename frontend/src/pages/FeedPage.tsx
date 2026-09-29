@@ -536,8 +536,46 @@ export const FeedPage: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    /* OTHER VIEWER VIEW: Shows intent-driven response action CTA */
-                    <div className="flex items-center justify-end w-full">
+                    /* OTHER VIEWER VIEW: Shows reactor avatars on left + intent-driven response action CTA on right */
+                    <div className="flex items-center justify-between w-full">
+                      <div
+                        onClick={() => {
+                          if (replies.length > 0) {
+                            setCanConnectDrawerPost({
+                              id: post.post_id,
+                              targetName: targetPersonInPost,
+                              isOwner: false,
+                              intentKey: originalIntentKey,
+                            });
+                          }
+                        }}
+                        className={`flex items-center gap-2 ${replies.length > 0 ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                      >
+                        {replies.length > 0 ? (
+                          <div className="flex items-center -space-x-2 overflow-hidden">
+                            {replies.slice(0, 3).map((r, idx) => (
+                              <Avatar
+                                key={idx}
+                                src={r.authorAvatar}
+                                name={r.authorName}
+                                className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                                title={r.authorName}
+                              />
+                            ))}
+                            {replies.length > 3 && (
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 ring-2 ring-white">
+                                +{replies.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        ) : null}
+                        {replies.length > 0 && (
+                          <span className="text-xs font-bold text-slate-700">
+                            {replies.length} {replies.length === 1 ? 'person reacted' : 'people reacted'}
+                          </span>
+                        )}
+                      </div>
+
                       {userHasResponded ? (
                         <button
                           type="button"
