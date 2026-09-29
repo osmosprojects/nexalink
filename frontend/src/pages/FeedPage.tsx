@@ -305,13 +305,19 @@ export const FeedPage: React.FC = () => {
             const topEmojis = Object.keys(reactions.counts);
 
             // Default response intent condition:
-            // Wants to meet -> Can connect to
-            // Can connect to -> Wants to meet
+            // Wants to meet -> Can Connect
+            // Can Connect -> Wants to meet
             const defaultResponseIntent: 'wants to meet to' | 'can connect to' = isWantToMeet
               ? 'can connect to'
               : 'wants to meet to';
-            const actionButtonText = isWantToMeet ? 'Can connect to' : 'Wants to meet';
+            const actionButtonText = isWantToMeet ? 'Can Connect' : 'Wants to meet';
             const actionButtonIcon = isWantToMeet ? '🌟' : '🤝';
+
+            const isOwnPost = Boolean(
+              (user?.userId && post.user_id && Number(user.userId) === Number(post.user_id)) ||
+              (profile?.user_id && post.user_id && Number(profile.user_id) === Number(post.user_id)) ||
+              (user?.displayName && post.author_name && user.displayName.trim().toLowerCase() === post.author_name.trim().toLowerCase())
+            );
 
             const replies: ReplyItem[] = postReplies[post.post_id] || [];
 
@@ -447,29 +453,31 @@ export const FeedPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Actions: Intent-based Action Button (Can connect to / Wants to meet) - Share button removed */}
-                  <div className="flex items-center gap-4 text-slate-600">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (activeReplyPostId === post.post_id) {
-                          setActiveReplyPostId(null);
-                        } else {
-                          setActiveReplyPostId(post.post_id);
-                          if (!replyTypeInputs[post.post_id]) {
-                            setReplyTypeInputs((prev) => ({ ...prev, [post.post_id]: defaultResponseIntent }));
+                  {/* Actions: Intent-based Action Button (Can Connect / Wants to meet) - Hidden on user's own posts */}
+                  {!isOwnPost && (
+                    <div className="flex items-center gap-4 text-slate-600">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (activeReplyPostId === post.post_id) {
+                            setActiveReplyPostId(null);
+                          } else {
+                            setActiveReplyPostId(post.post_id);
+                            if (!replyTypeInputs[post.post_id]) {
+                              setReplyTypeInputs((prev) => ({ ...prev, [post.post_id]: defaultResponseIntent }));
+                            }
+                            if (!isThreadExpanded) {
+                              setExpandedThreadPostId(post.post_id);
+                            }
                           }
-                          if (!isThreadExpanded) {
-                            setExpandedThreadPostId(post.post_id);
-                          }
-                        }
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/80 font-bold cursor-pointer transition-all active:scale-95"
-                    >
-                      <span>{actionButtonIcon}</span>
-                      <span>{actionButtonText}</span>
-                    </button>
-                  </div>
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/80 font-bold cursor-pointer transition-all active:scale-95"
+                      >
+                        <span>{actionButtonIcon}</span>
+                        <span>{actionButtonText}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* ============================================================ */}
@@ -552,8 +560,8 @@ export const FeedPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Inline Thread Reply Composer Input */}
-                {isReplyComposerActive && (
+                {/* Inline Thread Reply Composer Input - Disabled on user's own posts */}
+                {isReplyComposerActive && !isOwnPost && (
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();

@@ -75,6 +75,11 @@ export class FeedController {
       const postId = parseInt(String(req.params.id), 10);
       const { replyType, targetPerson, content } = req.body;
 
+      const post = await FeedRepository.findById(postId);
+      if (post && post.user_id === userId) {
+        return sendError(res, 'You cannot reply to your own post', 400);
+      }
+
       const user = await UserRepository.findById(userId);
 
       const replyId = await FeedRepository.createReply(

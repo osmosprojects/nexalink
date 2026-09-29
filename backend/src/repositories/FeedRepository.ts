@@ -168,6 +168,14 @@ export class FeedRepository {
     return result.insertId;
   }
 
+  static async findById(postId: number): Promise<PostRow | null> {
+    const rows = await query<PostRow[]>(
+      `SELECT * FROM posts WHERE post_id = ?`,
+      [postId]
+    );
+    return rows[0] || null;
+  }
+
   static async like(userId: number, postId: number): Promise<void> {
     await query(
       `UPDATE posts SET likes_count = likes_count + 1 WHERE post_id = ?`,
