@@ -290,3 +290,20 @@ export interface DashboardData {
   goals: Goal[];
   recent_interactions: Interaction[];
 }
+
+export interface CanConnectPerson {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  avatarUrl: string | null;
+  mutualConnectionsCount: number;
+  relationshipStatus: string;
+  networkingContext: string;
+  targetPersonName: string;
+  location?: string | null;
+  bio?: string | null;
+  contactId?: number;
+  userId?: number;
+  recommendationId?: number;
+}

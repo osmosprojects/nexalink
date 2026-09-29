@@ -118,6 +118,7 @@ apiRouter.post('/recommendations/:id/convert', RecommendationController.convertT
 // Networking Feed
 apiRouter.get('/feed', FeedController.list);
 apiRouter.post('/feed', FeedController.create);
+apiRouter.get('/feed/:id/can-connect', FeedController.getCanConnectPaths);
 apiRouter.post('/feed/:id/like', FeedController.like);
 apiRouter.get('/feed/:id/replies', FeedController.getReplies);
 apiRouter.post('/feed/:id/reply', FeedController.createReply);

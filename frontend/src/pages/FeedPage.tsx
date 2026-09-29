@@ -7,13 +7,21 @@ import {
   Send,
   MessageCircle,
   Image as ImageIcon,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { api } from '../lib/api';
-import { Post } from '../types';
+import { Post, CanConnectPerson } from '../types';
 import { formatDate } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 import confetti from 'canvas-confetti';
+import { CanConnectDrawer } from '../components/ui/CanConnectDrawer';
+import { ProfilePreviewModal } from '../components/ui/ProfilePreviewModal';
+import { WarmIntroModal } from '../components/ui/WarmIntroModal';
+
+// Feature flags for networking card UI
+const SHOW_REACTIONS = false;
+const SHOW_THREAD_CONVERSATION = false;
 
 // Emoji Reaction Map
 const EMOJI_OPTIONS = [
@@ -41,6 +49,15 @@ export const FeedPage: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Can Connect Drawer state
+  const [canConnectDrawerPost, setCanConnectDrawerPost] = useState<{ id: number; targetName: string } | null>(null);
+
+  // Profile Preview Modal state
+  const [previewPerson, setPreviewPerson] = useState<CanConnectPerson | null>(null);
+
+  // Warm Intro Modal state
+  const [warmIntroUser, setWarmIntroUser] = useState<any | null>(null);
 
   // Interactive Reaction & Reply UI States
   const [activeReactionPicker, setActiveReactionPicker] = useState<number | null>(null);
@@ -289,14 +306,12 @@ export const FeedPage: React.FC = () => {
             const intentLabel = isCanConnect ? 'can connect you to' : 'wants to meet';
             const intentBadgeIcon = isCanConnect ? '🌟' : '🤝';
 
-            // Author role & company subtitle fix (ensures "Employee at Osmos Multimedia Pvt Ltd" instead of generic fallback)
             const authorRoleTitle =
               post.author_title && post.author_title !== 'NexaLink Network Member'
                 ? post.author_title
                 : userSubtitle;
 
-            // Extract target name for thread replies (e.g. Sanjeev Sarma)
-            const targetPersonInPost = details.split('\n')[0].split(',')[0].trim() || 'Sanjeev Sarma';
+            const targetPersonInPost = details.split('\n')[0].split(',')[0].trim() || 'Target Connection';
 
             const reactions = postReactions[post.post_id] || {
               counts: {},
@@ -304,14 +319,9 @@ export const FeedPage: React.FC = () => {
             };
             const topEmojis = Object.keys(reactions.counts);
 
-            // Default response intent condition:
-            // Wants to meet -> Can Connect
-            // Can Connect -> Wants to meet
             const defaultResponseIntent: 'wants to meet to' | 'can connect' | 'can connect to' = isWantToMeet
               ? 'can connect'
               : 'wants to meet to';
-            const actionButtonText = isWantToMeet ? 'Can Connect' : 'Wants to meet';
-            const actionButtonIcon = isWantToMeet ? '🌟' : '🤝';
 
             const isOwnPost = Boolean(
               (user?.userId && post.user_id && Number(user.userId) === Number(post.user_id)) ||
@@ -330,11 +340,8 @@ export const FeedPage: React.FC = () => {
                 key={post.post_id}
                 className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-soft transition-all space-y-4 relative"
               >
-                {/* ============================================================ */}
-                {/* 1. MOBILE POST DESIGN (NO AVATARS ANYWHERE ON MOBILE) */}
-                {/* ============================================================ */}
+                {/* 1. MOBILE POST DESIGN */}
                 <div className="block md:hidden space-y-3">
-                  {/* Author Info (No avatar) */}
                   <div className="flex items-center justify-between">
                     <div>
                       <h4
@@ -348,7 +355,6 @@ export const FeedPage: React.FC = () => {
                     <span className="text-[11px] text-slate-400 font-medium">{formatDate(post.created_at, 'relative')}</span>
                   </div>
 
-                  {/* Networking Requirement Card */}
                   <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3.5 space-y-2">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold">
                       <span>{intentBadgeIcon}</span>
@@ -361,12 +367,9 @@ export const FeedPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* ============================================================ */}
-                {/* 2. DESKTOP POST DESIGN (INLINE LAYOUT) */}
-                {/* ============================================================ */}
+                {/* 2. DESKTOP POST DESIGN */}
                 <div className="hidden md:flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap">
-                    {/* [Avatar] */}
                     <img
                       src={post.author_avatar || profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
                       alt={post.author_name}
@@ -375,7 +378,6 @@ export const FeedPage: React.FC = () => {
                       title="View Profile"
                     />
 
-                    {/* Inline Content: Abhishek Tiwari 🤝 wants to meet Sanjeev, CEO, OSMOS Multimedia */}
                     <div className="flex items-center gap-2 text-xs leading-tight flex-wrap">
                       <span
                         onClick={() => navigate('/profile')}
@@ -384,106 +386,92 @@ export const FeedPage: React.FC = () => {
                         {post.author_name}
                       </span>
 
-                      {/* 🤝 wants to meet (bold) / 🌟 can connect you to (bold) */}
                       <span className="font-bold text-blue-700 bg-blue-50/90 px-2 py-0.5 rounded-md border border-blue-200 text-xs inline-flex items-center gap-1 shrink-0">
                         <span>{intentBadgeIcon}</span>
                         <span>{intentLabel}</span>
                       </span>
 
-                      {/* Requirement details */}
                       <span className="font-semibold text-slate-700 text-xs">
                         {details}
                       </span>
                     </div>
                   </div>
 
-                  {/* Time ago */}
                   <span className="text-[11px] text-slate-400 font-medium shrink-0">
                     {formatDate(post.created_at, 'relative')}
                   </span>
                 </div>
 
-                {/* ============================================================ */}
-                {/* 3. REACTION & ACTION ROW */}
-                {/* ============================================================ */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-semibold relative">
-                  {/* Reaction Button & Count */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setActiveReactionPicker(activeReactionPicker === post.post_id ? null : post.post_id)
-                      }
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
-                        reactions.userReaction
-                          ? 'bg-rose-50 text-rose-600 border border-rose-200 font-bold'
-                          : 'hover:bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      <Heart
-                        className={`w-4 h-4 ${
-                          reactions.userReaction ? 'text-rose-500 fill-rose-500' : 'text-slate-400 hover:text-rose-500'
-                        }`}
-                      />
-                      {topEmojis.length > 0 && (
-                        <span className="flex items-center gap-0.5 text-xs">
-                          {topEmojis.map((e) => (
-                            <span key={e}>{e}</span>
-                          ))}
-                        </span>
-                      )}
-                      <span>{reactions.total}</span>
-                    </button>
-
-                    {/* Popover Emoji Picker */}
-                    {activeReactionPicker === post.post_id && (
-                      <div className="absolute bottom-full left-0 mb-2 bg-white border border-slate-200 rounded-2xl p-2 shadow-xl flex items-center gap-1.5 z-30 animate-fadeIn select-none">
-                        {EMOJI_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.label}
-                            type="button"
-                            onClick={() => handleSelectReaction(post.post_id, opt.emoji)}
-                            className="p-1.5 text-lg hover:scale-125 transition-transform rounded-lg hover:bg-slate-100 cursor-pointer"
-                            title={opt.label}
-                          >
-                            {opt.emoji}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions: Intent-based Action Button (Can Connect / Wants to meet) - Hidden on user's own posts */}
-                  {!isOwnPost && (
-                    <div className="flex items-center gap-4 text-slate-600">
+                {/* 3. REACTION ROW (HIDDEN FOR NOW WHEN SHOW_REACTIONS = FALSE) */}
+                {SHOW_REACTIONS && (
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-semibold relative">
+                    <div className="relative">
                       <button
                         type="button"
-                        onClick={() => {
-                          if (activeReplyPostId === post.post_id) {
-                            setActiveReplyPostId(null);
-                          } else {
-                            setActiveReplyPostId(post.post_id);
-                            if (!replyTypeInputs[post.post_id]) {
-                              setReplyTypeInputs((prev) => ({ ...prev, [post.post_id]: defaultResponseIntent }));
-                            }
-                            if (!isThreadExpanded) {
-                              setExpandedThreadPostId(post.post_id);
-                            }
-                          }
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/80 font-bold cursor-pointer transition-all active:scale-95"
+                        onClick={() =>
+                          setActiveReactionPicker(activeReactionPicker === post.post_id ? null : post.post_id)
+                        }
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
+                          reactions.userReaction
+                            ? 'bg-rose-50 text-rose-600 border border-rose-200 font-bold'
+                            : 'hover:bg-slate-100 text-slate-600'
+                        }`}
                       >
-                        <span>{actionButtonIcon}</span>
-                        <span>{actionButtonText}</span>
+                        <Heart
+                          className={`w-4 h-4 ${
+                            reactions.userReaction ? 'text-rose-500 fill-rose-500' : 'text-slate-400 hover:text-rose-500'
+                          }`}
+                        />
+                        {topEmojis.length > 0 && (
+                          <span className="flex items-center gap-0.5 text-xs">
+                            {topEmojis.map((e) => (
+                              <span key={e}>{e}</span>
+                            ))}
+                          </span>
+                        )}
+                        <span>{reactions.total}</span>
                       </button>
-                    </div>
-                  )}
-                </div>
 
-                {/* ============================================================ */}
-                {/* 4. REPLY THREAD PREVIEW & CONVERSATION VIEW */}
-                {/* ============================================================ */}
-                {replies.length > 0 && !isThreadExpanded && (
+                      {activeReactionPicker === post.post_id && (
+                        <div className="absolute bottom-full left-0 mb-2 bg-white border border-slate-200 rounded-2xl p-2 shadow-xl flex items-center gap-1.5 z-30 animate-fadeIn select-none">
+                          {EMOJI_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.label}
+                              type="button"
+                              onClick={() => handleSelectReaction(post.post_id, opt.emoji)}
+                              className="p-1.5 text-lg hover:scale-125 transition-transform rounded-lg hover:bg-slate-100 cursor-pointer"
+                              title={opt.label}
+                            >
+                              {opt.emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* PRIMARY ACTION: ✨ Can Connect */}
+                {!isOwnPost && (
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCanConnectDrawerPost({
+                          id: post.post_id,
+                          targetName: targetPersonInPost,
+                        });
+                      }}
+                      className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>✨ Can Connect</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* 4. REPLY THREAD PREVIEW & CONVERSATION VIEW (HIDDEN FOR NOW WHEN SHOW_THREAD_CONVERSATION = FALSE) */}
+                {SHOW_THREAD_CONVERSATION && replies.length > 0 && !isThreadExpanded && (
                   <div className="bg-slate-50/80 rounded-2xl p-3 text-xs space-y-2 border border-slate-200/60">
                     <div className="flex items-center justify-between text-slate-500 text-[11px] font-medium">
                       <span className="font-bold text-slate-700">{replies.length} {replies.length === 1 ? 'Reply' : 'Replies'} in Thread</span>
@@ -497,7 +485,6 @@ export const FeedPage: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Compact preview of first reply */}
                     <div className="flex items-center gap-2 pt-1 text-slate-800">
                       <span className="font-bold text-slate-900">{replies[0].authorName}</span>
                       <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
@@ -507,8 +494,7 @@ export const FeedPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Full Expanded Thread Conversation UI */}
-                {isThreadExpanded && (
+                {SHOW_THREAD_CONVERSATION && isThreadExpanded && (
                   <div className="space-y-3 pt-3 border-t border-slate-100 animate-fadeIn">
                     <div className="flex items-center justify-between">
                       <h5 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
@@ -524,14 +510,12 @@ export const FeedPage: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Thread Items Conversation List */}
                     <div className="relative pl-3 space-y-3 border-l-2 border-brand-200/60 ml-2">
                       {replies.map((rep) => (
                         <div
                           key={rep.id}
                           className="bg-slate-50 p-3.5 rounded-2xl text-xs space-y-2 border border-slate-200/80 shadow-xs relative"
                         >
-                          {/* Thread node indicator */}
                           <div className="absolute -left-[19px] top-4 w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-white" />
 
                           <div className="flex items-center justify-between">
@@ -560,8 +544,7 @@ export const FeedPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Inline Thread Reply Composer Input - Disabled on user's own posts */}
-                {isReplyComposerActive && !isOwnPost && (
+                {SHOW_THREAD_CONVERSATION && isReplyComposerActive && !isOwnPost && (
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -612,6 +595,57 @@ export const FeedPage: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* Can Connect Drawer */}
+      <CanConnectDrawer
+        isOpen={Boolean(canConnectDrawerPost)}
+        onClose={() => setCanConnectDrawerPost(null)}
+        postId={canConnectDrawerPost?.id || null}
+        targetPersonName={canConnectDrawerPost?.targetName || 'Target Connection'}
+        onSelectPerson={(person) => {
+          setPreviewPerson(person);
+        }}
+        onExploreNetwork={() => {
+          navigate('/discover');
+        }}
+      />
+
+      {/* Profile Preview Modal */}
+      <ProfilePreviewModal
+        person={previewPerson}
+        isOpen={Boolean(previewPerson)}
+        onClose={() => setPreviewPerson(null)}
+        onViewFullProfile={(person) => {
+          setPreviewPerson(null);
+          if (person.contactId) {
+            navigate(`/connections/${person.contactId}`);
+          } else {
+            navigate('/discover');
+          }
+        }}
+        onConnect={(person) => {
+          setPreviewPerson(null);
+          setWarmIntroUser({
+            recommended_name: person.name,
+            recommended_role: person.role,
+            recommended_company: person.company,
+            industry: 'Networking Ecosystem',
+            reason: `Direct introduction path: ${person.networkingContext}`,
+          });
+        }}
+      />
+
+      {/* Warm Intro Modal */}
+      {warmIntroUser && (
+        <WarmIntroModal
+          user={warmIntroUser}
+          onClose={() => setWarmIntroUser(null)}
+          onSuccess={() => {
+            setWarmIntroUser(null);
+          }}
+        />
+      )}
     </div>
   );
 };
+
