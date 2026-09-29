@@ -124,6 +124,24 @@ export class FeedController {
           if (parts[0]) targetName = parts[0];
           if (parts[1]) targetRole = parts[1];
           if (parts[2]) targetCompany = parts[2];
+
+          // If post owner is viewing, return the list of people who responded to their post
+          if (post.user_id === userId) {
+            const replies = await FeedRepository.getRepliesForPost(postId);
+            const ownerPaths = replies.map((r) => ({
+              id: `reply-${r.reply_id}`,
+              name: r.author_name,
+              role: r.reply_type === 'CAN_CONNECT' || r.reply_type === 'can connect' ? 'Responded: Can Connect' : 'Responded: Wants to Meet',
+              company: 'Responded to your request',
+              avatarUrl: r.author_avatar,
+              mutualConnectionsCount: 3,
+              relationshipStatus: 'Responded to your post',
+              networkingContext: r.content || `Responded to connect with ${r.target_person}`,
+              targetPersonName: targetName,
+              userId: r.user_id,
+            }));
+            return sendSuccess(res, ownerPaths);
+          }
         }
       }
 

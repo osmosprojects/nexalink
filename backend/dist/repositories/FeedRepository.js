@@ -35,9 +35,16 @@ class FeedRepository {
     }
     static async createReply(userId, postId, authorName, authorAvatar, replyType, targetPerson, content) {
         await this.ensureRepliesTableExist();
-        const result = await (0, db_1.query)(`INSERT INTO post_replies (post_id, user_id, author_name, author_avatar, reply_type, target_person, content)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`, [postId, userId, authorName, authorAvatar || null, replyType, targetPerson, content || null]);
-        return result.insertId;
+        const existing = await (0, db_1.query)(`SELECT * FROM post_replies WHERE post_id = ? AND user_id = ?`, [postId, userId]);
+        if (existing.length > 0) {
+            await (0, db_1.query)(`UPDATE post_replies SET reply_type = ?, target_person = ?, content = ?, author_name = ?, author_avatar = ? WHERE reply_id = ?`, [replyType, targetPerson, content || null, authorName, authorAvatar || null, existing[0].reply_id]);
+            return existing[0].reply_id;
+        }
+        else {
+            const result = await (0, db_1.query)(`INSERT INTO post_replies (post_id, user_id, author_name, author_avatar, reply_type, target_person, content)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`, [postId, userId, authorName, authorAvatar || null, replyType, targetPerson, content || null]);
+            return result.insertId;
+        }
     }
     static async list(userId, limit = 30) {
         let rows = await (0, db_1.query)(`SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`);

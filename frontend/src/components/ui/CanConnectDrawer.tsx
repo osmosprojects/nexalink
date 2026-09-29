@@ -15,6 +15,8 @@ interface CanConnectDrawerProps {
   onClose: () => void;
   postId: number | null;
   targetPersonName: string;
+  isOwner?: boolean;
+  intentKey?: 'WANTS_TO_MEET' | 'CAN_CONNECT';
   onSelectPerson: (person: CanConnectPerson) => void;
   onExploreNetwork?: () => void;
 }
@@ -24,12 +26,28 @@ export const CanConnectDrawer: React.FC<CanConnectDrawerProps> = ({
   onClose,
   postId,
   targetPersonName,
+  isOwner = false,
+  intentKey = 'WANTS_TO_MEET',
   onSelectPerson,
   onExploreNetwork,
 }) => {
   const [people, setPeople] = useState<CanConnectPerson[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
+
+  const isWantToMeet = intentKey === 'WANTS_TO_MEET';
+
+  const drawerTitle = isOwner
+    ? isWantToMeet
+      ? `People who can help you reach ${targetPersonName}`
+      : `People who want to meet ${targetPersonName}`
+    : `People who can help you reach ${targetPersonName}`;
+
+  const drawerSubtitle = isOwner
+    ? isWantToMeet
+      ? 'People who responded to your networking request.'
+      : 'People who responded to your networking availability.'
+    : 'People in your network who may be able to introduce you.';
 
   const fetchPaths = async () => {
     if (!postId) return;
@@ -154,15 +172,19 @@ export const CanConnectDrawer: React.FC<CanConnectDrawerProps> = ({
         <div className="flex items-start justify-between border-b border-slate-100 pb-4 shrink-0">
           <div>
             <h3 className="text-base font-bold text-slate-900 leading-snug">
-              People who can help you reach {targetPersonName}
+              {drawerTitle}
             </h3>
             <p className="text-xs text-slate-500 font-medium mt-1">
-              People in your network who may be able to introduce you.
+              {drawerSubtitle}
             </p>
             {!isLoading && !isError && people.length > 0 && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 mt-2 rounded-full text-[11px] font-bold bg-brand-50 text-brand-700 border border-brand-200">
                 <Users className="w-3 h-3" />
-                {people.length} {people.length === 1 ? 'person can help you connect' : 'people can help you connect'}
+                {isOwner
+                  ? isWantToMeet
+                    ? `${people.length} ${people.length === 1 ? 'person can help you connect' : 'people can help you connect'}`
+                    : `${people.length} ${people.length === 1 ? 'person wants to meet' : 'people want to meet'}`
+                  : `${people.length} ${people.length === 1 ? 'person can help you connect' : 'people can help you connect'}`}
               </span>
             )}
           </div>

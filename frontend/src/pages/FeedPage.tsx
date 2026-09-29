@@ -23,6 +23,38 @@ import { WarmIntroModal } from '../components/ui/WarmIntroModal';
 const SHOW_REACTIONS = false;
 const SHOW_THREAD_CONVERSATION = false;
 
+// Centralized Intent -> Response Action Mapping
+export const NETWORKING_INTENT_ACTIONS = {
+  WANTS_TO_MEET: {
+    intentKey: 'WANTS_TO_MEET' as const,
+    displayIntent: '🤝 wants to meet',
+    intentBadgeIcon: '🤝',
+    intentLabel: 'wants to meet',
+    responseAction: '✨ Can Connect',
+    responseActionIcon: '✨',
+    responseType: 'CAN_CONNECT',
+    respondedText: '✓ Can Connect',
+    ownerSummaryText: (count: number) =>
+      `${count} ${count === 1 ? 'person can' : 'people can'} help you connect`,
+    ownerDrawerTitle: (target: string) => `People who can help you reach ${target}`,
+    ownerDrawerSubtitle: 'People who responded to your networking request.',
+  },
+  CAN_CONNECT: {
+    intentKey: 'CAN_CONNECT' as const,
+    displayIntent: '🌟 can connect you to',
+    intentBadgeIcon: '🌟',
+    intentLabel: 'can connect you to',
+    responseAction: '🤝 Wants to Meet',
+    responseActionIcon: '🤝',
+    responseType: 'WANTS_TO_MEET',
+    respondedText: '✓ Wants to Meet',
+    ownerSummaryText: (count: number, target: string) =>
+      `${count} ${count === 1 ? 'person wants' : 'people want'} to meet ${target}`,
+    ownerDrawerTitle: (target: string) => `People who want to meet ${target}`,
+    ownerDrawerSubtitle: 'People who responded to your networking availability.',
+  },
+} as const;
+
 // Emoji Reaction Map
 const EMOJI_OPTIONS = [
   { emoji: '❤️', label: 'Like' },
@@ -36,7 +68,8 @@ const EMOJI_OPTIONS = [
 export interface ReplyItem {
   id: string;
   authorName: string;
-  replyType: 'wants to meet to' | 'can connect' | 'can connect to';
+  authorAvatar?: string | null;
+  replyType: 'wants to meet to' | 'can connect' | 'can connect to' | 'CAN_CONNECT' | 'WANTS_TO_MEET';
   targetPerson: string;
   content?: string | null;
   timeAgo: string;
@@ -51,7 +84,12 @@ export const FeedPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Can Connect Drawer state
-  const [canConnectDrawerPost, setCanConnectDrawerPost] = useState<{ id: number; targetName: string } | null>(null);
+  const [canConnectDrawerPost, setCanConnectDrawerPost] = useState<{
+    id: number;
+    targetName: string;
+    isOwner: boolean;
+    intentKey: 'WANTS_TO_MEET' | 'CAN_CONNECT';
+  } | null>(null);
 
   // Profile Preview Modal state
   const [previewPerson, setPreviewPerson] = useState<CanConnectPerson | null>(null);
@@ -89,6 +127,7 @@ export const FeedPage: React.FC = () => {
         const formatted: ReplyItem[] = res.map((r) => ({
           id: String(r.reply_id),
           authorName: r.author_name,
+          authorAvatar: r.author_avatar,
           replyType: r.reply_type || 'wants to meet to',
           targetPerson: r.target_person || 'Sanjeev Sarma',
           content: r.content || null,
@@ -157,6 +196,19 @@ export const FeedPage: React.FC = () => {
     });
 
     setActiveReactionPicker(null);
+  };
+
+  const handleRespondToPost = async (postId: number, targetPerson: string, responseType: string) => {
+    try {
+      await api.post(`/feed/${postId}/reply`, {
+        replyType: responseType,
+        targetPerson,
+      });
+      await fetchRepliesForPost(postId);
+      confetti({ particleCount: 35, spread: 50, origin: { y: 0.7 } });
+    } catch (err) {
+      console.error('Failed to respond to post:', err);
+    }
   };
 
   const handleAddThreadReply = async (postId: number, defaultTargetName: string, defaultReplyType: 'wants to meet to' | 'can connect' | 'can connect to') => {
@@ -286,25 +338,16 @@ export const FeedPage: React.FC = () => {
           {posts.map((post) => {
             const isWantToMeet =
               post.content.startsWith('[wants to meet]') || post.content.startsWith('[I want to meet]');
-            const isCanConnect =
-              post.content.startsWith('[can connect you to]') ||
-              post.content.startsWith('[I can connect You to]') ||
-              post.content.startsWith('[I can introduce]');
+            const originalIntentKey = isWantToMeet ? 'WANTS_TO_MEET' : 'CAN_CONNECT';
+            const intentConfig = NETWORKING_INTENT_ACTIONS[originalIntentKey];
 
-            let details = post.content;
-            if (isWantToMeet) {
-              details = post.content.replace('[wants to meet]', '').replace('[I want to meet]', '').trim();
-            }
-            if (isCanConnect) {
-              details = post.content
-                .replace('[can connect you to]', '')
-                .replace('[I can connect You to]', '')
-                .replace('[I can introduce]', '')
-                .trim();
-            }
-
-            const intentLabel = isCanConnect ? 'can connect you to' : 'wants to meet';
-            const intentBadgeIcon = isCanConnect ? '🌟' : '🤝';
+            let details = post.content
+              .replace('[wants to meet]', '')
+              .replace('[I want to meet]', '')
+              .replace('[can connect you to]', '')
+              .replace('[I can connect You to]', '')
+              .replace('[I can introduce]', '')
+              .trim();
 
             const authorRoleTitle =
               post.author_title && post.author_title !== 'NexaLink Network Member'
@@ -312,16 +355,6 @@ export const FeedPage: React.FC = () => {
                 : userSubtitle;
 
             const targetPersonInPost = details.split('\n')[0].split(',')[0].trim() || 'Target Connection';
-
-            const reactions = postReactions[post.post_id] || {
-              counts: {},
-              total: post.likes_count || 0,
-            };
-            const topEmojis = Object.keys(reactions.counts);
-
-            const defaultResponseIntent: 'wants to meet to' | 'can connect' | 'can connect to' = isWantToMeet
-              ? 'can connect'
-              : 'wants to meet to';
 
             const isOwnPost = Boolean(
               (user?.userId && post.user_id && Number(user.userId) === Number(post.user_id)) ||
@@ -331,9 +364,16 @@ export const FeedPage: React.FC = () => {
 
             const replies: ReplyItem[] = postReplies[post.post_id] || [];
 
-            const isThreadExpanded = expandedThreadPostId === post.post_id;
-            const isReplyComposerActive = activeReplyPostId === post.post_id;
-            const currentReplyType = replyTypeInputs[post.post_id] || defaultResponseIntent;
+            const userHasResponded = replies.some(
+              (r) =>
+                (user?.displayName && r.authorName.toLowerCase() === user.displayName.toLowerCase())
+            );
+
+            const reactions = postReactions[post.post_id] || {
+              counts: {},
+              total: post.likes_count || 0,
+            };
+            const topEmojis = Object.keys(reactions.counts);
 
             return (
               <div
@@ -357,8 +397,8 @@ export const FeedPage: React.FC = () => {
 
                   <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3.5 space-y-2">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold">
-                      <span>{intentBadgeIcon}</span>
-                      <span>{intentLabel}</span>
+                      <span>{intentConfig.intentBadgeIcon}</span>
+                      <span>{intentConfig.intentLabel}</span>
                     </div>
 
                     <div className="text-xs font-semibold text-slate-800 leading-relaxed pl-0.5 whitespace-pre-wrap">
@@ -387,8 +427,8 @@ export const FeedPage: React.FC = () => {
                       </span>
 
                       <span className="font-bold text-blue-700 bg-blue-50/90 px-2 py-0.5 rounded-md border border-blue-200 text-xs inline-flex items-center gap-1 shrink-0">
-                        <span>{intentBadgeIcon}</span>
-                        <span>{intentLabel}</span>
+                        <span>{intentConfig.intentBadgeIcon}</span>
+                        <span>{intentConfig.intentLabel}</span>
                       </span>
 
                       <span className="font-semibold text-slate-700 text-xs">
@@ -402,7 +442,7 @@ export const FeedPage: React.FC = () => {
                   </span>
                 </div>
 
-                {/* 3. REACTION ROW (HIDDEN FOR NOW WHEN SHOW_REACTIONS = FALSE) */}
+                {/* 3. REACTION ROW (HIDDEN WHEN SHOW_REACTIONS = FALSE) */}
                 {SHOW_REACTIONS && (
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-semibold relative">
                     <div className="relative">
@@ -451,157 +491,89 @@ export const FeedPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* PRIMARY ACTION: ✨ Can Connect */}
-                {!isOwnPost && (
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCanConnectDrawerPost({
-                          id: post.post_id,
-                          targetName: targetPersonInPost,
-                        });
-                      }}
-                      className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>✨ Can Connect</span>
-                    </button>
-                  </div>
-                )}
-
-                {/* 4. REPLY THREAD PREVIEW & CONVERSATION VIEW (HIDDEN FOR NOW WHEN SHOW_THREAD_CONVERSATION = FALSE) */}
-                {SHOW_THREAD_CONVERSATION && replies.length > 0 && !isThreadExpanded && (
-                  <div className="bg-slate-50/80 rounded-2xl p-3 text-xs space-y-2 border border-slate-200/60">
-                    <div className="flex items-center justify-between text-slate-500 text-[11px] font-medium">
-                      <span className="font-bold text-slate-700">{replies.length} {replies.length === 1 ? 'Reply' : 'Replies'} in Thread</span>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedThreadPostId(post.post_id)}
-                        className="text-brand-600 font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
-                      >
-                        <span>View thread conversation</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-1 text-slate-800">
-                      <span className="font-bold text-slate-900">{replies[0].authorName}</span>
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
-                        {replies[0].replyType === 'can connect' || replies[0].replyType === 'can connect to' ? '🌟 can connect' : '🤝 wants to meet to'} {replies[0].targetPerson}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {SHOW_THREAD_CONVERSATION && isThreadExpanded && (
-                  <div className="space-y-3 pt-3 border-t border-slate-100 animate-fadeIn">
-                    <div className="flex items-center justify-between">
-                      <h5 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                        <MessageCircle className="w-3.5 h-3.5 text-brand-600" />
-                        <span>Thread Conversation ({replies.length})</span>
-                      </h5>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedThreadPostId(null)}
-                        className="text-[11px] font-bold text-slate-400 hover:text-slate-600 cursor-pointer"
-                      >
-                        Collapse Thread
-                      </button>
-                    </div>
-
-                    <div className="relative pl-3 space-y-3 border-l-2 border-brand-200/60 ml-2">
-                      {replies.map((rep) => (
-                        <div
-                          key={rep.id}
-                          className="bg-slate-50 p-3.5 rounded-2xl text-xs space-y-2 border border-slate-200/80 shadow-xs relative"
-                        >
-                          <div className="absolute -left-[19px] top-4 w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-white" />
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-bold text-slate-900 text-xs">{rep.authorName}</span>
-                              <span
-                                className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${
-                                  rep.replyType === 'can connect' || rep.replyType === 'can connect to'
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    : 'bg-blue-50 text-blue-700 border-blue-200'
-                                }`}
-                              >
-                                {rep.replyType === 'can connect' || rep.replyType === 'can connect to' ? '🌟 can connect' : '🤝 wants to meet to'}{' '}
-                                {rep.targetPerson}
+                {/* 4. NETWORKING CARD ACTIONS (OWNER VIEW vs VIEWER VIEW) */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  {isOwnPost ? (
+                    /* POST OWNER VIEW: Shows responders summary & View responses button */
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        {replies.length > 0 ? (
+                          <div className="flex items-center -space-x-2 overflow-hidden">
+                            {replies.slice(0, 3).map((r, idx) => (
+                              <img
+                                key={idx}
+                                src={r.authorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                                alt={r.authorName}
+                                className="inline-block h-6 w-6 rounded-full ring-2 ring-white object-cover"
+                              />
+                            ))}
+                            {replies.length > 3 && (
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 ring-2 ring-white">
+                                +{replies.length - 3}
                               </span>
-                            </div>
-                            <span className="text-[10px] text-slate-400 font-medium">{rep.timeAgo}</span>
+                            )}
                           </div>
+                        ) : null}
+                        <span className="text-xs font-bold text-slate-700">
+                          {intentConfig.ownerSummaryText(replies.length, targetPersonInPost)}
+                        </span>
+                      </div>
 
-                          {rep.content && (
-                            <p className="text-slate-700 font-medium leading-relaxed pt-0.5">{rep.content}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {SHOW_THREAD_CONVERSATION && isReplyComposerActive && !isOwnPost && (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleAddThreadReply(post.post_id, targetPersonInPost, defaultResponseIntent);
-                    }}
-                    className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-3 animate-fadeIn"
-                  >
-                    <div className="border-b border-slate-200/60 pb-2">
-                      <span className="text-xs font-bold text-slate-800">Add Thread Reply</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-700 shrink-0">
-                        {user?.displayName || 'User'} {currentReplyType === 'can connect' || currentReplyType === 'can connect to' ? 'can connect' : 'wants to meet to'}:
-                      </span>
-                      <input
-                        type="text"
-                        placeholder={`Target Person (e.g. ${targetPersonInPost})`}
-                        value={replyTargetInputs[post.post_id] ?? targetPersonInPost}
-                        onChange={(e) =>
-                          setReplyTargetInputs((prev) => ({ ...prev, [post.post_id]: e.target.value }))
-                        }
-                        className="flex-1 text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-1 focus:ring-brand-500"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        placeholder="Optional comment details..."
-                        value={replyContentInputs[post.post_id] || ''}
-                        onChange={(e) =>
-                          setReplyContentInputs((prev) => ({ ...prev, [post.post_id]: e.target.value }))
-                        }
-                        className="flex-1 text-xs px-3.5 py-2 bg-white border border-slate-200 rounded-xl font-medium text-slate-900 focus:ring-1 focus:ring-brand-500"
-                      />
                       <button
-                        type="submit"
-                        className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs"
+                        type="button"
+                        onClick={() => {
+                          setCanConnectDrawerPost({
+                            id: post.post_id,
+                            targetName: targetPersonInPost,
+                            isOwner: true,
+                            intentKey: originalIntentKey,
+                          });
+                        }}
+                        className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs"
                       >
-                        Reply to Thread
+                        View responses ({replies.length})
                       </button>
                     </div>
-                  </form>
-                )}
+                  ) : (
+                    /* OTHER VIEWER VIEW: Shows intent-driven response action CTA */
+                    <div className="flex items-center justify-end w-full">
+                      {userHasResponded ? (
+                        <button
+                          type="button"
+                          disabled
+                          className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 cursor-default opacity-90 shadow-xs"
+                        >
+                          <span>{intentConfig.respondedText}</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleRespondToPost(post.post_id, targetPersonInPost, intentConfig.responseType)
+                          }
+                          className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                        >
+                          <span>{intentConfig.responseActionIcon}</span>
+                          <span>{intentConfig.responseAction}</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
       )}
 
-      {/* Can Connect Drawer */}
+      {/* Can Connect / Responses Drawer */}
       <CanConnectDrawer
         isOpen={Boolean(canConnectDrawerPost)}
         onClose={() => setCanConnectDrawerPost(null)}
         postId={canConnectDrawerPost?.id || null}
         targetPersonName={canConnectDrawerPost?.targetName || 'Target Connection'}
+        isOwner={canConnectDrawerPost?.isOwner || false}
+        intentKey={canConnectDrawerPost?.intentKey || 'WANTS_TO_MEET'}
         onSelectPerson={(person) => {
           setPreviewPerson(person);
         }}

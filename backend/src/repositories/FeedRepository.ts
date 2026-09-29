@@ -71,12 +71,24 @@ export class FeedRepository {
     content: string | null
   ): Promise<number> {
     await this.ensureRepliesTableExist();
-    const result: any = await query(
-      `INSERT INTO post_replies (post_id, user_id, author_name, author_avatar, reply_type, target_person, content)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [postId, userId, authorName, authorAvatar || null, replyType, targetPerson, content || null]
+    const existing = await query<PostReplyRow[]>(
+      `SELECT * FROM post_replies WHERE post_id = ? AND user_id = ?`,
+      [postId, userId]
     );
-    return result.insertId;
+    if (existing.length > 0) {
+      await query(
+        `UPDATE post_replies SET reply_type = ?, target_person = ?, content = ?, author_name = ?, author_avatar = ? WHERE reply_id = ?`,
+        [replyType, targetPerson, content || null, authorName, authorAvatar || null, existing[0].reply_id]
+      );
+      return existing[0].reply_id;
+    } else {
+      const result: any = await query(
+        `INSERT INTO post_replies (post_id, user_id, author_name, author_avatar, reply_type, target_person, content)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [postId, userId, authorName, authorAvatar || null, replyType, targetPerson, content || null]
+      );
+      return result.insertId;
+    }
   }
 
   static async list(userId: number, limit = 30): Promise<PostRow[]> {
