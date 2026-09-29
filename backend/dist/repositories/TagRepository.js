@@ -19,6 +19,30 @@ class TagRepository {
         const result = await (0, db_1.query)(`INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)`, [userId, name.trim(), color]);
         return result.insertId;
     }
+    static async setContactWarmth(userId, contactId, warmth) {
+        try {
+            const hotTagId = await this.findOrCreate(userId, '🔥 Hot', '#EF4444');
+            const warmTagId = await this.findOrCreate(userId, '☀️ Warm', '#F59E0B');
+            const coldTagId = await this.findOrCreate(userId, '❄️ Cold', '#3B82F6');
+            let targetTagId = coldTagId;
+            let strength = 30;
+            const lower = String(warmth).toLowerCase();
+            if (lower.includes('hot') || lower.includes('🔥')) {
+                targetTagId = hotTagId;
+                strength = 90;
+            }
+            else if (lower.includes('warm') || lower.includes('☀️')) {
+                targetTagId = warmTagId;
+                strength = 60;
+            }
+            await (0, db_1.query)(`DELETE FROM contact_tags WHERE contact_id = ? AND tag_id IN (?, ?, ?)`, [contactId, hotTagId, warmTagId, coldTagId]);
+            await (0, db_1.query)(`INSERT IGNORE INTO contact_tags (contact_id, tag_id) VALUES (?, ?)`, [contactId, targetTagId]);
+            await (0, db_1.query)(`UPDATE contacts SET relationship_strength = ? WHERE user_id = ? AND contact_id = ?`, [strength, userId, contactId]);
+        }
+        catch (err) {
+            console.error('Failed to set contact warmth manually:', err);
+        }
+    }
     /**
      * Automatically calculates and synchronizes Hot, Warm, and Cold relationship tags
      * based on interaction recency and frequency.

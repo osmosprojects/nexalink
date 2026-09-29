@@ -402,7 +402,10 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
         .filter(Boolean)
         .join('\n\n');
 
-      const strengthMap = { hot: 90, warm: 60, cold: 30 };
+      const strengthMap: Record<string, number> = { hot: 90, warm: 60, cold: 30 };
+      const warmthTagMap: Record<string, string> = { hot: '🔥 Hot', warm: '☀️ Warm', cold: '❄️ Cold' };
+      const warmthTag = warmthTagMap[relationship] || '☀️ Warm';
+      const allTags = Array.from(new Set([...networks, warmthTag]));
 
       const payload = {
         first_name,
@@ -415,7 +418,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
         relationship_strength: strengthMap[relationship],
         next_follow_up_at: followUpDate || null,
         notes: notesText,
-        tagNames: networks,
+        tagNames: allTags,
       };
 
       const res = await api.post<any>('/contacts', payload);

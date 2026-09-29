@@ -20,7 +20,8 @@ import {
   Copy,
   Check,
   Loader2,
-  Users
+  Users,
+  Globe
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Contact, Interaction, Meeting, Task, Note } from '../types';
@@ -62,6 +63,15 @@ export const ContactDetailPage: React.FC = () => {
     mutationFn: () => api.delete(`/contacts/${id}`),
     onSuccess: () => {
       navigate('/connections');
+    },
+  });
+
+  const updateWarmthMutation = useMutation({
+    mutationFn: (warmthTag: '🔥 Hot' | '☀️ Warm' | '❄️ Cold') =>
+      api.put(`/contacts/${id}`, { warmthTag }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contact', id] });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
     },
   });
 
@@ -172,19 +182,41 @@ export const ContactDetailPage: React.FC = () => {
                 </p>
               )}
 
-              {/* Tag Pills */}
-              {contact.tags && contact.tags.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
-                  {contact.tags.map((t) => (
-                    <span
-                      key={t.tag_id}
-                      className="text-[10px] font-bold px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/60"
-                    >
-                      #{t.name}
+              {/* Network Memberships & Tag Pills */}
+              {(() => {
+                const { extendedData } = parseContactNotes(contact.notes);
+                const isWarmthTagName = (name: string) =>
+                  name.includes('Hot') || name.includes('Warm') || name.includes('Cold') || name.includes('🔥') || name.includes('☀️') || name.includes('❄️');
+
+                const rawNetworkList = Array.from(
+                  new Set([
+                    ...(extendedData?.otherNetworks || []),
+                    ...(contact.tags || [])
+                      .filter((t) => !isWarmthTagName(t.name))
+                      .map((t) => t.name),
+                  ])
+                ).filter(Boolean);
+
+                if (rawNetworkList.length === 0) return null;
+
+                return (
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <Globe className="w-3 h-3 text-indigo-500" />
+                      <span>Networks:</span>
                     </span>
-                  ))}
-                </div>
-              )}
+                    {rawNetworkList.map((net, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 text-xs font-extrabold px-3 py-1 rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 text-indigo-900 border border-indigo-200 shadow-xs"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                        <span>{net}</span>
+                      </span>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -217,37 +249,77 @@ export const ContactDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Relationship Status Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60">
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Relationship Strength</span>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-brand-500 to-purple-600 h-2 rounded-full"
-                  style={{ width: `${contact.relationship_strength}%` }}
-                />
+        {/* Relationship Status & Interactive Warmth Selector Row */}
+        {(() => {
+          const isWarmthTagName = (name: string) =>
+            name.includes('Hot') || name.includes('Warm') || name.includes('Cold') || name.includes('🔥') || name.includes('☀️') || name.includes('❄️');
+
+          const warmthTagObj = (contact.tags || []).find((t) => isWarmthTagName(t.name));
+          const currentWarmthName = warmthTagObj
+            ? warmthTagObj.name
+            : contact.relationship_strength >= 80
+            ? '🔥 Hot'
+            : contact.relationship_strength >= 50
+            ? '☀️ Warm'
+            : '❄️ Cold';
+
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60">
+              {/* Interactive Connection Warmth Buttons */}
+              <div className="sm:col-span-2 space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Connection Warmth Rating
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {[
+                    { name: '🔥 Hot', label: '🔥 Hot', color: 'bg-rose-500 text-white border-rose-600 shadow-rose-500/20' },
+                    { name: '☀️ Warm', label: '☀️ Warm', color: 'bg-amber-500 text-white border-amber-600 shadow-amber-500/20' },
+                    { name: '❄️ Cold', label: '❄️ Cold', color: 'bg-blue-500 text-white border-blue-600 shadow-blue-500/20' },
+                  ].map((w) => {
+                    const isActive = currentWarmthName.includes(w.name.replace(/[^a-zA-Z]/g, '')) || currentWarmthName === w.name;
+                    return (
+                      <button
+                        key={w.name}
+                        onClick={() => updateWarmthMutation.mutate(w.name as any)}
+                        disabled={updateWarmthMutation.isPending}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
+                          isActive
+                            ? `${w.color} shadow-sm scale-105 ring-2 ring-offset-1 ring-slate-400`
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        <span>{w.label}</span>
+                        {isActive && <Check className="w-3.5 h-3.5" />}
+                      </button>
+                    );
+                  })}
+                  {updateWarmthMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-slate-400 ml-1" />}
+                </div>
               </div>
-              <span className="text-xs font-bold text-slate-800">{contact.relationship_strength}/100</span>
+
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Strength Score</span>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-brand-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${contact.relationship_strength}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-slate-800">{contact.relationship_strength}/100</span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Last Touch</span>
+                <p className="text-xs font-bold text-slate-800 mt-2 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{formatDate(contact.last_interaction_at, 'relative')}</span>
+                </p>
+              </div>
             </div>
-          </div>
-
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Last Interaction</span>
-            <p className="text-xs font-bold text-slate-800 mt-1 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span>{formatDate(contact.last_interaction_at, 'relative')}</span>
-            </p>
-          </div>
-
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Next Follow-up</span>
-            <p className="text-xs font-bold text-slate-800 mt-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              <span>{formatDate(contact.next_follow_up_at, 'short')}</span>
-            </p>
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
       {/* Interactive Tabs */}
@@ -288,9 +360,53 @@ export const ContactDetailPage: React.FC = () => {
       {/* 1. OVERVIEW TAB */}
       {activeTab === 'overview' && (() => {
         const { cleanNotes, extendedData } = parseContactNotes(contact.notes);
+        const isWarmthTagName = (name: string) =>
+          name.includes('Hot') || name.includes('Warm') || name.includes('Cold') || name.includes('🔥') || name.includes('☀️') || name.includes('❄️');
+
+        const rawNetworkList = Array.from(
+          new Set([
+            ...(extendedData?.otherNetworks || []),
+            ...(contact.tags || [])
+              .filter((t) => !isWarmthTagName(t.name))
+              .map((t) => t.name),
+          ])
+        ).filter(Boolean);
+
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
+              {/* Network & Community Memberships Card */}
+              {rawNetworkList.length > 0 && (
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        Network & Community Memberships ({rawNetworkList.length})
+                      </h4>
+                      <p className="text-[11px] text-slate-500">Active networks, communities, and organizations this connection belongs to</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2.5 pt-2">
+                    {rawNetworkList.map((net, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 text-indigo-950 font-bold text-xs shadow-xs"
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse" />
+                        <span>{net}</span>
+                        <span className="text-[10px] uppercase px-2 py-0.5 rounded-md bg-white/80 text-indigo-700 font-extrabold border border-indigo-100">
+                          Active Member
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Notes & Summary */}
               <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-3">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Relationship Notes & Context</h4>

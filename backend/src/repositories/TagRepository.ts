@@ -37,6 +37,42 @@ export class TagRepository {
     return result.insertId;
   }
 
+  static async setContactWarmth(userId: number, contactId: number, warmth: 'hot' | 'warm' | 'cold' | string): Promise<void> {
+    try {
+      const hotTagId = await this.findOrCreate(userId, '🔥 Hot', '#EF4444');
+      const warmTagId = await this.findOrCreate(userId, '☀️ Warm', '#F59E0B');
+      const coldTagId = await this.findOrCreate(userId, '❄️ Cold', '#3B82F6');
+
+      let targetTagId = coldTagId;
+      let strength = 30;
+      const lower = String(warmth).toLowerCase();
+      if (lower.includes('hot') || lower.includes('🔥')) {
+        targetTagId = hotTagId;
+        strength = 90;
+      } else if (lower.includes('warm') || lower.includes('☀️')) {
+        targetTagId = warmTagId;
+        strength = 60;
+      }
+
+      await query(
+        `DELETE FROM contact_tags WHERE contact_id = ? AND tag_id IN (?, ?, ?)`,
+        [contactId, hotTagId, warmTagId, coldTagId]
+      );
+
+      await query(
+        `INSERT IGNORE INTO contact_tags (contact_id, tag_id) VALUES (?, ?)`,
+        [contactId, targetTagId]
+      );
+
+      await query(
+        `UPDATE contacts SET relationship_strength = ? WHERE user_id = ? AND contact_id = ?`,
+        [strength, userId, contactId]
+      );
+    } catch (err) {
+      console.error('Failed to set contact warmth manually:', err);
+    }
+  }
+
   /**
    * Automatically calculates and synchronizes Hot, Warm, and Cold relationship tags
    * based on interaction recency and frequency.

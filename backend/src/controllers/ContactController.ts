@@ -123,6 +123,11 @@ export class ContactController {
       const existing = await ContactRepository.getById(userId, contactId);
       if (!existing) return sendError(res, 'Contact not found', 404);
 
+      if (req.body.warmthTag || req.body.warmth) {
+        const warmthVal = req.body.warmthTag || req.body.warmth;
+        await TagRepository.setContactWarmth(userId, contactId, warmthVal);
+      }
+
       await ContactRepository.update(userId, contactId, req.body);
       const updated = await ContactRepository.getById(userId, contactId);
 

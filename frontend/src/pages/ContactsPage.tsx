@@ -280,25 +280,25 @@ export const ContactsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Tags & Warmth Badges */}
+                  {/* Tags & Network Badges */}
                   {contact.tags && contact.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-3">
                       {contact.tags.slice(0, 4).map((t) => {
-                        const isWarmth = t.name.includes('Hot') || t.name.includes('Warm') || t.name.includes('Cold');
+                        const isWarmth = t.name.includes('Hot') || t.name.includes('Warm') || t.name.includes('Cold') || t.name.includes('🔥') || t.name.includes('☀️') || t.name.includes('❄️');
                         return (
                           <span
                             key={t.tag_id}
-                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
-                              t.name.includes('Hot')
-                                ? 'bg-rose-50 text-rose-700 border-rose-200 font-bold'
-                                : t.name.includes('Warm')
-                                ? 'bg-amber-50 text-amber-700 border-amber-200 font-bold'
-                                : t.name.includes('Cold')
-                                ? 'bg-blue-50 text-blue-700 border-blue-200 font-bold'
-                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+                              t.name.includes('Hot') || t.name.includes('🔥')
+                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                : t.name.includes('Warm') || t.name.includes('☀️')
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : t.name.includes('Cold') || t.name.includes('❄️')
+                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                : 'bg-indigo-50 text-indigo-800 border-indigo-200 font-extrabold'
                             }`}
                           >
-                            {isWarmth ? t.name : `#${t.name}`}
+                            {isWarmth ? t.name : `🌐 ${t.name}`}
                           </span>
                         );
                       })}

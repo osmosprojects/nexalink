@@ -105,6 +105,10 @@ class ContactController {
             const existing = await ContactRepository_1.ContactRepository.getById(userId, contactId);
             if (!existing)
                 return (0, response_1.sendError)(res, 'Contact not found', 404);
+            if (req.body.warmthTag || req.body.warmth) {
+                const warmthVal = req.body.warmthTag || req.body.warmth;
+                await TagRepository_1.TagRepository.setContactWarmth(userId, contactId, warmthVal);
+            }
             await ContactRepository_1.ContactRepository.update(userId, contactId, req.body);
             const updated = await ContactRepository_1.ContactRepository.getById(userId, contactId);
             await (0, audit_1.logAudit)(req, 'CONTACT_UPDATED', 'contact', contactId);
