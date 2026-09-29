@@ -435,7 +435,8 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
       const strengthMap: Record<string, number> = { hot: 90, warm: 60, cold: 30 };
       const warmthTagMap: Record<string, string> = { hot: '🔥 Hot', warm: '☀️ Warm', cold: '❄️ Cold' };
       const warmthTag = warmthTagMap[relationship] || '☀️ Warm';
-      const allTags = Array.from(new Set([...networks, warmthTag]));
+      const defaultPrivacyTag = '🔒 Private Network';
+      const allTags = Array.from(new Set([...networks, warmthTag, defaultPrivacyTag]));
 
       const payload = {
         first_name,
@@ -569,6 +570,9 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                         const targetDetails = `${fullName}${role ? `, ${role}` : ''}${company ? `, ${company}` : ''}`;
                         const postContent = `[can connect you to] ${targetDetails}`;
                         await api.post('/feed', { content: postContent, tags: null });
+                        if (savedContact?.contact_id) {
+                          await api.put(`/contacts/${savedContact.contact_id}`, { privacyTag: '🌐 Public Connection' });
+                        }
                         setHasPostedToFeed(true);
                         try {
                           confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });

@@ -19,6 +19,20 @@ class TagRepository {
         const result = await (0, db_1.query)(`INSERT INTO tags (user_id, name, color) VALUES (?, ?, ?)`, [userId, name.trim(), color]);
         return result.insertId;
     }
+    static async setContactPrivacy(userId, contactId, isPublic) {
+        try {
+            const publicTagId = await this.findOrCreate(userId, '🌐 Public Connection', '#10B981');
+            const privateTagId = await this.findOrCreate(userId, '🔒 Private Network', '#64748B');
+            const isPub = isPublic === true || isPublic === 'true' || isPublic === 1 || String(isPublic).toLowerCase().includes('public');
+            const targetTagId = isPub ? publicTagId : privateTagId;
+            const removeTagId = isPub ? privateTagId : publicTagId;
+            await (0, db_1.query)(`DELETE FROM contact_tags WHERE contact_id = ? AND tag_id = ?`, [contactId, removeTagId]);
+            await (0, db_1.query)(`INSERT IGNORE INTO contact_tags (contact_id, tag_id) VALUES (?, ?)`, [contactId, targetTagId]);
+        }
+        catch (err) {
+            console.error('Failed to set contact privacy tags:', err);
+        }
+    }
     static async setContactWarmth(userId, contactId, warmth) {
         try {
             const hotTagId = await this.findOrCreate(userId, '🔥 Hot', '#EF4444');

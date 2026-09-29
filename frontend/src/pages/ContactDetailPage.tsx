@@ -76,6 +76,15 @@ export const ContactDetailPage: React.FC = () => {
     },
   });
 
+  const updatePrivacyMutation = useMutation({
+    mutationFn: (privacyTag: '🌐 Public Connection' | '🔒 Private Network') =>
+      api.put(`/contacts/${id}`, { privacyTag }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contact', id] });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    },
+  });
+
   const handleAISuggestions = async () => {
     setAiModalMode('conversation');
     setAiLoading(true);
@@ -171,6 +180,26 @@ export const ContactDetailPage: React.FC = () => {
                 <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase ${badge.bg}`}>
                   {badge.label}
                 </span>
+
+                {/* Privacy Network Badge Toggle */}
+                {(() => {
+                  const isPublic = (contact.tags || []).some((t) => t.name.includes('Public'));
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => updatePrivacyMutation.mutate(isPublic ? '🔒 Private Network' : '🌐 Public Connection')}
+                      disabled={updatePrivacyMutation.isPending}
+                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border transition-all flex items-center gap-1 cursor-pointer ${
+                        isPublic
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                          : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
+                      }`}
+                      title="Click to toggle Public Connection vs Private Network"
+                    >
+                      <span>{isPublic ? '🌐 Public Connection' : '🔒 Private Network'}</span>
+                    </button>
+                  );
+                })()}
               </div>
               <p className="text-xs sm:text-sm text-slate-600 font-semibold flex items-center justify-center sm:justify-start gap-1.5">
                 <Building className="w-4 h-4 text-slate-400" />
@@ -186,14 +215,14 @@ export const ContactDetailPage: React.FC = () => {
               {/* Network Memberships & Tag Pills */}
               {(() => {
                 const { extendedData } = parseContactNotes(contact.notes);
-                const isWarmthTagName = (name: string) =>
-                  name.includes('Hot') || name.includes('Warm') || name.includes('Cold') || name.includes('🔥') || name.includes('☀️') || name.includes('❄️');
+                const isSpecialTag = (name: string) =>
+                  name.includes('Hot') || name.includes('Warm') || name.includes('Cold') || name.includes('🔥') || name.includes('☀️') || name.includes('❄️') || name.includes('Public') || name.includes('Private');
 
                 const rawNetworkList = Array.from(
                   new Set([
                     ...(extendedData?.otherNetworks || []),
                     ...(contact.tags || [])
-                      .filter((t) => !isWarmthTagName(t.name))
+                      .filter((t) => !isSpecialTag(t.name))
                       .map((t) => t.name),
                   ])
                 ).filter(Boolean);

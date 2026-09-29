@@ -105,6 +105,9 @@ export class ContactController {
       });
 
       await TagRepository.syncContactWarmth(userId, contactId);
+      const isPublicVal = req.body.is_public || req.body.isPublic || (req.body.privacyTag && req.body.privacyTag.includes('Public')) || (tagNames && Array.isArray(tagNames) && tagNames.some((t: string) => t.includes('Public')));
+      await TagRepository.setContactPrivacy(userId, contactId, isPublicVal || false);
+
       const contact = await ContactRepository.getById(userId, contactId);
       await logAudit(req, 'CONTACT_CREATED', 'contact', contactId);
 
@@ -126,6 +129,11 @@ export class ContactController {
       if (req.body.warmthTag || req.body.warmth) {
         const warmthVal = req.body.warmthTag || req.body.warmth;
         await TagRepository.setContactWarmth(userId, contactId, warmthVal);
+      }
+
+      if (req.body.privacyTag !== undefined || req.body.is_public !== undefined || req.body.isPublic !== undefined) {
+        const isPub = req.body.privacyTag ? req.body.privacyTag.includes('Public') : Boolean(req.body.is_public || req.body.isPublic);
+        await TagRepository.setContactPrivacy(userId, contactId, isPub);
       }
 
       await ContactRepository.update(userId, contactId, req.body);

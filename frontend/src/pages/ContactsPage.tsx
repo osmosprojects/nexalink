@@ -174,7 +174,7 @@ export const ContactsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Relationship Warmth Filter Pills */}
+        {/* Quick Relationship Warmth & Privacy Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 touch-scroll pt-2 border-t border-slate-100">
           <span className="text-[11px] text-slate-400 font-semibold shrink-0 mr-1">Warmth:</span>
           {[
@@ -193,6 +193,24 @@ export const ContactsPage: React.FC = () => {
               }`}
             >
               {w.label}
+            </button>
+          ))}
+
+          <span className="text-[11px] text-slate-400 font-semibold shrink-0 ml-3 mr-1">Visibility:</span>
+          {[
+            { label: '🌐 Public Connections', value: 'Public' },
+            { label: '🔒 Private Networks', value: 'Private' },
+          ].map((p) => (
+            <button
+              key={p.label}
+              onClick={() => setSelectedTag(selectedTag === p.value ? '' : p.value)}
+              className={`text-xs px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all ${
+                selectedTag === p.value
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {p.label}
             </button>
           ))}
         </div>
@@ -235,6 +253,7 @@ export const ContactsPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {contacts.map((contact) => {
             const badge = getRelationshipTypeBadge(contact.relationship_type);
+            const isPublic = (contact.tags || []).some((t) => t.name.includes('Public'));
             return (
               <div
                 key={contact.contact_id}
@@ -261,9 +280,20 @@ export const ContactsPage: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase shrink-0 ${badge.bg}`}>
-                      {badge.label}
-                    </span>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${badge.bg}`}>
+                        {badge.label}
+                      </span>
+                      <span
+                        className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${
+                          isPublic
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        {isPublic ? '🌐 Public' : '🔒 Private'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Relationship Strength Bar */}
