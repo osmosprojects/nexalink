@@ -34,10 +34,13 @@ export const NETWORKING_INTENT_ACTIONS = {
     displayIntent: '🤝 wants to meet',
     intentBadgeIcon: '🤝',
     intentLabel: 'wants to meet',
+    badgeStyle: 'bg-blue-800 text-white font-bold border border-blue-900',
     responseAction: '✨ Can Connect',
     responseActionIcon: '✨',
     responseType: 'CAN_CONNECT',
     respondedText: '✓ Can Connect',
+    responseBtnStyle: 'bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-xs',
+    respondedBtnStyle: 'bg-emerald-800 text-white font-bold border border-emerald-950',
     ownerSummaryText: (count: number) =>
       `${count} ${count === 1 ? 'person can' : 'people can'} help you connect`,
     ownerDrawerTitle: (target: string) => `People who can help you reach ${target}`,
@@ -48,10 +51,13 @@ export const NETWORKING_INTENT_ACTIONS = {
     displayIntent: '🌟 can connect you to',
     intentBadgeIcon: '🌟',
     intentLabel: 'can connect you to',
+    badgeStyle: 'bg-emerald-700 text-white font-bold border border-emerald-800',
     responseAction: '🤝 Wants to Meet',
     responseActionIcon: '🤝',
     responseType: 'WANTS_TO_MEET',
     respondedText: '✓ Wants to Meet',
+    responseBtnStyle: 'bg-blue-800 hover:bg-blue-900 text-white font-bold shadow-xs',
+    respondedBtnStyle: 'bg-blue-900 text-white font-bold border border-blue-950',
     ownerSummaryText: (count: number, target: string) =>
       `${count} ${count === 1 ? 'person wants' : 'people want'} to meet ${target}`,
     ownerDrawerTitle: (target: string) => `People who want to meet ${target}`,
@@ -334,10 +340,14 @@ export const FeedPage: React.FC = () => {
                 id="requirement-type"
                 value={postType}
                 onChange={(e) => setPostType(e.target.value as 'wants to meet' | 'can connect you to')}
-                className="text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden cursor-pointer"
+                className={`text-xs font-bold px-3 py-2 border rounded-xl focus:outline-hidden cursor-pointer transition-colors ${
+                  postType === 'can connect you to'
+                    ? 'bg-emerald-700 text-white border-emerald-800'
+                    : 'bg-blue-800 text-white border-blue-900'
+                }`}
               >
-                <option value="wants to meet">🤝 wants to meet</option>
-                <option value="can connect you to">🌟 can connect you to</option>
+                <option value="wants to meet" className="bg-white text-slate-900">🤝 wants to meet</option>
+                <option value="can connect you to" className="bg-white text-slate-900">🌟 can connect you to</option>
               </select>
             </div>
 
@@ -455,7 +465,7 @@ export const FeedPage: React.FC = () => {
                   </div>
 
                   <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3.5 space-y-2">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold">
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] ${intentConfig.badgeStyle}`}>
                       <span>{intentConfig.intentBadgeIcon}</span>
                       <span>{intentConfig.intentLabel}</span>
                     </div>
@@ -485,7 +495,7 @@ export const FeedPage: React.FC = () => {
                         {post.author_name}
                       </span>
 
-                      <span className="font-bold text-blue-700 bg-blue-50/90 px-2 py-0.5 rounded-md border border-blue-200 text-xs inline-flex items-center gap-1 shrink-0">
+                      <span className={`px-2.5 py-1 rounded-md text-xs inline-flex items-center gap-1 shrink-0 ${intentConfig.badgeStyle}`}>
                         <span>{intentConfig.intentBadgeIcon}</span>
                         <span>{intentConfig.intentLabel}</span>
                       </span>
@@ -638,7 +648,7 @@ export const FeedPage: React.FC = () => {
                         <button
                           type="button"
                           disabled
-                          className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 cursor-default opacity-90 shadow-xs"
+                          className={`px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 cursor-default opacity-90 ${intentConfig.respondedBtnStyle}`}
                         >
                           <span>{intentConfig.respondedText}</span>
                         </button>
@@ -648,7 +658,7 @@ export const FeedPage: React.FC = () => {
                           onClick={() =>
                             handleRespondToPost(post.post_id, targetPersonInPost, intentConfig.responseType)
                           }
-                          className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                          className={`px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 ${intentConfig.responseBtnStyle}`}
                         >
                           <span>{intentConfig.responseActionIcon}</span>
                           <span>{intentConfig.responseAction}</span>
