@@ -91,10 +91,11 @@ export const ContactsPage: React.FC = () => {
 
             <button
               onClick={() => openQuickAdd?.()}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-2.5 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Add to Network"
             >
-              <UserPlus className="w-4 h-4" />
-              <span>Add to Network</span>
+              <UserPlus className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Add to Network</span>
             </button>
           </div>
         </div>
