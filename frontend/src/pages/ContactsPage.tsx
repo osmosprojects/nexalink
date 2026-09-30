@@ -176,44 +176,48 @@ export const ContactsPage: React.FC = () => {
         </div>
 
         {/* Quick Relationship Warmth & Privacy Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 touch-scroll pt-2 border-t border-slate-100">
-          <span className="text-[11px] text-slate-400 font-semibold shrink-0 mr-1">Warmth:</span>
-          {[
-            { label: 'All Contacts', value: '' },
-            { label: '🔥 Hot (Active)', value: '🔥 Hot' },
-            { label: '☀️ Warm (15-45d)', value: '☀️ Warm' },
-            { label: '❄️ Cold (Needs Touch)', value: '❄️ Cold' },
-          ].map((w) => (
-            <button
-              key={w.label}
-              onClick={() => setSelectedTag(selectedTag === w.value ? '' : w.value)}
-              className={`text-xs px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all ${
-                selectedTag === w.value
-                  ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              {w.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] text-slate-400 font-semibold shrink-0 mr-1">Warmth:</span>
+            {[
+              { label: 'All Contacts', value: '' },
+              { label: '🔥 Hot (Active)', value: '🔥 Hot' },
+              { label: '☀️ Warm (15-45d)', value: '☀️ Warm' },
+              { label: '❄️ Cold (Needs Touch)', value: '❄️ Cold' },
+            ].map((w) => (
+              <button
+                key={w.label}
+                onClick={() => setSelectedTag(selectedTag === w.value ? '' : w.value)}
+                className={`text-xs px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all cursor-pointer ${
+                  selectedTag === w.value
+                    ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
 
-          <span className="text-[11px] text-slate-400 font-semibold shrink-0 ml-3 mr-1">Visibility:</span>
-          {[
-            { label: '🌐 Public Connections', value: 'Public' },
-            { label: '🔒 Private Networks', value: 'Private' },
-          ].map((p) => (
-            <button
-              key={p.label}
-              onClick={() => setSelectedTag(selectedTag === p.value ? '' : p.value)}
-              className={`text-xs px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all ${
-                selectedTag === p.value
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] text-slate-400 font-semibold shrink-0 mr-1">Visibility:</span>
+            {[
+              { label: '🌐 Public Connections', value: 'Public' },
+              { label: '🔒 Private Networks', value: 'Private' },
+            ].map((p) => (
+              <button
+                key={p.label}
+                onClick={() => setSelectedTag(selectedTag === p.value ? '' : p.value)}
+                className={`text-xs px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all cursor-pointer ${
+                  selectedTag === p.value
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -251,7 +255,7 @@ export const ContactsPage: React.FC = () => {
 
       {/* Grid View */}
       {!isLoading && viewMode === 'grid' && contacts.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {contacts.map((contact) => {
             const badge = getRelationshipTypeBadge(contact.relationship_type);
             const isPublic = (contact.tags || []).some((t) => t.name.includes('Public'));
@@ -262,21 +266,21 @@ export const ContactsPage: React.FC = () => {
                 className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-soft hover:border-brand-300 transition-all cursor-pointer flex flex-col justify-between group space-y-4"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Avatar
                         src={contact.avatar_url}
                         name={formatFullName(contact.first_name, contact.last_name)}
                         className="w-12 h-12 rounded-2xl ring-1 ring-slate-200 shrink-0 group-hover:scale-105 transition-transform"
                       />
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-brand-600 truncate transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-brand-600 truncate transition-colors leading-snug" title={formatFullName(contact.first_name, contact.last_name)}>
                           {formatFullName(contact.first_name, contact.last_name)}
                         </h4>
-                        <p className="text-xs text-slate-500 truncate font-medium">
+                        <p className="text-xs text-slate-500 truncate font-medium mt-0.5" title={contact.job_title || 'Professional'}>
                           {contact.job_title || 'Professional'}
                         </p>
-                        <p className="text-[11px] text-slate-400 truncate">
+                        <p className="text-[11px] text-slate-400 truncate mt-0.5" title={contact.company || 'Network'}>
                           {contact.company || 'Network'}
                         </p>
                       </div>
@@ -315,21 +319,24 @@ export const ContactsPage: React.FC = () => {
                   {contact.tags && contact.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-3">
                       {contact.tags.slice(0, 4).map((t) => {
-                        const isWarmth = t.name.includes('Hot') || t.name.includes('Warm') || t.name.includes('Cold') || t.name.includes('🔥') || t.name.includes('☀️') || t.name.includes('❄️');
+                        const rawName = t.name || '';
+                        const isWarmth = rawName.includes('Hot') || rawName.includes('Warm') || rawName.includes('Cold') || rawName.includes('🔥') || rawName.includes('☀️') || rawName.includes('❄️');
+                        const hasEmoji = /^(🌐|🔒|🔥|☀️|❄️)/.test(rawName);
+                        const cleanName = rawName.replace(/^(🌐|🔒|🔥|☀️|❄️)\s*/, '');
                         return (
                           <span
                             key={t.tag_id}
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${
-                              t.name.includes('Hot') || t.name.includes('🔥')
+                              rawName.includes('Hot') || rawName.includes('🔥')
                                 ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                : t.name.includes('Warm') || t.name.includes('☀️')
+                                : rawName.includes('Warm') || rawName.includes('☀️')
                                 ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                : t.name.includes('Cold') || t.name.includes('❄️')
+                                : rawName.includes('Cold') || rawName.includes('❄️')
                                 ? 'bg-blue-50 text-blue-700 border-blue-200'
                                 : 'bg-indigo-50 text-indigo-800 border-indigo-200 font-extrabold'
                             }`}
                           >
-                            {isWarmth ? t.name : `🌐 ${t.name}`}
+                            {isWarmth || hasEmoji ? rawName : `🌐 ${cleanName}`}
                           </span>
                         );
                       })}
