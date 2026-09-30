@@ -86,16 +86,22 @@ export const FeedPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const composerCardRef = useRef<HTMLDivElement | null>(null);
 
   const handleOpenPostFeature = () => {
-    if (composerCardRef.current) {
-      composerCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    setTimeout(() => {
-      composerRef.current?.focus();
-    }, 150);
+    setIsComposerOpen((prev) => {
+      const nextState = !prev;
+      if (nextState) {
+        setTimeout(() => {
+          composerCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          composerRef.current?.focus();
+        }, 150);
+      }
+      return nextState;
+    });
   };
 
   // Can Connect Drawer state
@@ -173,6 +179,7 @@ export const FeedPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       setContent('');
+      setIsComposerOpen(false);
       confetti({ particleCount: 35, spread: 50, origin: { y: 0.7 } });
     },
   });
@@ -280,72 +287,74 @@ export const FeedPage: React.FC = () => {
       </div>
 
       {/* Share Networking Requirement & Update Composer */}
-      <div ref={composerCardRef} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
-        {/* Profile Pic, Name, Role & Company Header */}
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-          <Avatar
-            src={user?.avatarUrl || profile?.avatar_url}
-            name={user?.displayName}
-            onClick={() => navigate('/profile')}
-            className="w-11 h-11 rounded-full ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
-            title="View Profile"
-          />
-          <div className="flex-1 min-w-0">
-            <h3
+      {isComposerOpen && (
+        <div ref={composerCardRef} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+          {/* Profile Pic, Name, Role & Company Header */}
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+            <Avatar
+              src={user?.avatarUrl || profile?.avatar_url}
+              name={user?.displayName}
               onClick={() => navigate('/profile')}
-              className="text-sm font-bold text-slate-900 hover:text-brand-600 cursor-pointer transition-colors leading-tight"
+              className="w-11 h-11 rounded-full ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
+              title="View Profile"
+            />
+            <div className="flex-1 min-w-0">
+              <h3
+                onClick={() => navigate('/profile')}
+                className="text-sm font-bold text-slate-900 hover:text-brand-600 cursor-pointer transition-colors leading-tight"
+              >
+                {user?.displayName || 'Abhishek Tiwari'}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{userSubtitle}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {/* Dropdown Options */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="requirement-type" className="text-xs font-bold text-slate-700 shrink-0">
+                Type:
+              </label>
+              <select
+                id="requirement-type"
+                value={postType}
+                onChange={(e) => setPostType(e.target.value as 'wants to meet' | 'can connect you to')}
+                className="text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden cursor-pointer"
+              >
+                <option value="wants to meet">🤝 wants to meet</option>
+                <option value="can connect you to">🌟 can connect you to</option>
+              </select>
+            </div>
+
+            {/* Text Area for Typing */}
+            <textarea
+              ref={composerRef}
+              rows={3}
+              placeholder="Name, Role, Industry — Share details of your requirement or connection..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full text-xs p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium leading-relaxed text-slate-900 resize-none"
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
+              <span className="flex items-center gap-1 hover:text-slate-600 cursor-pointer">
+                <ImageIcon className="w-3.5 h-3.5" /> Photo
+              </span>
+            </div>
+
+            <button
+              onClick={() => createPostMutation.mutate(content)}
+              disabled={!content.trim() || createPostMutation.isPending}
+              className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
             >
-              {user?.displayName || 'Abhishek Tiwari'}
-            </h3>
-            <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{userSubtitle}</p>
+              <Send className="w-3.5 h-3.5" />
+              <span>Post Update</span>
+            </button>
           </div>
         </div>
-
-        <div className="space-y-3">
-          {/* Dropdown Options */}
-          <div className="flex items-center gap-2">
-            <label htmlFor="requirement-type" className="text-xs font-bold text-slate-700 shrink-0">
-              Type:
-            </label>
-            <select
-              id="requirement-type"
-              value={postType}
-              onChange={(e) => setPostType(e.target.value as 'wants to meet' | 'can connect you to')}
-              className="text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden cursor-pointer"
-            >
-              <option value="wants to meet">🤝 wants to meet</option>
-              <option value="can connect you to">🌟 can connect you to</option>
-            </select>
-          </div>
-
-          {/* Text Area for Typing */}
-          <textarea
-            ref={composerRef}
-            rows={3}
-            placeholder="Name, Role, Industry — Share details of your requirement or connection..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full text-xs p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium leading-relaxed text-slate-900 resize-none"
-          />
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
-            <span className="flex items-center gap-1 hover:text-slate-600 cursor-pointer">
-              <ImageIcon className="w-3.5 h-3.5" /> Photo
-            </span>
-          </div>
-
-          <button
-            onClick={() => createPostMutation.mutate(content)}
-            disabled={!content.trim() || createPostMutation.isPending}
-            className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Post Update</span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Posts Stream */}
       {isLoading ? (
