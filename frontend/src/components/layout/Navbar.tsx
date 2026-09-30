@@ -62,14 +62,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
 
 
-            {/* Header Actions: Add Person & Add Goal */}
+            {/* Header Actions: Add to Network & Add Goal */}
             <button
               onClick={onOpenAddPerson || onOpenQuickAdd}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 sm:px-3.5 rounded-xl shadow-xs hover:shadow-md hover:shadow-blue-600/20 active:scale-95 transition-all shrink-0 cursor-pointer"
               title="Add New Connection"
             >
               <UserPlus className="w-4 h-4 shrink-0" />
-              <span>Add Person</span>
+              <span>Add to Network</span>
             </button>
 
             <button

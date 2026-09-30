@@ -161,8 +161,8 @@ export class ContactController {
         const isPub = req.body.privacyTag ? req.body.privacyTag.includes('Public') : Boolean(req.body.is_public || req.body.isPublic);
         await TagRepository.setContactPrivacy(userId, contactId, isPub);
 
-        // RULE: If changed to Public from CRM, auto-post connection to Network Feed!
-        if (isPub) {
+        // ONLY post connection to Network Feed if user explicitly opted to share on feed
+        if (isPub && req.body.shareOnFeed === true) {
           try {
             const contact = await ContactRepository.getById(userId, contactId);
             if (contact) {

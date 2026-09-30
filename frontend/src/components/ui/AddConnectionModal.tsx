@@ -74,6 +74,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
 
   // Form State
   const [relationship, setRelationship] = useState<'hot' | 'warm' | 'cold'>('warm');
+  const [connectionType, setConnectionType] = useState<'public' | 'private'>('public');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -121,6 +122,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setRelationship('warm');
+      setConnectionType('public');
       setFullName('');
       setPhone('');
       setEmail('');
@@ -439,7 +441,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
       const strengthMap: Record<string, number> = { hot: 90, warm: 60, cold: 30 };
       const warmthTagMap: Record<string, string> = { hot: '🔥 Hot', warm: '☀️ Warm', cold: '❄️ Cold' };
       const warmthTag = warmthTagMap[relationship] || '☀️ Warm';
-      const defaultPrivacyTag = '🔒 Private Network';
+      const defaultPrivacyTag = connectionType === 'public' ? '🌐 Public Connection' : '🔒 Private Network';
       const allTags = Array.from(new Set([...networks, warmthTag, defaultPrivacyTag]));
 
       const payload = {
@@ -454,6 +456,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
         next_follow_up_at: followUpDate || null,
         notes: notesText,
         tagNames: allTags,
+        is_public: connectionType === 'public',
       };
 
       const res = await api.post<any>('/contacts', payload);
@@ -493,7 +496,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="text-base sm:text-lg font-bold text-slate-900 truncate">
-                Add New Connection
+                Add to Network
               </h2>
               <p className="text-xs text-slate-500 truncate mt-0.5">
                 Capture a new relationship and all important details
@@ -536,10 +539,10 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 </div>
                 <div className="space-y-0.5">
                   <h4 className="text-sm font-bold text-slate-900">
-                    Share on Network Feed?
+                    Would you like to share this connection on your Feed?
                   </h4>
                   <p className="text-xs text-slate-600">
-                    Would you like to post this connection to notify your network?
+                    Notify your network about this new connection
                   </p>
                 </div>
               </div>
@@ -562,7 +565,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
               {hasPostedToFeed ? (
                 <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 animate-fadeIn">
                   <Check className="w-4 h-4 text-emerald-600" />
-                  <span>✓ Posted to Network Feed successfully!</span>
+                  <span>✓ Shared on Feed successfully!</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 pt-1">
@@ -595,12 +598,12 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     {isPostingToFeed ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Posting...</span>
+                        <span>Sharing...</span>
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>Yes, Post to Feed</span>
+                        <span>Yes, Share on Feed</span>
                       </>
                     )}
                   </button>
@@ -609,19 +612,11 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     type="button"
                     disabled={isPostingToFeed}
                     onClick={async () => {
-                      if (savedContact?.contact_id) {
-                        try {
-                          await api.put(`/contacts/${savedContact.contact_id}`, { privacyTag: '🔒 Private Network' });
-                          queryClient.invalidateQueries({ queryKey: ['contacts'] });
-                        } catch (e) {
-                          console.warn('Privacy tag setting error:', e);
-                        }
-                      }
                       handleDone();
                     }}
                     className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
-                    No, Thanks
+                    No, Don't Share
                   </button>
                 </div>
               )}
@@ -695,6 +690,61 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 <span>{errors.fullName}</span>
               </div>
             )}
+
+            {/* Connection Type Selection Card */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900">Connection Type</h3>
+                    <p className="text-[11px] text-slate-500 leading-none mt-0.5">
+                      Select visibility for this connection
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setConnectionType('public')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    connectionType === 'public'
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-2 ring-emerald-400/20 font-bold'
+                      : 'bg-white border-slate-200/80 text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/30'
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center gap-1.5">
+                    <span>🌐</span>
+                    <span>Public Connection</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 block mt-0.5 font-normal">
+                    Visible to network & eligible for feed sharing
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setConnectionType('private')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    connectionType === 'private'
+                      ? 'bg-slate-100 border-slate-300 text-slate-900 ring-2 ring-slate-400/20 font-bold'
+                      : 'bg-white border-slate-200/80 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center gap-1.5">
+                    <span>🔒</span>
+                    <span>Private Connection</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 block mt-0.5 font-normal">
+                    Private only to your CRM
+                  </span>
+                </button>
+              </div>
+            </div>
 
             {/* ROW 1: Relationship & Network Membership */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

@@ -40,6 +40,11 @@ export const ContactDetailPage: React.FC = () => {
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickAddTab, setQuickAddTab] = useState<'interaction' | 'meeting' | 'task' | 'note'>('interaction');
 
+  // Connection Type Private -> Public Flow state
+  const [showPublicConfirmModal, setShowPublicConfirmModal] = useState(false);
+  const [isPostingFeed, setIsPostingFeed] = useState(false);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
+
   // AI Assistant Modal state
   const [aiModalMode, setAiModalMode] = useState<'conversation' | 'draft' | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<any>(null);
@@ -125,6 +130,54 @@ export const ContactDetailPage: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleConnectionTypeChange = (targetType: 'public' | 'private', isCurrentlyPublic: boolean) => {
+    if (targetType === 'public' && !isCurrentlyPublic) {
+      setShowPublicConfirmModal(true);
+    } else if (targetType === 'private' && isCurrentlyPublic) {
+      updatePrivacyMutation.mutate('🔒 Private Network', {
+        onSuccess: () => {
+          setSuccessToast('✓ Connection changed to Private Connection');
+          setTimeout(() => setSuccessToast(null), 3000);
+        },
+      });
+    }
+  };
+
+  const handleConfirmPublicShare = async (shareOnFeed: boolean) => {
+    setIsPostingFeed(true);
+    try {
+      await api.put(`/contacts/${id}`, { privacyTag: '🌐 Public Connection' });
+
+      if (shareOnFeed && data?.contact) {
+        const c = data.contact;
+        const last = c.last_name && c.last_name !== '.' ? ` ${c.last_name}` : '';
+        const nameStr = `${c.first_name || ''}${last}`.trim();
+        const targetDetails = `${nameStr}${c.job_title ? `, ${c.job_title}` : ''}${c.company ? `, ${c.company}` : ''}`;
+        const postContent = `[can connect you to] ${targetDetails}`;
+        await api.post('/feed', { content: postContent, tags: null });
+        try {
+          confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+        } catch {}
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['contact', id] });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+
+      setSuccessToast(
+        shareOnFeed
+          ? '✓ Changed to Public Connection & shared on Feed!'
+          : '✓ Changed to Public Connection'
+      );
+      setTimeout(() => setSuccessToast(null), 3500);
+    } catch (err: any) {
+      console.error('Failed to update connection type:', err);
+    } finally {
+      setIsPostingFeed(false);
+      setShowPublicConfirmModal(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -154,6 +207,14 @@ export const ContactDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Feedback */}
+      {successToast && (
+        <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold flex items-center gap-2 animate-fadeIn">
+          <Sparkles className="w-4 h-4 text-emerald-400" />
+          <span>{successToast}</span>
+        </div>
+      )}
+
       {/* Back Button */}
       <button
         onClick={() => navigate('/connections')}
@@ -181,23 +242,36 @@ export const ContactDetailPage: React.FC = () => {
                   {badge.label}
                 </span>
 
-                {/* Privacy Network Badge Toggle */}
+                {/* Privacy Network Badge Toggle / Selector */}
                 {(() => {
                   const isPublic = (contact.tags || []).some((t) => t.name.includes('Public'));
                   return (
-                    <button
-                      type="button"
-                      onClick={() => updatePrivacyMutation.mutate(isPublic ? '🔒 Private Network' : '🌐 Public Connection')}
-                      disabled={updatePrivacyMutation.isPending}
-                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border transition-all flex items-center gap-1 cursor-pointer ${
-                        isPublic
-                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
-                          : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
-                      }`}
-                      title="Click to toggle Public Connection vs Private Network"
-                    >
-                      <span>{isPublic ? '🌐 Public Connection' : '🔒 Private Network'}</span>
-                    </button>
+                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-full border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => handleConnectionTypeChange('private', isPublic)}
+                        className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer ${
+                          !isPublic
+                            ? 'bg-slate-800 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                        title="Set as Private Connection"
+                      >
+                        <span>🔒 Private Connection</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleConnectionTypeChange('public', isPublic)}
+                        className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer ${
+                          isPublic
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                        title="Set as Public Connection"
+                      >
+                        <span>🌐 Public Connection</span>
+                      </button>
+                    </div>
                   );
                 })()}
               </div>
@@ -966,6 +1040,68 @@ export const ContactDetailPage: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Private -> Public Connection Feed Share Prompt Modal */}
+      {showPublicConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 p-6 space-y-5 animate-scaleUp text-slate-900">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shrink-0">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Would you like to share this connection on your Feed?
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Connection type will be set to Public Connection.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Connection Feed Post Preview */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+              <span className="text-[10px] font-bold uppercase text-slate-400">Post Preview</span>
+              <p className="text-xs font-bold text-slate-800">
+                [can connect you to] {formatFullName(contact.first_name, contact.last_name)}{contact.job_title ? `, ${contact.job_title}` : ''}{contact.company ? `, ${contact.company}` : ''}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                disabled={isPostingFeed}
+                onClick={() => handleConfirmPublicShare(true)}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+              >
+                {isPostingFeed ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Sharing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Yes, Share on Feed</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                disabled={isPostingFeed}
+                onClick={() => handleConfirmPublicShare(false)}
+                className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                No, Don't Share
+              </button>
             </div>
           </div>
         </div>

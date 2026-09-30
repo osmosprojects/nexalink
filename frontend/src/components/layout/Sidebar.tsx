@@ -245,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
           >
             <div className="flex items-center gap-2.5">
               <UserCheck className="w-4 h-4 text-brand-400" />
-              <span>Networking Profile</span>
+              <span>My Profile</span>
             </div>
             {!isProfileComplete && (
               <span className="text-[9px] font-extrabold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/40 animate-pulse">

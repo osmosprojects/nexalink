@@ -65,8 +65,18 @@ export const ProfilePage: React.FC = () => {
     return () => window.removeEventListener('trigger-save-profile', handleTrigger);
   }, []);
 
-  // Collapsible section state
-  const [collapsedBlocks, setCollapsedBlocks] = useState<Record<string, boolean>>({});
+  // Collapsible section state: Personal & Professional Identity open by default, all other sections collapsed by default
+  const [collapsedBlocks, setCollapsedBlocks] = useState<Record<string, boolean>>({
+    photo: true,
+    identity: false,
+    locations: true,
+    groups: true,
+    hobbies: true,
+    interests: true,
+    objectives: true,
+    targets: true,
+    bridges: true,
+  });
 
   const toggleBlock = (blockKey: string) => {
     setCollapsedBlocks((prev) => ({
@@ -775,7 +785,7 @@ export const ProfilePage: React.FC = () => {
             <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold tracking-tight">Networking Profile</h1>
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight">My Profile</h1>
             <p className="text-xs sm:text-sm text-blue-100 font-medium">
               {isCompletedUser
                 ? 'Your networking identity & preferences are active and synced'
@@ -870,8 +880,8 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. MAIN CONTENT 2-COLUMN GRID (UNIFIED DESKTOP GRID) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 items-start">
+      {/* 3. MAIN CONTENT SINGLE-COLUMN GRID FOR DESKTOP */}
+      <div className="grid grid-cols-1 gap-5 lg:gap-6 items-start">
         
         {/* ROW 1 LEFT: BLOCK 1 - Profile Photo */}
         <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">

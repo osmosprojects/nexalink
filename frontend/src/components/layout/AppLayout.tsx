@@ -25,7 +25,7 @@ const routeTitleMap: Record<string, { title: string; subtitle: string }> = {
   '/feed': { title: 'Network Feed', subtitle: 'Recent activity, milestones, and community updates' },
   '/analytics': { title: 'Analytics & Growth', subtitle: 'Relationship health, network velocity, and engagement metrics' },
   '/notifications': { title: 'Alerts & Reminders', subtitle: 'Timely reminders for follow-ups and meetings' },
-  '/profile': { title: 'Networking Profile', subtitle: 'Complete your identity to unlock all CRM modules' },
+  '/profile': { title: 'My Profile', subtitle: 'Complete your identity to unlock all CRM modules' },
   '/settings': { title: 'Settings & Privacy', subtitle: 'System preferences, data export, and security audit logs' },
 };
 
@@ -52,7 +52,7 @@ export const AppLayout: React.FC = () => {
   };
   const pageMeta = path === '/profile'
     ? {
-        title: 'Networking Profile',
+        title: 'My Profile',
         subtitle: isProfileComplete
           ? 'Manage your networking identity, locations, and connection bridges'
           : 'Complete your identity to unlock all CRM modules',

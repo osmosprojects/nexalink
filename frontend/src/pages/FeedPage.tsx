@@ -8,8 +8,10 @@ import {
   MessageCircle,
   Image as ImageIcon,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Plus
 } from 'lucide-react';
+import { useRef } from 'react';
 import { api } from '../lib/api';
 import { Post, CanConnectPerson } from '../types';
 import { formatDate } from '../lib/utils';
@@ -83,6 +85,18 @@ export const FeedPage: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const composerCardRef = useRef<HTMLDivElement | null>(null);
+
+  const handleOpenPostFeature = () => {
+    if (composerCardRef.current) {
+      composerCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    setTimeout(() => {
+      composerRef.current?.focus();
+    }, 150);
+  };
 
   // Can Connect Drawer state
   const [canConnectDrawerPost, setCanConnectDrawerPost] = useState<{
@@ -250,13 +264,23 @@ export const FeedPage: React.FC = () => {
           <h2 className="text-lg font-bold text-slate-900">Networking Feed</h2>
           <p className="text-xs text-slate-500">Share networking requirements, updates, and community connections</p>
         </div>
-        <div className="w-9 h-9 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center">
-          <Rss className="w-4 h-4" />
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleOpenPostFeature}
+            className="w-9 h-9 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center transition-all shadow-md shadow-brand-600/20 active:scale-95 cursor-pointer"
+            title="Create Post / Share Update (+)"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+          <div className="w-9 h-9 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center">
+            <Rss className="w-4 h-4" />
+          </div>
         </div>
       </div>
 
       {/* Share Networking Requirement & Update Composer */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
+      <div ref={composerCardRef} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
         {/* Profile Pic, Name, Role & Company Header */}
         <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
           <Avatar
@@ -296,6 +320,7 @@ export const FeedPage: React.FC = () => {
 
           {/* Text Area for Typing */}
           <textarea
+            ref={composerRef}
             rows={3}
             placeholder="Name, Role, Industry — Share details of your requirement or connection..."
             value={content}

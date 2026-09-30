@@ -94,7 +94,7 @@ export const ContactsPage: React.FC = () => {
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              <span>Add Person</span>
+              <span>Add to Network</span>
             </button>
           </div>
         </div>
