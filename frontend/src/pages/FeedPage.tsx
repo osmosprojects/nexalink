@@ -9,7 +9,8 @@ import {
   Image as ImageIcon,
   ChevronRight,
   Sparkles,
-  Plus
+  Plus,
+  X
 } from 'lucide-react';
 import { useRef } from 'react';
 import { api } from '../lib/api';
@@ -275,10 +276,14 @@ export const FeedPage: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenPostFeature}
-            className="w-9 h-9 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center transition-all shadow-md shadow-brand-600/20 active:scale-95 cursor-pointer"
-            title="Create Post / Share Update (+)"
+            className={`w-9 h-9 rounded-2xl flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer ${
+              isComposerOpen
+                ? 'bg-slate-700 hover:bg-slate-800 text-white shadow-slate-700/20'
+                : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/20'
+            }`}
+            title={isComposerOpen ? 'Close / Cancel (X)' : 'Create Post / Share Update (+)'}
           >
-            <Plus className="w-5 h-5" />
+            {isComposerOpen ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
           </button>
           <div className="w-9 h-9 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center">
             <Rss className="w-4 h-4" />
@@ -290,23 +295,33 @@ export const FeedPage: React.FC = () => {
       {isComposerOpen && (
         <div ref={composerCardRef} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
           {/* Profile Pic, Name, Role & Company Header */}
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-            <Avatar
-              src={user?.avatarUrl || profile?.avatar_url}
-              name={user?.displayName}
-              onClick={() => navigate('/profile')}
-              className="w-11 h-11 rounded-full ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
-              title="View Profile"
-            />
-            <div className="flex-1 min-w-0">
-              <h3
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar
+                src={user?.avatarUrl || profile?.avatar_url}
+                name={user?.displayName}
                 onClick={() => navigate('/profile')}
-                className="text-sm font-bold text-slate-900 hover:text-brand-600 cursor-pointer transition-colors leading-tight"
-              >
-                {user?.displayName || 'Abhishek Tiwari'}
-              </h3>
-              <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{userSubtitle}</p>
+                className="w-11 h-11 rounded-full ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
+                title="View Profile"
+              />
+              <div className="flex-1 min-w-0">
+                <h3
+                  onClick={() => navigate('/profile')}
+                  className="text-sm font-bold text-slate-900 hover:text-brand-600 cursor-pointer transition-colors leading-tight"
+                >
+                  {user?.displayName || 'Abhishek Tiwari'}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{userSubtitle}</p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsComposerOpen(false)}
+              className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
+              title="Close composer"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="space-y-3">
@@ -344,14 +359,23 @@ export const FeedPage: React.FC = () => {
               </span>
             </div>
 
-            <button
-              onClick={() => createPostMutation.mutate(content)}
-              disabled={!content.trim() || createPostMutation.isPending}
-              className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Post Update</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsComposerOpen(false)}
+                className="px-3.5 py-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => createPostMutation.mutate(content)}
+                disabled={!content.trim() || createPostMutation.isPending}
+                className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Post Update</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
