@@ -73,7 +73,7 @@ export const AppLayout: React.FC = () => {
             navigate('/profile');
             return;
           }
-          setIsQuickAddOpen(true);
+          setIsAddPersonOpen(true);
         }}
         onOpenSearch={() => {
           if (!isProfileComplete) {
@@ -148,7 +148,36 @@ export const AppLayout: React.FC = () => {
 
         {/* Page Content Body */}
         <main className="flex-1 p-3 sm:p-5 lg:p-6 w-full mx-auto min-w-0 overflow-y-auto">
-          <Outlet context={{ openQuickAdd: () => setIsAddPersonOpen(true), openAddPerson: () => setIsAddPersonOpen(true) }} />
+          <Outlet
+            context={{
+              openQuickAdd: (tab?: 'contact' | 'interaction' | 'meeting' | 'task' | 'goal' | 'note') => {
+                if (!isProfileComplete) {
+                  navigate('/profile');
+                  return;
+                }
+                if (tab && tab !== 'contact') {
+                  setQuickAddTab(tab);
+                  setIsQuickAddOpen(true);
+                } else {
+                  setIsAddPersonOpen(true);
+                }
+              },
+              openAddPerson: () => {
+                if (!isProfileComplete) {
+                  navigate('/profile');
+                  return;
+                }
+                setIsAddPersonOpen(true);
+              },
+              openAddNetworkingRecord: () => {
+                if (!isProfileComplete) {
+                  navigate('/profile');
+                  return;
+                }
+                setIsAddPersonOpen(true);
+              },
+            }}
+          />
         </main>
       </div>
 
@@ -163,7 +192,7 @@ export const AppLayout: React.FC = () => {
         }}
       />
 
-      {/* Add New Connection Modal (Add Person) */}
+      {/* Add New Connection Modal (Add Person / Add to Network) */}
       {isProfileComplete && (
         <AddConnectionModal
           isOpen={isAddPersonOpen}
@@ -180,6 +209,10 @@ export const AppLayout: React.FC = () => {
           isOpen={isQuickAddOpen}
           defaultTab={quickAddTab}
           onClose={() => setIsQuickAddOpen(false)}
+          onOpenAddPerson={() => {
+            setIsQuickAddOpen(false);
+            setIsAddPersonOpen(true);
+          }}
           onSuccess={() => {
             refetchNotifs();
           }}

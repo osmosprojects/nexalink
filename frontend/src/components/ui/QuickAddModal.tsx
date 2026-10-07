@@ -19,6 +19,7 @@ interface QuickAddModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onOpenAddPerson?: () => void;
   defaultTab?: 'contact' | 'interaction' | 'meeting' | 'task' | 'goal' | 'note';
   defaultContactId?: number | string | null;
 }
@@ -27,6 +28,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  onOpenAddPerson,
   defaultTab = 'contact',
   defaultContactId,
 }) => {
@@ -223,6 +225,24 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
           {/* CONTACT FORM */}
           {activeTab === 'contact' && (
             <div className="space-y-3.5">
+              {onOpenAddPerson && (
+                <div className="p-3 bg-blue-50/80 border border-blue-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-900">
+                    <UserPlus className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span>Want to add a full networking record with tags & warmth?</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenAddPerson();
+                    }}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all shrink-0 cursor-pointer"
+                  >
+                    Open Add to Network Form →
+                  </button>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">First Name *</label>

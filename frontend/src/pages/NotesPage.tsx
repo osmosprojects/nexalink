@@ -19,7 +19,7 @@ export const NotesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { openQuickAdd } = useOutletContext<{ openQuickAdd: () => void }>() || {};
+  const { openQuickAdd } = useOutletContext<{ openQuickAdd: (tab?: string) => void }>() || {};
 
   const { data: notes = [], isLoading } = useQuery<Note[]>({
     queryKey: ['notes', search],
@@ -63,7 +63,7 @@ export const NotesPage: React.FC = () => {
           </div>
 
           <button
-            onClick={() => openQuickAdd?.()}
+            onClick={() => openQuickAdd?.('note')}
             className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition-all"
           >
             <Plus className="w-4 h-4" />

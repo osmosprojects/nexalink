@@ -21,7 +21,7 @@ import { formatDate } from '../lib/utils';
 export const InteractionsPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const navigate = useNavigate();
-  const { openQuickAdd } = useOutletContext<{ openQuickAdd: () => void }>() || {};
+  const { openQuickAdd } = useOutletContext<{ openQuickAdd: (tab?: string) => void }>() || {};
 
   const { data: interactions = [], isLoading } = useQuery<Interaction[]>({
     queryKey: ['interactions', typeFilter],
@@ -62,7 +62,7 @@ export const InteractionsPage: React.FC = () => {
           </select>
 
           <button
-            onClick={() => openQuickAdd?.()}
+            onClick={() => openQuickAdd?.('interaction')}
             className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition-all"
           >
             <Plus className="w-4 h-4" />
