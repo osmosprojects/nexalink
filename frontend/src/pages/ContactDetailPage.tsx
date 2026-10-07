@@ -327,28 +327,35 @@ export const ContactDetailPage: React.FC = () => {
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
             <button
-              onClick={handleAISuggestions}
-              className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-600/20 flex items-center gap-1.5 transition-all"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Prepare Conversation</span>
-            </button>
-            <button
-              onClick={() => handleAIDraft('follow_up')}
-              className="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
-            >
-              <Mail className="w-4 h-4" />
-              <span>Draft Message</span>
-            </button>
-            <button
               onClick={() => {
                 setQuickAddTab('interaction');
                 setIsQuickAddOpen(true);
               }}
-              className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Log Interaction</span>
+              <span>Add Interaction</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('interactions')}
+              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <MessageSquareShare className="w-4 h-4 text-slate-600" />
+              <span>View Interaction History</span>
+            </button>
+            <button
+              onClick={handleAISuggestions}
+              className="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>AI Prep</span>
+            </button>
+            <button
+              onClick={() => handleAIDraft('follow_up')}
+              className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Draft Message</span>
             </button>
           </div>
         </div>
@@ -1112,8 +1119,10 @@ export const ContactDetailPage: React.FC = () => {
         isOpen={isQuickAddOpen}
         onClose={() => setIsQuickAddOpen(false)}
         defaultTab={quickAddTab}
+        defaultContactId={Number(id)}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['contact', id] });
+          queryClient.invalidateQueries({ queryKey: ['contacts'] });
         }}
       />
     </div>

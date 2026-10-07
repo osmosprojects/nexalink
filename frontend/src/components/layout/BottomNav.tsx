@@ -41,12 +41,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
   ];
 
   const moreItems = [
+    { to: '/connections', label: 'My Networks', icon: Users },
+    { to: '/calendar', label: 'My Networking Calendar', icon: Calendar },
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/tasks', label: 'Tasks', icon: CheckSquare },
     { to: '/interactions', label: 'Interactions', icon: MessageSquareShare },
     { to: '/goals', label: 'Goals', icon: Target },
     { to: '/kanban', label: 'Kanban Board', icon: KanbanSquare },
-    { to: '/calendar', label: 'Calendar', icon: Calendar },
     { to: '/notes', label: 'Notes', icon: FileText },
     { to: '/ai', label: 'AI Assistant', icon: Sparkles, badge: 'AI' },
     { to: '/analytics', label: 'Analytics', icon: BarChart3 },
@@ -168,7 +169,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
               className="w-full bg-gradient-to-r from-brand-600 to-purple-600 text-white font-semibold text-sm py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-600/20"
             >
               {!isProfileComplete ? <Lock className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              <span>{!isProfileComplete ? 'Complete Profile Setup First' : 'Create New Record'}</span>
+              <span>{!isProfileComplete ? 'Complete Profile Setup First' : 'Add Networking Record'}</span>
             </button>
 
             {/* Grid of Navigation Links */}

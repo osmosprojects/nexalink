@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   X,
   UserPlus,
@@ -11,6 +12,7 @@ import {
   Check
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { Contact } from '../../types';
 import confetti from 'canvas-confetti';
 
 interface QuickAddModalProps {
@@ -18,6 +20,7 @@ interface QuickAddModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   defaultTab?: 'contact' | 'interaction' | 'meeting' | 'task' | 'goal' | 'note';
+  defaultContactId?: number | string | null;
 }
 
 export const QuickAddModal: React.FC<QuickAddModalProps> = ({
@@ -25,10 +28,24 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
   onClose,
   onSuccess,
   defaultTab = 'contact',
+  defaultContactId,
 }) => {
   const [activeTab, setActiveTab] = useState<'contact' | 'interaction' | 'meeting' | 'task' | 'goal' | 'note'>(defaultTab);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch contacts for dropdown selection
+  const { data: contactsData } = useQuery<any>({
+    queryKey: ['contacts-dropdown'],
+    queryFn: () => api.get<any>('/contacts?limit=100'),
+    enabled: isOpen,
+  });
+
+  const contactsList: Contact[] = Array.isArray(contactsData?.items)
+    ? contactsData.items
+    : Array.isArray(contactsData)
+    ? contactsData
+    : [];
 
   // Form states
   const [contactForm, setContactForm] = useState({
@@ -43,15 +60,28 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
   });
 
   const [interactionForm, setInteractionForm] = useState({
-    contact_id: '',
-    interaction_type: 'coffee',
+    contact_id: defaultContactId ? String(defaultContactId) : '',
+    interaction_type: 'call',
     title: '',
+    interaction_date: new Date().toISOString().slice(0, 16),
     summary: '',
     outcome: '',
     follow_up_required: false,
     follow_up_date: '',
     sentiment: 'positive',
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(defaultTab);
+      if (defaultContactId) {
+        setInteractionForm((prev) => ({ ...prev, contact_id: String(defaultContactId) }));
+        setMeetingForm((prev) => ({ ...prev, contact_id: String(defaultContactId) }));
+        setTaskForm((prev) => ({ ...prev, contact_id: String(defaultContactId) }));
+        setNoteForm((prev) => ({ ...prev, contact_id: String(defaultContactId) }));
+      }
+    }
+  }, [isOpen, defaultTab, defaultContactId]);
 
   const [meetingForm, setMeetingForm] = useState({
     title: '',
@@ -291,30 +321,37 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
             <div className="space-y-3.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Contact ID *</label>
-                  <input
-                    type="number"
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Networking Contact *</label>
+                  <select
                     required
-                    placeholder="1"
                     value={interactionForm.contact_id}
                     onChange={(e) => setInteractionForm({ ...interactionForm, contact_id: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
-                  />
+                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium text-slate-800"
+                  >
+                    <option value="">Select Contact...</option>
+                    {contactsList.map((c) => (
+                      <option key={c.contact_id} value={c.contact_id}>
+                        {c.first_name} {c.last_name} {c.company ? `(${c.company})` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Type</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Interaction Type *</label>
                   <select
                     value={interactionForm.interaction_type}
                     onChange={(e) => setInteractionForm({ ...interactionForm, interaction_type: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden font-medium text-slate-800"
                   >
-                    <option value="coffee">Coffee Chat</option>
+                    <option value="call">Call</option>
                     <option value="meeting">Meeting</option>
-                    <option value="call">Phone Call</option>
                     <option value="email">Email</option>
-                    <option value="message">Direct Message</option>
+                    <option value="whatsapp">WhatsApp / Message</option>
+                    <option value="coffee">Coffee Chat</option>
                     <option value="event">Event / Conference</option>
-                    <option value="introduction">Introduction</option>
+                    <option value="follow_up">Follow-up</option>
+                    <option value="note">Note</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
               </div>
@@ -324,18 +361,40 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Discussed AI agent architecture"
+                  placeholder="e.g. Discussed partnership opportunity"
                   value={interactionForm.title}
                   onChange={(e) => setInteractionForm({ ...interactionForm, title: e.target.value })}
                   className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={interactionForm.interaction_date}
+                    onChange={(e) => setInteractionForm({ ...interactionForm, interaction_date: e.target.value })}
+                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Outcome</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Agreed to share proposal"
+                    value={interactionForm.outcome}
+                    onChange={(e) => setInteractionForm({ ...interactionForm, outcome: e.target.value })}
+                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Summary / Notes</label>
                 <textarea
                   rows={2}
-                  placeholder="High-signal key takeaways from conversation..."
+                  placeholder="Key takeaways, context, or discussion notes..."
                   value={interactionForm.summary}
                   onChange={(e) => setInteractionForm({ ...interactionForm, summary: e.target.value })}
                   className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"

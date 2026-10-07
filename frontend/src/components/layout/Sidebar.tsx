@@ -15,6 +15,7 @@ import {
   BarChart3,
   Settings,
   UserCheck,
+  UserPlus,
   LogOut,
   ChevronRight,
   Plus,
@@ -32,11 +33,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
   const { user, profile, isProfileComplete, logout } = useAuth();
   const navigate = useNavigate();
 
+  const networkingNav = [
+    { to: '/connections', label: 'My Networks', icon: Users },
+    { to: '/calendar', label: 'My Networking Calendar', icon: Calendar },
+  ];
+
   const mainNav = [
     { to: '/feed', label: 'Home / Feed', icon: Rss },
     { to: '/discover', label: 'Discover', icon: Compass },
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/connections', label: 'Connections', icon: Users },
     { to: '/interactions', label: 'Interactions', icon: MessageSquareShare },
     { to: '/goals', label: 'Goals', icon: Target },
   ];
@@ -144,6 +149,43 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
           </div>
         ) : (
           <>
+            {/* Networking Core Section */}
+            <div className="space-y-1">
+              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-brand-400">Networking</p>
+              <button
+                type="button"
+                onClick={onOpenQuickAdd}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <UserPlus className="w-4 h-4 text-brand-400" />
+                  <span>Add Networking Record</span>
+                </div>
+                <Plus className="w-3.5 h-3.5 text-slate-500" />
+              </button>
+              {networkingNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                        isActive
+                          ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
+                          : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
+                      }`
+                    }
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </div>
+                  </NavLink>
+                );
+              })}
+            </div>
+
             {/* Core CRM */}
             <div className="space-y-1">
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Core CRM</p>

@@ -79,6 +79,18 @@ export const router = createBrowserRouter([
         element: <ContactDetailPage />,
       },
       {
+        path: 'networking',
+        element: <Navigate to="/networking/networks" replace />,
+      },
+      {
+        path: 'networking/networks',
+        element: <ContactsPage />,
+      },
+      {
+        path: 'networking/calendar',
+        element: <CalendarPage />,
+      },
+      {
         path: 'interactions',
         element: <InteractionsPage />,
       },

@@ -66,8 +66,8 @@ export const ContactsPage: React.FC = () => {
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Connections Directory</h2>
-            <p className="text-xs text-slate-500">Manage and cultivate your personal & professional relationships</p>
+            <h2 className="text-lg font-bold text-slate-900">My Networks</h2>
+            <p className="text-xs text-slate-500">My Networks is your personal networking relationship database</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -91,11 +91,11 @@ export const ContactsPage: React.FC = () => {
 
             <button
               onClick={() => openQuickAdd?.()}
-              className="px-2.5 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
-              title="Add to Network"
+              className="px-2.5 sm:px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Add Networking Record"
             >
               <UserPlus className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Add to Network</span>
+              <span className="hidden sm:inline">+ Add Networking Record</span>
             </button>
           </div>
         </div>
@@ -237,18 +237,18 @@ export const ContactsPage: React.FC = () => {
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900">No contacts found</h3>
+            <h3 className="text-base font-bold text-slate-900">No networking records yet.</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
               {search || selectedTag || relationshipType !== 'all'
                 ? 'Try adjusting your search queries or filter criteria.'
-                : 'Start building your network by adding your first professional connection.'}
+                : 'Start building your network by adding your first networking record.'}
             </p>
           </div>
           <button
             onClick={() => openQuickAdd?.()}
-            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-md transition-all"
+            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
           >
-            Add First Contact
+            + Add Networking Record
           </button>
         </div>
       )}
