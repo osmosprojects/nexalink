@@ -390,78 +390,82 @@ export const CalendarPage: React.FC = () => {
         {/* Filters and Month Navigation Controls Row */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-3 border-t border-slate-100">
           {/* Month Navigation */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
               onClick={handleToday}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-200/80 transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1.5"
             >
-              Today
+              <CalendarIcon className="w-3.5 h-3.5 text-brand-600 shrink-0" />
+              <span>Today</span>
             </button>
-            <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-0.5">
+
+            <div className="flex items-center bg-slate-100/90 border border-slate-200/90 rounded-xl p-0.5 shadow-2xs">
               <button
                 onClick={handlePrevMonth}
-                className="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg transition-all cursor-pointer flex items-center justify-center active:scale-95"
                 title="Previous Month"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4 text-slate-700 stroke-[2.5]" />
               </button>
               <button
                 onClick={handleNextMonth}
-                className="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg transition-all cursor-pointer flex items-center justify-center active:scale-95"
                 title="Next Month"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 text-slate-700 stroke-[2.5]" />
               </button>
             </div>
-            <h3 className="text-sm font-extrabold text-slate-900 min-w-[140px] pl-1">
+
+            <h3 className="text-sm sm:text-base font-extrabold text-slate-900 min-w-[140px] pl-1 tracking-tight">
               {monthTitle}
             </h3>
           </div>
 
           {/* Filters Bar */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Filter className="w-3 h-3 text-slate-400" />
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <div className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 text-slate-600 rounded-xl border border-slate-200/80 text-[11px] font-bold uppercase tracking-wider shrink-0">
+              <Filter className="w-3.5 h-3.5 text-slate-500 shrink-0" />
               <span>Filter:</span>
-            </span>
+            </div>
 
-            {/* Filter Pills */}
-            {[
-              { id: 'all', label: 'All' },
-              { id: 'upcoming', label: 'Upcoming' },
-              { id: 'completed', label: 'Completed' },
-              { id: 'calls', label: 'Calls' },
-              { id: 'meetings', label: 'Meetings' },
-              { id: 'follow_ups', label: 'Follow-ups' },
-            ].map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setSelectedFilter(f.id as any)}
-                className={`text-xs px-2.5 py-1 rounded-xl border font-bold transition-all cursor-pointer ${
-                  selectedFilter === f.id
-                    ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
-                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
+            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'upcoming', label: 'Upcoming' },
+                { id: 'completed', label: 'Completed' },
+                { id: 'calls', label: 'Calls' },
+                { id: 'meetings', label: 'Meetings' },
+                { id: 'follow_ups', label: 'Follow-ups' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setSelectedFilter(f.id as any)}
+                  className={`text-xs px-3 py-1.5 rounded-xl border font-bold transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
+                    selectedFilter === f.id
+                      ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
 
-            {/* Contact Selector Filter */}
-            {contactsList.length > 0 && (
-              <select
-                value={selectedContactId}
-                onChange={(e) => setSelectedContactId(e.target.value)}
-                className="text-xs px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700 focus:outline-hidden max-w-[160px] truncate"
-              >
-                <option value="all">All Contacts</option>
-                {contactsList.map((c) => (
-                  <option key={c.contact_id} value={c.contact_id}>
-                    {c.first_name} {c.last_name}
-                  </option>
-                ))}
-              </select>
-            )}
+              {/* Contact Selector Filter */}
+              {contactsList.length > 0 && (
+                <select
+                  value={selectedContactId}
+                  onChange={(e) => setSelectedContactId(e.target.value)}
+                  className="text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 max-w-[160px] truncate cursor-pointer"
+                >
+                  <option value="all">All Contacts</option>
+                  {contactsList.map((c) => (
+                    <option key={c.contact_id} value={c.contact_id}>
+                      {c.first_name} {c.last_name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
           </div>
         </div>
       </div>
