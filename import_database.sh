@@ -13,21 +13,18 @@ if [ -z "$MYSQL_BIN" ]; then
 fi
 
 echo "🔍 Checking MySQL connection on 127.0.0.1:3306..."
-if ! "$MYSQL_BIN" -u root -h 127.0.0.1 -e "SELECT 1;" >/dev/null 2>&1; then
-    # Try local socket
-    if ! "$MYSQL_BIN" -u root -e "SELECT 1;" >/dev/null 2>&1; then
-        echo "❌ Error: Cannot connect to MySQL. Please ensure MySQL is running (e.g. 'sudo /opt/lampp/lampp startmysql')."
-        exit 1
-    fi
+if ! "$MYSQL_BIN" -u root -h 127.0.0.1 -P 3306 -e "SELECT 1;" >/dev/null 2>&1; then
+    echo "❌ Error: Cannot connect to MySQL on 127.0.0.1:3306."
+    exit 1
 fi
 
 echo "📦 Creating database 'nexalink_crm' if not exists..."
-"$MYSQL_BIN" -u root -e "CREATE DATABASE IF NOT EXISTS \`nexalink_crm\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+"$MYSQL_BIN" -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS \`nexalink_crm\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 echo "📥 Importing nexalink_crm.sql schema & seed data..."
-"$MYSQL_BIN" -u root nexalink_crm < nexalink_crm.sql
+"$MYSQL_BIN" -u root -h 127.0.0.1 -P 3306 nexalink_crm < nexalink_crm.sql
 
 echo "👤 Importing populate_personas_and_profiles.sql..."
-"$MYSQL_BIN" -u root nexalink_crm < populate_personas_and_profiles.sql
+"$MYSQL_BIN" -u root -h 127.0.0.1 -P 3306 nexalink_crm < populate_personas_and_profiles.sql
 
 echo "✅ Database 'nexalink_crm' imported successfully!"
