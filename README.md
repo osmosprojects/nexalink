@@ -73,3 +73,16 @@ Then open **[http://localhost:5173](http://localhost:5173)** in your browser.
 15. **Notifications Center:** Alerts for follow-ups, meetings, and goal deadlines with mark-as-read.
 16. **Settings & Privacy:** Public profile toggles, discoverability controls, AI usage consent, JSON data export backup.
 17. **Global Search:** Multi-entity quick search across contacts, meetings, interactions, tasks, goals, and notes.
+
+---
+
+## 📖 Comprehensive Documentation & Card Files
+
+Detailed modular architecture cards and deep-dive logic documentation are available in the [`docs/`](docs/README.md) directory:
+
+- **[Master Documentation Portal](docs/README.md)**
+- **[Frontend UI Card Files](docs/cards/frontend/)** (14 UI Card specifications & implementations)
+- **[Backend Module Card Files](docs/cards/backend/)** (14 backend controllers, routes, and SQL logic cards)
+- **[Understanding Code and Logic Files](docs/understanding_code_and_logic/)** (7 architecture deep-dives, algorithm formulations, database dictionaries, and full API specifications)
+
+
