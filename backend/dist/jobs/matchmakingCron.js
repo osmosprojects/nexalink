@@ -8,8 +8,8 @@ let cron = null;
 try {
     cron = require('node-cron');
 }
-catch (e) {
-    console.warn('⚠️ node-cron optional module warning:', e);
+catch {
+    // node-cron is optional for background scheduled jobs
 }
 /**
  * Runs pairwise precomputation for all active profiles.

@@ -16,6 +16,7 @@ release_build/backend/.env
 Thumbs.db
 *.log
 npm-debug.log*
+deploy_package/
 
 # Zips
 *.zip

@@ -16,6 +16,8 @@ const routes_1 = require("./routes");
 const errorHandler_1 = require("./middleware/errorHandler");
 const matchmakingCron_1 = require("./jobs/matchmakingCron");
 const app = (0, express_1.default)();
+// Trust proxy for reverse proxy environments (Hostinger / LiteSpeed / Nginx / Cloudflare)
+app.set('trust proxy', 1);
 // Security and utility middleware
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
@@ -67,6 +69,7 @@ const limiter = (0, express_rate_limit_1.default)({
     max: 1000,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { xForwardedForHeader: false },
     message: {
         success: false,
         error: {

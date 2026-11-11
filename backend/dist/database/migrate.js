@@ -21,9 +21,30 @@ async function runMigrations() {
     try {
         await connection.query(`CREATE DATABASE IF NOT EXISTS \`${env_1.config.db.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
         await connection.query(`USE \`${env_1.config.db.database}\`;`);
-        const schemaPath = path_1.default.join(__dirname, 'schema.sql');
-        const schemaSql = fs_1.default.readFileSync(schemaPath, 'utf8');
-        await connection.query(schemaSql);
+        const schemaCandidates = [
+            path_1.default.join(__dirname, 'schema.sql'),
+            path_1.default.join(__dirname, '../database/schema.sql'),
+            path_1.default.join(__dirname, '../../database/schema.sql'),
+            path_1.default.join(__dirname, '../../src/database/schema.sql'),
+            path_1.default.join(process.cwd(), 'database/schema.sql'),
+            path_1.default.join(process.cwd(), 'backend/dist/database/schema.sql'),
+            path_1.default.join(process.cwd(), 'schema.sql'),
+            path_1.default.join(process.cwd(), 'nexalink_crm.sql'),
+        ];
+        let schemaSql = null;
+        for (const p of schemaCandidates) {
+            if (fs_1.default.existsSync(p)) {
+                schemaSql = fs_1.default.readFileSync(p, 'utf8');
+                break;
+            }
+        }
+        if (schemaSql) {
+            await connection.query(schemaSql);
+            console.log('✅ Migrations applied successfully!');
+        }
+        else {
+            console.log('ℹ️ Schema file already imported or not found in dist; skipping auto-migration.');
+        }
         // Apply column updates to existing databases
         try {
             await connection.query(`ALTER TABLE users MODIFY COLUMN avatar_url LONGTEXT NULL;`);
@@ -32,7 +53,6 @@ async function runMigrations() {
         catch (e) {
             // Ignore if table/column does not exist yet
         }
-        console.log('✅ Migrations applied successfully!');
     }
     catch (error) {
         console.error('❌ Migration failed:', error);

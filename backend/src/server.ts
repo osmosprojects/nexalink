@@ -13,6 +13,9 @@ import { initMatchmakingCron } from './jobs/matchmakingCron';
 
 const app = express();
 
+// Trust proxy for reverse proxy environments (Hostinger / LiteSpeed / Nginx / Cloudflare)
+app.set('trust proxy', 1);
+
 // Security and utility middleware
 app.use(
   cors({
@@ -72,6 +75,7 @@ const limiter = rateLimit({
   max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: false,
     error: {

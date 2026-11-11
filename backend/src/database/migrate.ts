@@ -19,10 +19,31 @@ export async function runMigrations() {
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${config.db.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
     await connection.query(`USE \`${config.db.database}\`;`);
 
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+    const schemaCandidates = [
+      path.join(__dirname, 'schema.sql'),
+      path.join(__dirname, '../database/schema.sql'),
+      path.join(__dirname, '../../database/schema.sql'),
+      path.join(__dirname, '../../src/database/schema.sql'),
+      path.join(process.cwd(), 'database/schema.sql'),
+      path.join(process.cwd(), 'backend/dist/database/schema.sql'),
+      path.join(process.cwd(), 'schema.sql'),
+      path.join(process.cwd(), 'nexalink_crm.sql'),
+    ];
 
-    await connection.query(schemaSql);
+    let schemaSql: string | null = null;
+    for (const p of schemaCandidates) {
+      if (fs.existsSync(p)) {
+        schemaSql = fs.readFileSync(p, 'utf8');
+        break;
+      }
+    }
+
+    if (schemaSql) {
+      await connection.query(schemaSql);
+      console.log('✅ Migrations applied successfully!');
+    } else {
+      console.log('ℹ️ Schema file already imported or not found in dist; skipping auto-migration.');
+    }
 
     // Apply column updates to existing databases
     try {
@@ -31,8 +52,6 @@ export async function runMigrations() {
     } catch (e) {
       // Ignore if table/column does not exist yet
     }
-
-    console.log('✅ Migrations applied successfully!');
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;
