@@ -11,8 +11,9 @@ export function errorHandler(
   console.error(`[API Error] ${req.method} ${req.originalUrl}:`, err);
 
   if (err instanceof ZodError) {
-    const errorDetails = err.errors.map((e) => ({
-      field: e.path.join('.'),
+    const issues = (err as any).issues || (err as any).errors || [];
+    const errorDetails = issues.map((e: any) => ({
+      field: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
       message: e.message,
     }));
     return sendError(res, 'Validation failed for request data', 422, 'VALIDATION_ERROR', errorDetails);

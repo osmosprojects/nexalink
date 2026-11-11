@@ -6,8 +6,9 @@ const zod_1 = require("zod");
 function errorHandler(err, req, res, next) {
     console.error(`[API Error] ${req.method} ${req.originalUrl}:`, err);
     if (err instanceof zod_1.ZodError) {
-        const errorDetails = err.errors.map((e) => ({
-            field: e.path.join('.'),
+        const issues = err.issues || err.errors || [];
+        const errorDetails = issues.map((e) => ({
+            field: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
             message: e.message,
         }));
         return (0, response_1.sendError)(res, 'Validation failed for request data', 422, 'VALIDATION_ERROR', errorDetails);
