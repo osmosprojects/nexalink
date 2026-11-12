@@ -92,7 +92,7 @@ export const AppLayout: React.FC = () => {
         id="mobile-sidebar"
         ref={mobileSidebarRef}
         aria-label="Main navigation"
-        className="fixed inset-y-0 left-0 right-auto m-0 h-dvh max-h-none w-72 max-w-[85vw] overflow-hidden bg-[var(--sans-ink)] p-0 text-blue-100 backdrop:bg-[var(--sans-ink)]/60"
+        className="fixed inset-y-0 left-0 right-auto m-0 h-dvh max-h-none w-72 max-w-[85vw] overflow-hidden bg-slate-900 p-0 text-slate-300 backdrop:bg-slate-950/60"
         onClick={(event) => {
           if (event.target === event.currentTarget) event.currentTarget.close();
         }}
