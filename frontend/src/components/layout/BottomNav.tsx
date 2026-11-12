@@ -11,9 +11,7 @@ import {
   KanbanSquare,
   Calendar,
   FileText,
-  Sparkles,
   Rss,
-  BarChart3,
   Settings,
   UserCheck,
   LogOut,
@@ -49,8 +47,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
     { to: '/goals', label: 'Goals', icon: Target },
     { to: '/kanban', label: 'Kanban Board', icon: KanbanSquare },
     { to: '/notes', label: 'Notes', icon: FileText },
-    { to: '/ai', label: 'AI Assistant', icon: Sparkles, badge: 'AI' },
-    { to: '/analytics', label: 'Analytics', icon: BarChart3 },
     { to: '/profile', label: 'My Profile', icon: UserCheck },
     { to: '/settings', label: 'Settings', icon: Settings },
   ];
@@ -201,11 +197,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
                       <div className="text-xs font-semibold flex items-center justify-between gap-1 truncate">
                         <span>{item.label}</span>
                         {isLocked && <Lock className="w-3 h-3 text-slate-400 shrink-0" />}
-                        {!isLocked && item.badge && (
-                          <span className="text-[9px] font-bold bg-purple-100 text-purple-700 px-1 py-0.2 rounded">
-                            {item.badge}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </button>

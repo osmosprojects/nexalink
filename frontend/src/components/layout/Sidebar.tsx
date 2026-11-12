@@ -13,7 +13,6 @@ import {
   FileText,
   Sparkles,
   Rss,
-  BarChart3,
   Settings,
   UserCheck,
   UserPlus,
@@ -52,11 +51,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd, onClose }) => 
     { to: '/calendar', label: 'Calendar', icon: Calendar },
     { to: '/tasks', label: 'Tasks', icon: CheckSquare },
     { to: '/notes', label: 'Notes', icon: FileText },
-  ];
-
-  const secondaryNav = [
-    { to: '/ai', label: 'AI Assistant', icon: Sparkles, badge: 'AI' },
-    { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   ];
 
   const handleNavClick = (e: React.MouseEvent, path: string) => {
@@ -251,37 +245,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd, onClose }) => 
                       <Icon className="w-4 h-4" />
                       <span>{item.label}</span>
                     </div>
-                  </NavLink>
-                );
-              })}
-            </div>
-
-            {/* Intelligence & Feed */}
-            <div className="space-y-1">
-              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Intelligence & Network</p>
-              {secondaryNav.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                        isActive
-                          ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
-                          : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
-                      }`
-                    }
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className="w-4 h-4 text-purple-400" />
-                      <span>{item.label}</span>
-                    </div>
-                    {item.badge && (
-                      <span className="text-[10px] font-bold bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30">
-                        {item.badge}
-                      </span>
-                    )}
                   </NavLink>
                 );
               })}
