@@ -782,7 +782,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     <Heart className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-900">1. Relationship</h3>
+                    <h3 className="text-xs font-bold text-slate-900">1. Relationship Status</h3>
                     <p className="text-[11px] text-slate-500 leading-none mt-0.5">
                       Set your relationship temperature with this person
                     </p>
@@ -922,14 +922,14 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
               </div>
             </div>
 
-            {/* ROW 2: Person & Professional Information */}
+            {/* ROW 2: Professional Information */}
             <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
               <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
                 <div className="w-7 h-7 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
                   <Briefcase className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-slate-900">3. Person & Professional Information</h3>
+                  <h3 className="text-xs font-bold text-slate-900">3. Professional Information</h3>
                   <p className="text-[11px] text-slate-500 leading-none mt-0.5">
                     Basic details about this person
                   </p>
@@ -1388,7 +1388,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
               </div>
             </div>
 
-            {/* ROW 5: Milestones & Meeting Intelligence */}
+            {/* ROW 5: Milestones & Meeting Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* SECTION 7 — IMPORTANT DATES */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
@@ -1480,16 +1480,16 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 </div>
               </div>
 
-              {/* SECTION 8 — MEETING INTELLIGENCE */}
+              {/* SECTION 8 — MEETING SUMMARY */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 pb-2.5">
                   <div className="w-7 h-7 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
                     <MessageSquare className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-900">8. Meeting Intelligence</h3>
+                    <h3 className="text-xs font-bold text-slate-900">8. Meeting Summary</h3>
                     <p className="text-[11px] text-slate-500 leading-none mt-0.5">
-                      Key points from your conversations and meetings
+                      Key points from your conversations
                     </p>
                   </div>
                 </div>
