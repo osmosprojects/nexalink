@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { GoogleOAuthButton } from '../components/auth/GoogleOAuthButton';
-import { ArrowRight, Lock, Mail, User, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Lock, Mail, User } from 'lucide-react';
+import mark from '../assets/login/mark.webp';
+import './LoginPage.css';
 
 export const RegisterPage: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
@@ -33,118 +35,87 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-850 to-brand-950 flex flex-col justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 text-slate-100 w-full max-w-full overflow-x-hidden">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center px-2">
-        <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-purple-600 text-white font-black text-xl sm:text-2xl shadow-xl shadow-brand-500/30 mb-3 sm:mb-4">
-          N
+    <main className="login-page register-page">
+      <header className="login-intro register-intro">
+        <div className="login-brand register-brand">
+          <img src={mark} alt="" />
+          <p>Sans<span>Network</span></p>
         </div>
-        <h2 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Create your <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">NexaLink</span> Account
-        </h2>
-        <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-400">
-          Start organizing your high-signal professional relationships
-        </p>
-      </div>
+        <h1 id="register-title">Create an <span>account</span></h1>
+        <p className="login-description">Build meaningful connections. Grow together.</p>
+      </header>
 
-      <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md px-1 sm:px-0">
-        <div className="bg-white text-slate-900 py-6 sm:py-8 px-4 sm:px-10 shadow-2xl rounded-2xl sm:rounded-3xl border border-slate-100/10 backdrop-blur-md">
-          <div className="mb-4">
-            <GoogleOAuthButton
-              buttonText="Sign up with Google"
-              onSuccess={(isComplete) => {
-                if (isComplete) navigate('/feed');
-                else navigate('/profile');
-              }}
-              onError={(err) => setError(err)}
-            />
-          </div>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-400 font-semibold tracking-wider">Or register with email</span>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-4 w-4 text-slate-400" />
-                </div>
-                <input
-                  type="text"
-                  required
-                  placeholder="Your Full Name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full text-xs pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Email address</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-slate-400" />
-                </div>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full text-xs pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-slate-400" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="At least 6 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full text-xs pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-md shadow-brand-600/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <span>{loading ? 'Creating Account...' : 'Get Started'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
-
-          <div className="mt-6 text-center text-xs text-slate-500">
-            Already have an account?{' '}
-            <Link to="/login" className="font-bold text-brand-600 hover:text-brand-700">
-              Sign in
-            </Link>
-          </div>
+      <section className="login-card register-card" aria-labelledby="register-title">
+        <div className="login-google">
+          <GoogleOAuthButton
+            buttonText="Sign up with Google"
+            buttonClassName="login-google-button"
+            onSuccess={(isComplete) => navigate(isComplete ? '/feed' : '/profile')}
+            onError={setError}
+          />
         </div>
-      </div>
-    </div>
+        <div className="login-rule login-divider">Or register with email</div>
+        {error && <p className="login-error" role="alert">{error}</p>}
+
+        <form onSubmit={handleRegister} className="login-form">
+          <div>
+            <label htmlFor="register-name">Full name</label>
+            <div className="login-field">
+              <User aria-hidden="true" />
+              <input
+                id="register-name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                placeholder="Your full name"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="register-email">Email address</label>
+            <div className="login-field">
+              <Mail aria-hidden="true" />
+              <input
+                id="register-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="you@company.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="register-password">Password</label>
+            <div className="login-field">
+              <Lock aria-hidden="true" />
+              <input
+                id="register-password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={6}
+                placeholder="At least 6 characters"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </div>
+          </div>
+          <button type="submit" disabled={loading} className="login-submit">
+            {loading ? 'Creating account…' : 'Create an account'} <ArrowRight aria-hidden="true" />
+          </button>
+        </form>
+
+        <div className="login-membership">
+          <span>Already have an account?</span> <Link to="/login">Sign in</Link>
+        </div>
+      </section>
+    </main>
   );
 };

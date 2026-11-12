@@ -292,3 +292,32 @@
   .login-card { margin-top: 0; }
   .login-options label, .login-options button { min-height: 2.75rem; }
 }
+
+.register-page {
+  justify-items: center;
+  padding-bottom: clamp(1.5rem, 4vw, 4rem);
+}
+
+.register-intro { text-align: center; }
+
+.register-brand {
+  justify-content: center;
+  align-items: center;
+}
+
+.register-brand img { width: clamp(2.5rem, 3.4vw, 3.5rem); }
+.register-brand p { font-size: clamp(1.35rem, 2vw, 2.1rem); }
+
+.register-intro h1 {
+  margin-top: clamp(1.1rem, 2vw, 2rem);
+  font-size: clamp(2.25rem, 4.15vw, 4rem);
+}
+
+.register-intro .login-description { font-size: clamp(1rem, 1.5vw, 1.4rem); }
+
+.register-card {
+  width: min(100%, 36rem);
+  margin-top: clamp(1.35rem, 2.25vw, 2.35rem);
+}
+
+.register-card .login-field input { padding-left: clamp(2.45rem, 3.5vw, 3.8rem); }
