@@ -34,7 +34,6 @@ export const AppLayout: React.FC = () => {
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickAddTab, setQuickAddTab] = useState<'contact' | 'interaction' | 'meeting' | 'task' | 'goal' | 'note'>('goal');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const mobileSidebarRef = useRef<HTMLDialogElement>(null);
   const { user, profile, persona, isProfileComplete, isLoading } = useAuth();
@@ -84,8 +83,8 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] w-full min-w-0 overflow-hidden">
-      <div id="desktop-sidebar" hidden={!isDesktopSidebarOpen} className={isDesktopSidebarOpen ? 'hidden w-64 shrink-0 lg:block' : 'hidden'}>
-        {isDesktopSidebarOpen && <Sidebar onOpenQuickAdd={openSidebarQuickAdd} />}
+      <div className="hidden w-64 shrink-0 lg:block">
+        <Sidebar onOpenQuickAdd={openSidebarQuickAdd} />
       </div>
 
       <dialog
@@ -136,8 +135,6 @@ export const AppLayout: React.FC = () => {
         <Navbar
           title={pageMeta.title}
           subtitle={pageMeta.subtitle}
-          isDesktopSidebarOpen={isDesktopSidebarOpen}
-          onToggleDesktopSidebar={() => setIsDesktopSidebarOpen((open) => !open)}
           isMobileSidebarOpen={isMobileSidebarOpen}
           onOpenMobileSidebar={() => {
             mobileSidebarRef.current?.showModal();
