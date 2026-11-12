@@ -8,7 +8,7 @@ interface AuthContextType {
   persona: UserPersona | null;
   isLoading: boolean;
   isProfileComplete: boolean;
-  login: (email: string, password: string) => Promise<{ isComplete: boolean }>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ isComplete: boolean }>;
   register: (email: string, password: string, displayName: string) => Promise<{ isComplete: boolean }>;
   demoLogin: () => Promise<{ isComplete: boolean }>;
   googleLogin: (googleData: { token?: string; credential?: string; access_token?: string; googleUser?: any }) => Promise<{ isComplete: boolean }>;
@@ -94,9 +94,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchCurrentUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const data = await api.post<{ user: User; token: string }>('/auth/login', { email, password });
-    localStorage.setItem('token', data.token);
+  const login = async (email: string, password: string, rememberMe = true) => {
+    const data = await api.post<{ user: User; token: string }>('/auth/login', { email, password, rememberMe });
+    if (rememberMe) {
+      localStorage.setItem('token', data.token);
+    } else {
+      localStorage.removeItem('token');
+    }
     return await fetchCurrentUser();
   };
 

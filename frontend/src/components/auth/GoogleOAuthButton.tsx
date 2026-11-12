@@ -6,6 +6,7 @@ interface GoogleOAuthButtonProps {
   onSuccess?: (isComplete: boolean) => void;
   onError?: (error: string) => void;
   buttonText?: string;
+  buttonClassName?: string;
 }
 
 declare global {
@@ -18,11 +19,13 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
   onSuccess,
   onError,
   buttonText = 'Sign in with Google',
+  buttonClassName = '',
 }) => {
   const { googleLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showConfigHelp, setShowConfigHelp] = useState(false);
+  const [hasGoogleButton, setHasGoogleButton] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
   // Environment Google Client ID or default Google App Client ID
@@ -32,46 +35,66 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
     '';
 
   useEffect(() => {
-    // 1. Load Google Identity Services SDK
-    const loadGsiScript = () => {
-      if (document.getElementById('google-gsi-client')) {
-        initGoogleGsi();
-        return;
-      }
-      const script = document.createElement('script');
-      script.id = 'google-gsi-client';
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        initGoogleGsi();
-      };
-      document.body.appendChild(script);
-    };
+    if (!clientId) return;
+    const container = googleBtnRef.current;
+    if (!container) return;
 
+    let observer: ResizeObserver | undefined;
     const initGoogleGsi = () => {
-      if (window.google?.accounts?.id && clientId && googleBtnRef.current) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: clientId,
-            callback: handleCredentialResponse,
-            auto_select: false,
-          });
+      const googleId = window.google?.accounts?.id;
+      if (!googleId) return;
 
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: 'outline',
-            size: 'large',
-            width: '100%',
-            text: 'continue_with',
-            shape: 'pill',
-          });
-        } catch (err) {
-          console.warn('Failed to render official Google button:', err);
-        }
+      try {
+        googleId.initialize({
+          client_id: clientId,
+          callback: handleCredentialResponse,
+          auto_select: false,
+        });
+
+        let previousWidth = 0;
+        observer = new ResizeObserver(() => {
+          const width = Math.min(container.clientWidth, 400);
+          if (width === 0 || width === previousWidth) return;
+          try {
+            container.replaceChildren();
+            googleId.renderButton(container, {
+              theme: 'outline',
+              size: 'large',
+              width,
+              text: 'continue_with',
+              shape: 'pill',
+            });
+            previousWidth = width;
+            setHasGoogleButton(true);
+          } catch (err) {
+            setHasGoogleButton(false);
+            console.warn('Failed to render official Google button:', err);
+          }
+        });
+        observer.observe(container);
+      } catch (err) {
+        console.warn('Failed to initialize Google sign-in:', err);
       }
     };
 
-    loadGsiScript();
+    let script = document.getElementById('google-gsi-client');
+    if (!script) {
+      const googleScript = document.createElement('script');
+      googleScript.id = 'google-gsi-client';
+      googleScript.src = 'https://accounts.google.com/gsi/client';
+      googleScript.async = true;
+      document.body.appendChild(googleScript);
+      script = googleScript;
+    }
+
+    if (window.google?.accounts?.id) initGoogleGsi();
+    else script.addEventListener('load', initGoogleGsi, { once: true });
+
+    return () => {
+      script.removeEventListener('load', initGoogleGsi);
+      observer?.disconnect();
+      container.replaceChildren();
+    };
   }, [clientId]);
 
   const handleCredentialResponse = async (response: any) => {
@@ -144,15 +167,15 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
   return (
     <div className="w-full space-y-2">
       {/* Container where official Google GIS Button is rendered if Client ID exists */}
-      {clientId && <div ref={googleBtnRef} className="w-full min-h-[40px] flex justify-center" />}
+      {clientId && <div ref={googleBtnRef} className="w-full flex justify-center" />}
 
       {/* Fallback Custom Google Styled Button */}
-      {(!clientId || !window.google?.accounts?.id) && (
+      {!hasGoogleButton && (
         <button
           type="button"
           onClick={handleCustomButtonClick}
           disabled={loading}
-          className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-2xl border border-slate-300 shadow-xs transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+          className={`w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-2xl border border-slate-300 shadow-xs transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] disabled:opacity-60 cursor-pointer ${buttonClassName}`}
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin text-slate-500" />

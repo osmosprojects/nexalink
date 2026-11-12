@@ -2,13 +2,22 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { GoogleOAuthButton } from '../components/auth/GoogleOAuthButton';
-import { Sparkles, ArrowRight, Lock, Mail, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowRight, Lock, Mail, ShieldCheck } from 'lucide-react';
+import mark from '../assets/login/mark.webp';
+import portraitTop from '../assets/login/portrait-top.webp';
+import portraitLeft from '../assets/login/portrait-left.webp';
+import portraitRight from '../assets/login/portrait-right.webp';
+import portraitBottom from '../assets/login/portrait-bottom.webp';
+import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [showRecoveryHelp, setShowRecoveryHelp] = useState(false);
 
   const { login, demoLogin } = useAuth();
   const navigate = useNavigate();
@@ -18,7 +27,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await login(email, password);
+      const res = await login(email, password, rememberMe);
       if (res.isComplete) {
         navigate('/feed');
       } else {
@@ -49,133 +58,101 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-850 to-brand-950 flex flex-col justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 text-slate-100 w-full max-w-full overflow-x-hidden">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center px-2">
-        {/* Logo Badge */}
-        <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-purple-600 text-white font-black text-xl sm:text-2xl shadow-xl shadow-brand-500/30 mb-3 sm:mb-4 animate-bounce-short">
-          N
-        </div>
-        <h2 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
-          NexaLink <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">CRM</span>
-        </h2>
-        <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-400">
-          Build Meaningful Connections. Track Relationships. Achieve Your Goals.
-        </p>
-      </div>
-
-      <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md px-1 sm:px-0">
-        <div className="bg-white text-slate-900 py-6 sm:py-8 px-4 sm:px-10 shadow-2xl rounded-2xl sm:rounded-3xl border border-slate-100/10 backdrop-blur-md">
-          {/* Quick Demo Access Callout */}
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-brand-50 to-purple-50 border border-brand-200/60 flex items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-brand-800">
-                <Zap className="w-4 h-4 text-brand-600 fill-brand-600" />
-                <span>Instant Demo Access</span>
-              </div>
-              <p className="text-[11px] text-slate-600">Explore pre-seeded contacts, goals, AI assistant & analytics</p>
+    <main className="login-page">
+      <div className="login-layout">
+        <section className="login-intro" aria-labelledby="login-title">
+          <header className="login-brand">
+            <img src={mark} alt="" />
+            <div>
+              <p>Sans<span>Network</span></p>
+              <small>Build Meaningful Connections. Grow Together.</small>
             </div>
-            <button
-              onClick={handleDemo}
-              disabled={loading}
-              className="px-3.5 py-2 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all whitespace-nowrap active:scale-95 disabled:opacity-50"
-            >
-              1-Click Demo
-            </button>
-          </div>
+          </header>
+          <h1 id="login-title">Welcome <span>Back!</span></h1>
+          <p className="login-description">Sign in to continue your<br className="login-desktop-break" /> networking journey.</p>
 
-          <div className="mb-4">
+          <div className="login-network" aria-hidden="true">
+            <div className="login-orbit login-orbit-outer"><i /><i /><i /><i /></div>
+            <div className="login-orbit login-orbit-inner"><i /><i /><i /><i /></div>
+            <img className="login-network-mark" src={mark} alt="" />
+            <img className="login-portrait login-portrait-top" src={portraitTop} alt="" />
+            <img className="login-portrait login-portrait-left" src={portraitLeft} alt="" />
+            <img className="login-portrait login-portrait-right" src={portraitRight} alt="" />
+            <img className="login-portrait login-portrait-bottom" src={portraitBottom} alt="" />
+          </div>
+        </section>
+
+        <section className="login-card" aria-label="Sign in">
+          <div className="login-rule login-card-mark" aria-hidden="true"><img src={mark} alt="" /></div>
+          <div className="login-google">
             <GoogleOAuthButton
               buttonText="Continue with Google"
-              onSuccess={(isComplete) => {
-                if (isComplete) navigate('/feed');
-                else navigate('/profile');
-              }}
-              onError={(err) => setError(err)}
+              buttonClassName="login-google-button"
+              onSuccess={(isComplete) => navigate(isComplete ? '/feed' : '/profile')}
+              onError={setError}
             />
           </div>
+          <div className="login-rule login-divider">Or sign in with email</div>
+          {error && <p className="login-error" role="alert">{error}</p>}
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-400 font-semibold tracking-wider">Or sign in with email</span>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="login-form">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Email address</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-slate-400" />
-                </div>
+              <label htmlFor="login-email">Email address</label>
+              <div className="login-field">
+                <Mail aria-hidden="true" />
                 <input
+                  id="login-email"
+                  name="email"
                   type="email"
+                  autoComplete="username"
                   required
-                  placeholder="name@example.com"
+                  placeholder="you@company.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full text-xs pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                  onChange={(event) => setEmail(event.target.value)}
                 />
               </div>
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-slate-400" />
-                </div>
+              <label htmlFor="login-password">Password</label>
+              <div className="login-field">
+                <Lock aria-hidden="true" />
                 <input
+                  id="login-password"
+                  name="password"
                   type="password"
+                  autoComplete="current-password"
                   required
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full text-xs pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-hidden"
+                  onChange={(event) => setPassword(event.target.value)}
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-1.5 text-slate-600 cursor-pointer">
-                <input type="checkbox" defaultChecked className="rounded text-brand-600 focus:ring-brand-500" />
-                <span>Remember me</span>
-              </label>
-              <a href="#" className="font-semibold text-brand-600 hover:text-brand-700">Forgot password?</a>
+            <div className="login-options">
+              <label><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} /> Remember me</label>
+              <button type="button" aria-expanded={showRecoveryHelp} onClick={() => setShowRecoveryHelp(!showRecoveryHelp)}>
+                Forgot password?
+              </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
-              <ArrowRight className="w-4 h-4" />
+            {showRecoveryHelp && (
+              <p className="login-recovery">Password reset is currently unavailable. Contact your account administrator for help.</p>
+            )}
+            <button type="submit" disabled={loading} className="login-submit">
+              {loading ? 'Authenticating…' : 'Sign In'} <ArrowRight aria-hidden="true" />
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-500">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700">
-              Create an account
-            </Link>
+          <div className="login-membership">
+            <span>New to SansNetwork?</span> <Link to="/register">Apply for membership</Link>
           </div>
-        </div>
-
-        {/* Security badges */}
-        <div className="mt-6 flex items-center justify-center gap-6 text-[11px] text-slate-400">
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-400" /> MySQL Prepared SQL</span>
-          <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-brand-400" /> AI-Assisted, User-Controlled</span>
-        </div>
+        </section>
       </div>
-    </div>
+
+      <footer className="login-footer">
+        <p className="login-rule"><ShieldCheck aria-hidden="true" /> A community for meaningful B2B relationships.</p>
+        <button type="button" onClick={handleDemo} disabled={loading}>Try the demo</button>
+      </footer>
+    </main>
   );
 };

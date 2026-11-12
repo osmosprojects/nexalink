@@ -71,7 +71,7 @@ export class AuthController {
 
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
+      const { email, password, rememberMe } = req.body;
       if (!email || !password) {
         return sendError(res, 'Email and password are required', 400);
       }
@@ -96,7 +96,7 @@ export class AuthController {
         httpOnly: true,
         secure: config.nodeEnv === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: rememberMe === false ? undefined : 7 * 24 * 60 * 60 * 1000,
       });
 
       await logAudit(req, 'USER_LOGIN', 'user', user.user_id);
