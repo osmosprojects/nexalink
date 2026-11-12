@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --sans-ink: #0a1430;
+    --sans-blue: #0066ef;
+    --sans-navy: #071574;
+    --sans-accent: #0643cb;
+    --sans-surface: #f8fafe;
+    --sans-border: #c8d5e7;
+    --sans-action: linear-gradient(112deg, var(--sans-blue), var(--sans-navy) 85%);
+  }
+
   *, *::before, *::after {
     box-sizing: border-box;
   }

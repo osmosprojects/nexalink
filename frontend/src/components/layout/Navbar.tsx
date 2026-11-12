@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, Menu, PanelLeftClose, PanelLeftOpen, UserPlus, Target } from 'lucide-react';
+import { Search, Bell, Menu, UserPlus, Target } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 
@@ -34,10 +34,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, profile, isProfileComplete } = useAuth();
   const navigate = useNavigate();
   const sidebarLabel = isDesktopSidebarOpen ? 'Close sidebar' : 'Open sidebar';
-  const SidebarIcon = isDesktopSidebarOpen ? PanelLeftClose : PanelLeftOpen;
+  const sidebarButtonClass = 'size-11 shrink-0 place-items-center rounded-xl bg-[image:var(--sans-action)] text-white shadow-md transition-[filter] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sans-accent)]';
 
   return (
-    <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-8 py-3 flex items-center justify-between transition-all w-full max-w-full">
+    <header className="sticky top-0 z-20 bg-[var(--sans-surface)] border-b border-[var(--sans-border)] px-3 sm:px-8 py-3 flex items-center justify-between transition-all w-full max-w-full">
       <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
         <button
           type="button"
@@ -46,9 +46,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           aria-expanded={isDesktopSidebarOpen}
           aria-label={sidebarLabel}
           title={sidebarLabel}
-          className="hidden size-9 shrink-0 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 lg:grid"
+          className={`hidden lg:grid ${sidebarButtonClass}`}
         >
-          <SidebarIcon className="size-5" aria-hidden="true" />
+          <Menu className="size-6" strokeWidth={2.5} aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -57,12 +57,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           aria-expanded={isMobileSidebarOpen}
           aria-haspopup="dialog"
           aria-label="Open sidebar"
-          className="grid size-9 shrink-0 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 lg:hidden"
+          title="Open sidebar"
+          className={`grid lg:hidden ${sidebarButtonClass}`}
         >
-          <Menu className="size-5" aria-hidden="true" />
+          <Menu className="size-6" strokeWidth={2.5} aria-hidden="true" />
         </button>
         <div className="min-w-0">
-          <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-slate-900 tracking-tight leading-tight truncate">
+          <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-[var(--sans-ink)] tracking-tight leading-tight truncate">
             {title}
           </h1>
           {subtitle && (

@@ -276,15 +276,15 @@
 .register-card .login-field input { padding-left: clamp(2.45rem, 3.5vw, 3.8rem); }
 
 .welcome-login {
-  --login-ink: #0a1430;
+  --login-ink: var(--sans-ink);
   --login-muted: #34496d;
-  --login-line: #c8d5e7;
-  --login-accent: #0643cb;
+  --login-line: var(--sans-border);
+  --login-accent: var(--sans-accent);
   min-height: 100svh;
   padding: clamp(1.5rem, 2.8vw, 3.25rem) clamp(1.25rem, 2.75vw, 3rem) clamp(1.5rem, 4vw, 4rem) clamp(1.25rem, 4.75vw, 5rem);
   background:
     radial-gradient(ellipse at 88% 50%, #cfe2f9, transparent 65%),
-    linear-gradient(143deg, #f8fafe 23%, #e4effd 25%, #edf4ff 31%, #f7fbff 48%, #dceafb);
+    linear-gradient(143deg, var(--sans-surface) 23%, #e4effd 25%, #edf4ff 31%, #f7fbff 48%, #dceafb);
 }
 
 .welcome-login::before, .welcome-login::after { display: none; }
@@ -417,10 +417,10 @@
 .welcome-login .login-submit {
   min-height: clamp(2.9rem, 3.35vw, 3.65rem);
   border-radius: 100vw;
-  background: linear-gradient(112deg, #0066ef, #071574 85%);
+  background: var(--sans-action);
 }
 .welcome-login .login-membership { font-size: clamp(.8rem, 1vw, 1.1rem); }
-.welcome-login :focus-visible { outline-color: #0643cb; }
+.welcome-login :focus-visible { outline-color: var(--sans-accent); }
 
 @media (min-width: 901px) and (max-height: 850px) {
   .welcome-login { padding-block: 1.25rem 2rem; }
