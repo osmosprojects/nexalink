@@ -6,7 +6,6 @@ import {
   Sparkles,
   MessageSquareShare,
   Calendar,
-  CheckSquare,
   FileText,
   Clock,
   Mail,
@@ -35,7 +34,7 @@ export const ContactDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'interactions' | 'meetings' | 'tasks' | 'notes'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'interactions' | 'engagement' | 'notes'>('overview');
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickAddTab, setQuickAddTab] = useState<'meeting' | 'task' | 'note'>('meeting');
 
@@ -158,6 +157,28 @@ export const ContactDetailPage: React.FC = () => {
 
   const { contact, interactions, meetings, tasks, notes } = data;
   const badge = getRelationshipTypeBadge(contact.relationship_type);
+  const engagements = [
+    ...meetings.map((meeting) => ({
+      key: `meeting-${meeting.meeting_id}`,
+      kind: 'Meeting',
+      title: meeting.title,
+      date: meeting.start_at,
+      label: meeting.meeting_type,
+      agenda: meeting.agenda,
+    })),
+    ...tasks.map((task) => ({
+      key: `task-${task.task_id}`,
+      kind: 'Task',
+      title: task.title,
+      date: task.due_date,
+      label: task.priority,
+      agenda: null,
+    })),
+  ].sort((a, b) => {
+    const timeA = a.date ? Date.parse(a.date) : Infinity;
+    const timeB = b.date ? Date.parse(b.date) : Infinity;
+    return timeA - timeB;
+  });
 
   return (
     <div className="space-y-6">
@@ -350,20 +371,18 @@ export const ContactDetailPage: React.FC = () => {
 
       {/* Interactive Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-slate-200/80 pb-2">
-        {[
+        {([
           { id: 'overview', label: 'Overview', icon: FileText, count: undefined },
-          { id: 'timeline', label: 'Timeline', icon: Clock, count: interactions.length },
           { id: 'interactions', label: 'Interactions', icon: MessageSquareShare, count: interactions.length },
-          { id: 'meetings', label: 'Meetings', icon: Calendar, count: meetings.length },
-          { id: 'tasks', label: 'Tasks', icon: CheckSquare, count: tasks.length },
+          { id: 'engagement', label: 'Upcoming Engagement', icon: Calendar, count: meetings.length + tasks.length },
           { id: 'notes', label: 'Notes', icon: FileText, count: notes.length },
-        ].map((tab) => {
+        ] as const).map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 active
                   ? 'bg-slate-900 text-white shadow-sm'
@@ -618,10 +637,10 @@ export const ContactDetailPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recent Interactions</h4>
                   <button
-                    onClick={() => setActiveTab('timeline')}
+                    onClick={() => setActiveTab('interactions')}
                     className="text-xs font-bold text-brand-600 hover:underline"
                   >
-                    View full timeline →
+                    View all interactions →
                   </button>
                 </div>
 
@@ -690,20 +709,19 @@ export const ContactDetailPage: React.FC = () => {
         );
       })()}
 
-      {/* 2. TIMELINE TAB (Guide Section 18) */}
-      {activeTab === 'timeline' && (
+      {activeTab === 'interactions' && (
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-card space-y-6">
-          <h4 className="text-sm font-bold text-slate-900">Interaction History & Chronology</h4>
+          <h4 className="text-sm font-bold text-slate-900">Interactions</h4>
 
           {interactions.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-8">No timeline entries yet.</p>
+            <p className="text-xs text-slate-400 text-center py-8">No interactions recorded yet.</p>
           ) : (
             <div className="relative pl-6 border-l-2 border-brand-200 space-y-6">
               {interactions.map((inter) => (
                 <div key={inter.interaction_id} className="relative space-y-2 group">
                   {/* Dot */}
                   <div className="absolute -left-[31px] top-1 w-3.5 h-3.5 rounded-full bg-brand-600 ring-4 ring-brand-100" />
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-bold text-slate-900">{inter.title}</span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800 uppercase">
                       {inter.interaction_type}
@@ -727,85 +745,59 @@ export const ContactDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* 3. INTERACTIONS TAB */}
-      {activeTab === 'interactions' && (
+      {activeTab === 'engagement' && (
         <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
-          <h4 className="text-sm font-bold text-slate-900">Logged Interactions</h4>
-          <div className="space-y-3">
-            {interactions.map((i) => (
-              <div key={i.interaction_id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900">{i.title}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-brand-100 text-brand-800 uppercase">{i.interaction_type}</span>
-                </div>
-                <p className="text-xs text-slate-600">{i.summary}</p>
-                {i.outcome && <p className="text-xs font-semibold text-purple-700">Outcome: {i.outcome}</p>}
-              </div>
-            ))}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h4 className="text-sm font-bold text-slate-900">Upcoming Engagement</h4>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickAddTab('meeting');
+                  setIsQuickAddOpen(true);
+                }}
+                className="px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold"
+              >
+                + Schedule Meeting
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickAddTab('task');
+                  setIsQuickAddOpen(true);
+                }}
+                className="px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold"
+              >
+                + Add Task
+              </button>
+            </div>
           </div>
+
+          {engagements.length === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-8">No meetings or tasks linked to this contact yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {engagements.map((item) => (
+                <div key={item.key} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-900">{item.title}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                      item.kind === 'Meeting' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-700'
+                    }`}>
+                      {item.kind} · {item.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {item.date ? formatDate(item.date, item.kind === 'Meeting' ? 'long' : 'short') : 'No due date'}
+                  </p>
+                  {item.agenda && <p className="text-xs text-slate-600 whitespace-pre-wrap">{item.agenda}</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* 4. MEETINGS TAB */}
-      {activeTab === 'meetings' && (
-        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-slate-900">Scheduled Meetings</h4>
-            <button
-              onClick={() => {
-                setQuickAddTab('meeting');
-                setIsQuickAddOpen(true);
-              }}
-              className="px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold"
-            >
-              + Schedule Meeting
-            </button>
-          </div>
-          <div className="space-y-3">
-            {meetings.map((m) => (
-              <div key={m.meeting_id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900">{m.title}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 uppercase">{m.meeting_type}</span>
-                </div>
-                <p className="text-xs text-slate-500">{formatDate(m.start_at, 'long')}</p>
-                {m.agenda && <p className="text-xs text-slate-600 whitespace-pre-wrap mt-1">{m.agenda}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 5. TASKS TAB */}
-      {activeTab === 'tasks' && (
-        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-slate-900">Linked Tasks & Follow-ups</h4>
-            <button
-              onClick={() => {
-                setQuickAddTab('task');
-                setIsQuickAddOpen(true);
-              }}
-              className="px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold"
-            >
-              + Add Task
-            </button>
-          </div>
-          <div className="space-y-2">
-            {tasks.map((t) => (
-              <div key={t.task_id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200/60 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-slate-800">{t.title}</p>
-                  <p className="text-[11px] text-slate-500">Due: {formatDate(t.due_date, 'short')}</p>
-                </div>
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">{t.priority}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 6. NOTES TAB */}
       {activeTab === 'notes' && (
         <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
           <div className="flex items-center justify-between">
