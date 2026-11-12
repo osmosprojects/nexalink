@@ -35,10 +35,7 @@ export const NETWORKING_INTENT_ACTIONS = {
     intentBadgeIcon: '🤝',
     intentLabel: 'wants to meet',
     badgeStyle: 'bg-blue-800 text-white font-bold border border-blue-900',
-    responseAction: '✨ Can Connect',
-    responseActionIcon: '✨',
     responseType: 'CAN_CONNECT',
-    respondedText: '✓ Can Connect',
     responseBtnStyle: 'bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-xs',
     respondedBtnStyle: 'bg-emerald-800 text-white font-bold border border-emerald-950',
     ownerSummaryText: (count: number) =>
@@ -52,10 +49,7 @@ export const NETWORKING_INTENT_ACTIONS = {
     intentBadgeIcon: '🌟',
     intentLabel: 'can connect you to',
     badgeStyle: 'bg-emerald-700 text-white font-bold border border-emerald-800',
-    responseAction: '🤝 Wants to Meet',
-    responseActionIcon: '🤝',
     responseType: 'WANTS_TO_MEET',
-    respondedText: '✓ Wants to Meet',
     responseBtnStyle: 'bg-blue-800 hover:bg-blue-900 text-white font-bold shadow-xs',
     respondedBtnStyle: 'bg-blue-900 text-white font-bold border border-blue-950',
     ownerSummaryText: (count: number, target: string) =>
@@ -438,6 +432,19 @@ export const FeedPage: React.FC = () => {
                 (user?.displayName && r.authorName.toLowerCase() === user.displayName.toLowerCase())
             );
 
+            const requestButton = !isOwnPost && (
+              <button
+                type="button"
+                disabled={userHasResponded}
+                onClick={() => handleRespondToPost(post.post_id, targetPersonInPost, intentConfig.responseType)}
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs whitespace-nowrap transition-colors ${
+                  userHasResponded ? intentConfig.respondedBtnStyle : intentConfig.responseBtnStyle
+                }`}
+              >
+                {userHasResponded ? '✓ Request sent' : 'Request to'}
+              </button>
+            );
+
             const reactions = postReactions[post.post_id] || {
               counts: {},
               total: post.likes_count || 0,
@@ -470,8 +477,11 @@ export const FeedPage: React.FC = () => {
                       <span>{intentConfig.intentLabel}</span>
                     </div>
 
-                    <div className="text-xs font-semibold text-slate-800 leading-relaxed pl-0.5 whitespace-pre-wrap">
-                      {details}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="min-w-0 text-xs font-semibold text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
+                        {details}
+                      </span>
+                      {requestButton}
                     </div>
                   </div>
                 </div>
@@ -500,9 +510,10 @@ export const FeedPage: React.FC = () => {
                         <span>{intentConfig.intentLabel}</span>
                       </span>
 
-                      <span className="font-semibold text-slate-700 text-xs">
+                      <span className="min-w-0 break-words font-semibold text-slate-700 text-xs">
                         {details}
                       </span>
+                      {requestButton}
                     </div>
                   </div>
 
@@ -560,8 +571,8 @@ export const FeedPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* 4. NETWORKING CARD ACTIONS (OWNER VIEW vs VIEWER VIEW) */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                {/* Responses */}
+                {(isOwnPost || replies.length > 0) && <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                   {isOwnPost ? (
                     /* POST OWNER VIEW: Shows responders summary & View responses button */
                     <div className="flex items-center justify-between w-full">
@@ -604,7 +615,7 @@ export const FeedPage: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    /* OTHER VIEWER VIEW: Shows reactor avatars on left + intent-driven response action CTA on right */
+                    /* Responses from other members */
                     <div className="flex items-center justify-between w-full">
                       <div
                         onClick={() => {
@@ -643,30 +654,9 @@ export const FeedPage: React.FC = () => {
                           </span>
                         )}
                       </div>
-
-                      {userHasResponded ? (
-                        <button
-                          type="button"
-                          disabled
-                          className={`px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 cursor-default opacity-90 ${intentConfig.respondedBtnStyle}`}
-                        >
-                          <span>{intentConfig.respondedText}</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleRespondToPost(post.post_id, targetPersonInPost, intentConfig.responseType)
-                          }
-                          className={`px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 ${intentConfig.responseBtnStyle}`}
-                        >
-                          <span>{intentConfig.responseActionIcon}</span>
-                          <span>{intentConfig.responseAction}</span>
-                        </button>
-                      )}
                     </div>
                   )}
-                </div>
+                </div>}
               </div>
             );
           })}
