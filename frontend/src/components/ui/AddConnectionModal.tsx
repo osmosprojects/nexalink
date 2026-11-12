@@ -117,6 +117,8 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
 
   const modalRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const networkInputRef = useRef<HTMLInputElement>(null);
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -481,11 +483,36 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
     }
   };
 
+  const handleFieldEnter = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter' || event.defaultPrevented || event.nativeEvent.isComposing ||
+        event.shiftKey || event.altKey || event.ctrlKey || event.metaKey ||
+        isSaving || showDiscardConfirm || possibleDuplicate) return;
+
+    const field = event.target;
+    if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) return;
+
+    event.preventDefault();
+    if (event.repeat) return;
+
+    if (field === networkInputRef.current && networkInput.trim()) {
+      addNetworkTag(networkInput);
+    }
+
+    const fields = Array.from(
+      event.currentTarget.querySelectorAll<HTMLElement>('input:not([type="hidden"]), select, textarea')
+    );
+    const nextField = fields.slice(fields.indexOf(field) + 1).find((candidate) =>
+      !candidate.matches(':disabled') && candidate.tabIndex >= 0 && candidate.getClientRects().length > 0
+    );
+    (nextField ?? saveButtonRef.current)?.focus();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4 md:p-6 animate-fadeIn">
       {/* Main Modal Container */}
       <div
         ref={modalRef}
+        onKeyDown={handleFieldEnter}
         className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-5xl max-h-[90vh] sm:max-h-[92vh] flex flex-col overflow-hidden animate-scaleUp text-slate-900"
       >
         {/* HEADER */}
@@ -840,17 +867,11 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                   {/* Text Input + Add Button */}
                   <div className="flex items-center gap-2">
                     <input
+                      enterKeyHint="next"
                       type="text"
                       value={networkInput}
                       onChange={(e) => setNetworkInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          if (networkInput.trim()) {
-                            addNetworkTag(networkInput);
-                          }
-                        }
-                      }}
+                      ref={networkInputRef}
                       placeholder="Type network name (e.g. TiE Mumbai, IIT Alumni)..."
                       className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                     />
@@ -922,6 +943,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     Full Name <span className="text-rose-500">*</span>
                   </label>
                   <input
+                    enterKeyHint="next"
                     ref={nameInputRef}
                     type="text"
                     value={fullName}
@@ -929,7 +951,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                       setFullName(e.target.value);
                       if (errors.fullName) setErrors({ ...errors, fullName: undefined });
                     }}
-                    placeholder="e.g. Priya Sharma"
+                    placeholder="e.g. Sofia Martinez"
                     aria-invalid={!!errors.fullName}
                     className={`w-full px-3 py-2 bg-slate-50 border text-xs text-slate-900 rounded-xl outline-none transition-all ${
                       errors.fullName
@@ -950,6 +972,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     Phone Number
                   </label>
                   <input
+                    enterKeyHint="next"
                     type="text"
                     value={phone}
                     onChange={(e) => {
@@ -977,13 +1000,14 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     Email Address
                   </label>
                   <input
+                    enterKeyHint="next"
                     type="email"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
                       if (errors.email) setErrors({ ...errors, email: undefined });
                     }}
-                    placeholder="e.g. priya@company.com"
+                    placeholder="e.g. sofia@company.com"
                     aria-invalid={!!errors.email}
                     className={`w-full px-3 py-2 bg-slate-50 border text-xs text-slate-900 rounded-xl outline-none transition-all ${
                       errors.email
@@ -1007,6 +1031,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     Company / Organisation
                   </label>
                   <input
+                    enterKeyHint="next"
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
@@ -1020,6 +1045,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     Role / Job Title
                   </label>
                   <input
+                    enterKeyHint="next"
                     type="text"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
@@ -1033,6 +1059,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     What they do / Core Business Focus
                   </label>
                   <input
+                    enterKeyHint="next"
                     type="text"
                     value={businessFocus}
                     onChange={(e) => setBusinessFocus(e.target.value)}
@@ -1048,6 +1075,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                   Where did you meet them?
                 </label>
                 <input
+                  enterKeyHint="next"
                   type="text"
                   value={whereMet}
                   onChange={(e) => setWhereMet(e.target.value)}
@@ -1103,13 +1131,15 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                       className="grid grid-cols-1 md:grid-cols-12 gap-2 p-2.5 md:p-1.5 bg-slate-50 md:bg-white rounded-xl border border-slate-200/80 items-center animate-fadeIn"
                     >
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={row.name}
                         onChange={(e) => updateConnectableRow(row.id, 'name', e.target.value)}
-                        placeholder="e.g. Rahul Mehta"
+                        placeholder="e.g. Oliver Bennett"
                         className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-blue-500"
                       />
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={row.company}
                         onChange={(e) => updateConnectableRow(row.id, 'company', e.target.value)}
@@ -1117,6 +1147,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                         className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-blue-500"
                       />
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={row.domain}
                         onChange={(e) => updateConnectableRow(row.id, 'domain', e.target.value)}
@@ -1124,6 +1155,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                         className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-blue-500"
                       />
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={row.role}
                         onChange={(e) => updateConnectableRow(row.id, 'role', e.target.value)}
@@ -1192,13 +1224,15 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                       className="grid grid-cols-1 md:grid-cols-12 gap-2 p-2.5 md:p-1.5 bg-slate-50 md:bg-white rounded-xl border border-slate-200/80 items-center animate-fadeIn"
                     >
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={row.name}
                         onChange={(e) => updateWantToMeetRow(row.id, 'name', e.target.value)}
-                        placeholder="e.g. Sanjeev, AI Founders"
+                        placeholder="e.g. Maya Laurent, AI Founders"
                         className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-amber-500"
                       />
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={row.company}
                         onChange={(e) => updateWantToMeetRow(row.id, 'company', e.target.value)}
@@ -1206,6 +1240,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                         className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-amber-500"
                       />
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={row.domain}
                         onChange={(e) => updateWantToMeetRow(row.id, 'domain', e.target.value)}
@@ -1213,6 +1248,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                         className="col-span-1 md:col-span-3 px-2.5 py-1.5 bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg outline-none focus:bg-white focus:border-amber-500"
                       />
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={row.role}
                         onChange={(e) => updateWantToMeetRow(row.id, 'role', e.target.value)}
@@ -1265,6 +1301,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                   {personalDetails.map((detail) => (
                     <div key={detail.id} className="flex items-center gap-2 animate-fadeIn">
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={detail.value}
                         onChange={(e) =>
@@ -1322,6 +1359,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                   {hobbies.map((hobby) => (
                     <div key={hobby.id} className="flex items-center gap-2 animate-fadeIn">
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={hobby.value}
                         onChange={(e) =>
@@ -1399,6 +1437,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                       </select>
 
                       <input
+                        enterKeyHint="next"
                         type="date"
                         value={m.date}
                         onChange={(e) =>
@@ -1412,6 +1451,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                       />
 
                       <input
+                        enterKeyHint="next"
                         type="text"
                         value={m.note}
                         onChange={(e) =>
@@ -1455,6 +1495,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 </div>
 
                 <textarea
+                  enterKeyHint="next"
                   rows={3}
                   value={meetingIntelligence}
                   onChange={(e) => setMeetingIntelligence(e.target.value)}
@@ -1484,6 +1525,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     Follow-up Date
                   </label>
                   <input
+                    enterKeyHint="next"
                     type="date"
                     value={followUpDate}
                     onChange={(e) => setFollowUpDate(e.target.value)}
@@ -1496,6 +1538,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     Follow-up Task
                   </label>
                   <input
+                    enterKeyHint="next"
                     type="text"
                     value={followUpTask}
                     onChange={(e) => setFollowUpTask(e.target.value)}
@@ -1520,6 +1563,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
               Cancel
             </button>
             <button
+              ref={saveButtonRef}
               type="button"
               onClick={() => checkDuplicateAndSave(false)}
               disabled={isSaving}
