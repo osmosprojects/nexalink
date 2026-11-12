@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { GoogleOAuthButton } from '../components/auth/GoogleOAuthButton';
+import { RegisterForm } from '../components/auth/RegisterForm';
 import { ArrowRight, Lock, Mail } from 'lucide-react';
 import mark from '../assets/login/blue-mark.webp';
 import portrait from '../assets/login/welcome-portrait.webp';
@@ -15,6 +16,13 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [showRecoveryHelp, setShowRecoveryHelp] = useState(false);
+  const [formMode, setFormMode] = useState<'register' | 'sign-in' | null>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const isRegistering = formMode === 'register';
+
+  useEffect(() => {
+    if (formMode) cardRef.current?.focus();
+  }, [formMode]);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -38,7 +46,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <main className="login-page welcome-login">
+    <main className={`login-page welcome-login${isRegistering ? ' welcome-login-register' : ''}`}>
       <div className="welcome-login-art" aria-hidden="true">
         <img src={portrait} alt="" className="welcome-login-portrait" />
       </div>
@@ -56,7 +64,12 @@ export const LoginPage: React.FC = () => {
           </p>
         </section>
 
-        <section className="login-card" aria-label="Sign in">
+        <section
+          ref={cardRef}
+          tabIndex={-1}
+          className="login-card"
+          aria-label={isRegistering ? 'Create an account' : 'Sign in'}
+        >
           <header className="login-brand welcome-login-card-brand">
             <img src={mark} alt="" />
             <div>
@@ -64,68 +77,74 @@ export const LoginPage: React.FC = () => {
               <small>Build Meaningful Connections. Grow Together.</small>
             </div>
           </header>
-          <div className="login-google">
-            <GoogleOAuthButton
-              buttonText="Continue with Google"
-              buttonClassName="login-google-button"
-              onSuccess={(isComplete) => navigate(isComplete ? '/feed' : '/profile')}
-              onError={setError}
-            />
-          </div>
-          <div className="login-rule login-divider">Or sign in with email</div>
-          {error && <p className="login-error" role="alert">{error}</p>}
-
-          <form onSubmit={handleLogin} className="login-form">
-            <div>
-              <label htmlFor="login-email">Email address</label>
-              <div className="login-field">
-                <Mail aria-hidden="true" />
-                <input
-                  id="login-email"
-                  name="email"
-                  type="email"
-                  autoComplete="username"
-                  required
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+          {isRegistering ? (
+            <RegisterForm onSignIn={() => setFormMode('sign-in')} />
+          ) : (
+            <>
+              <div className="login-google">
+                <GoogleOAuthButton
+                  buttonText="Continue with Google"
+                  buttonClassName="login-google-button"
+                  onSuccess={(isComplete) => navigate(isComplete ? '/feed' : '/profile')}
+                  onError={setError}
                 />
               </div>
-            </div>
-            <div>
-              <label htmlFor="login-password">Password</label>
-              <div className="login-field">
-                <Lock aria-hidden="true" />
-                <input
-                  id="login-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
+              <div className="login-rule login-divider">Or sign in with email</div>
+              {error && <p className="login-error" role="alert">{error}</p>}
+
+              <form onSubmit={handleLogin} className="login-form">
+                <div>
+                  <label htmlFor="login-email">Email address</label>
+                  <div className="login-field">
+                    <Mail aria-hidden="true" />
+                    <input
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      autoComplete="username"
+                      required
+                      placeholder="you@company.com"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="login-password">Password</label>
+                  <div className="login-field">
+                    <Lock aria-hidden="true" />
+                    <input
+                      id="login-password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="login-options">
+                  <label><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} /> Remember me</label>
+                  <button type="button" aria-expanded={showRecoveryHelp} onClick={() => setShowRecoveryHelp(!showRecoveryHelp)}>
+                    Forgot password?
+                  </button>
+                </div>
+                {showRecoveryHelp && (
+                  <p className="login-recovery">Password reset is currently unavailable. Contact your account administrator for help.</p>
+                )}
+                <button type="submit" disabled={loading} className="login-submit">
+                  {loading ? 'Authenticating…' : 'Sign In'} <ArrowRight aria-hidden="true" />
+                </button>
+              </form>
+
+              <div className="login-membership">
+                <span>Don't have an account?</span> <button type="button" onClick={() => setFormMode('register')} disabled={loading}>Create an account</button>
               </div>
-            </div>
-
-            <div className="login-options">
-              <label><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} /> Remember me</label>
-              <button type="button" aria-expanded={showRecoveryHelp} onClick={() => setShowRecoveryHelp(!showRecoveryHelp)}>
-                Forgot password?
-              </button>
-            </div>
-            {showRecoveryHelp && (
-              <p className="login-recovery">Password reset is currently unavailable. Contact your account administrator for help.</p>
-            )}
-            <button type="submit" disabled={loading} className="login-submit">
-              {loading ? 'Authenticating…' : 'Sign In'} <ArrowRight aria-hidden="true" />
-            </button>
-          </form>
-
-          <div className="login-membership">
-            <span>Don't have an account?</span> <Link to="/register">Create an account</Link>
-          </div>
+            </>
+          )}
         </section>
       </div>
 
