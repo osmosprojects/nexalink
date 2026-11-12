@@ -178,51 +178,6 @@ export const ContactsPage: React.FC = () => {
             </select>
           </div>
         </div>
-
-        {/* Quick Relationship Warmth & Privacy Filter Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] text-slate-400 font-semibold shrink-0 mr-1">Warmth:</span>
-            {[
-              { label: 'All Contacts', value: '' },
-              { label: '🔥 Hot (Active)', value: '🔥 Hot' },
-              { label: '☀️ Warm (15-45d)', value: '☀️ Warm' },
-              { label: '❄️ Cold (Needs Touch)', value: '❄️ Cold' },
-            ].map((w) => (
-              <button
-                key={w.label}
-                onClick={() => setSelectedTag(selectedTag === w.value ? '' : w.value)}
-                className={`text-xs px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all cursor-pointer ${
-                  selectedTag === w.value
-                    ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
-                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                {w.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] text-slate-400 font-semibold shrink-0 mr-1">Visibility:</span>
-            {[
-              { label: '🌐 Public Connections', value: 'Public' },
-              { label: '🔒 Private Networks', value: 'Private' },
-            ].map((p) => (
-              <button
-                key={p.label}
-                onClick={() => setSelectedTag(selectedTag === p.value ? '' : p.value)}
-                className={`text-xs px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all cursor-pointer ${
-                  selectedTag === p.value
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Loading State */}
