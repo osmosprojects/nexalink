@@ -1,4 +1,4 @@
--- NexaLink CRM Database Schema --
+-- SansNetworks Database Schema --
 
 CREATE TABLE IF NOT EXISTS users (
     user_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

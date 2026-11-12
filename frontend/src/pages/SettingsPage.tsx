@@ -38,7 +38,7 @@ export const SettingsPage: React.FC = () => {
 
       const fullExport = {
         export_date: new Date().toISOString(),
-        system: 'NexaLink CRM',
+        system: 'SansNetworks',
         contacts,
         interactions,
         goals,
@@ -49,7 +49,7 @@ export const SettingsPage: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `nexalink_crm_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `sansnetworks_backup_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {

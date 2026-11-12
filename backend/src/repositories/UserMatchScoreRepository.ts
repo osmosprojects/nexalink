@@ -117,7 +117,7 @@ export class UserMatchScoreRepository {
           ums.match_score_id, ums.user_a_id, ums.user_b_id, ums.score, ums.reasons, ums.is_mutual, ums.computed_at,
           u.display_name AS recommended_name,
           COALESCE(p.headline, 'Strategic Professional') AS recommended_role,
-          COALESCE(p.company, 'NexaLink Member') AS recommended_company,
+          COALESCE(p.company, 'SansNetworks Member') AS recommended_company,
           u.avatar_url,
           p.industry,
           p.skills
@@ -155,7 +155,7 @@ export class UserMatchScoreRepository {
           ums.match_score_id, ums.user_a_id, ums.user_b_id, ums.score, ums.reasons, ums.is_mutual, ums.computed_at,
           u.display_name AS recommended_name,
           COALESCE(p.headline, 'Strategic Professional') AS recommended_role,
-          COALESCE(p.company, 'NexaLink Member') AS recommended_company,
+          COALESCE(p.company, 'SansNetworks Member') AS recommended_company,
           u.avatar_url,
           p.industry,
           p.skills

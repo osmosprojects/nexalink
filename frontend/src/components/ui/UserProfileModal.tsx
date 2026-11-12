@@ -68,7 +68,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   // Real Profile Field Values
   const displayName = fullProfile?.displayName || user.recommended_name || user.name || 'User';
   const role = fullProfile?.jobTitle || user.recommended_role || user.role || 'Strategic Professional';
-  const company = fullProfile?.company || user.recommended_company || 'NexaLink Member';
+  const company = fullProfile?.company || user.recommended_company || 'SansNetworks Member';
   const domain = fullProfile?.domain || user.industry || user.domain || 'Technology & Services';
   const location = fullProfile?.location || user.location || 'Mumbai, India';
   const currentCity = fullProfile?.currentCity || location;

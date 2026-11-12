@@ -120,7 +120,7 @@ export const AIAssistantPage: React.FC = () => {
       <div className="bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-purple-900/10 space-y-3">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 text-xs font-bold">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>NexaLink Intelligence Engine</span>
+          <span>SansNetworks Intelligence Engine</span>
         </div>
         <h2 className="text-xl sm:text-2xl font-black">AI Networking Studio</h2>
         <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">

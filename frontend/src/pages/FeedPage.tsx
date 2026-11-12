@@ -419,7 +419,7 @@ export const FeedPage: React.FC = () => {
               .trim();
 
             const authorRoleTitle =
-              post.author_title && post.author_title !== 'NexaLink Network Member'
+              post.author_title && !['NexaLink Network Member', 'SansNetworks Network Member'].includes(post.author_title)
                 ? post.author_title
                 : userSubtitle;
 

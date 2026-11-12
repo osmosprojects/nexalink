@@ -32,7 +32,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
          u.display_name,
          u.avatar_url,
          COALESCE(p.headline, 'Strategic Professional') AS headline,
-         COALESCE(p.company, 'NexaLink Member') AS company,
+         COALESCE(p.company, 'SansNetworks Member') AS company,
          p.industry,
          p.skills
        FROM match_scores ms
@@ -57,7 +57,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
            u.display_name,
            u.avatar_url,
            COALESCE(p.headline, 'Strategic Professional') AS headline,
-           COALESCE(p.company, 'NexaLink Member') AS company,
+           COALESCE(p.company, 'SansNetworks Member') AS company,
            p.industry,
            p.skills
          FROM match_scores ms
@@ -93,7 +93,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
            u.display_name,
            u.avatar_url,
            COALESCE(p.headline, 'Strategic Professional') AS headline,
-           COALESCE(p.company, 'NexaLink Member') AS company,
+           COALESCE(p.company, 'SansNetworks Member') AS company,
            p.industry,
            p.skills
          FROM match_scores ms
@@ -188,7 +188,7 @@ router.get('/profile/:targetUserId', async (req: Request, res: Response, next: N
       email: row.email,
       avatarUrl: row.avatar_url,
       headline: row.headline || 'Strategic Professional',
-      company: row.company || 'NexaLink Member',
+      company: row.company || 'SansNetworks Member',
       jobTitle: row.job_title || row.headline || 'Professional',
       domain: row.industry || parsedSkills.domain || 'Technology & Services',
       bio: row.bio || parsedSkills.servicesOffered || 'No bio provided.',

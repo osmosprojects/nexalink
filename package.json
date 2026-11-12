@@ -1,7 +1,7 @@
 {
-  "name": "nexalink-crm",
+  "name": "sansnetworks",
   "version": "1.0.0",
-  "description": "NexaLink CRM — AI Relationship CRM (React 18 + Node.js + MySQL)",
+  "description": "SansNetworks — AI Relationship CRM (React 18 + Node.js + MySQL)",
   "main": "backend/dist/server.js",
   "scripts": {
     "build:frontend": "cd frontend && npm install && npm run build",

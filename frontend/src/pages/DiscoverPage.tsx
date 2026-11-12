@@ -214,7 +214,7 @@ export const DiscoverPage: React.FC = () => {
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">Expand Your Strategic Network</h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium">
-              NexaLink analyzes your goals, interests, location, and network to suggest high-affinity leaders & peers.
+              SansNetworks analyzes your goals, interests, location, and network to suggest high-affinity leaders & peers.
             </p>
           </div>
 

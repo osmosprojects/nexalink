@@ -39,7 +39,7 @@ export const RegisterPage: React.FC = () => {
       <header className="login-intro register-intro">
         <div className="login-brand register-brand">
           <img src={mark} alt="" />
-          <p>Sans<span>Network</span></p>
+          <p>Sans<span>Networks</span></p>
         </div>
         <h1 id="register-title">Create an <span>account</span></h1>
         <p className="login-description">Build meaningful connections. Grow together.</p>

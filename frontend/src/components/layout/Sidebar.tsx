@@ -1,3 +1,4 @@
+import brandMark from '../../assets/login/blue-mark.webp';
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -73,13 +74,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
           onClick={() => navigate(isProfileComplete ? '/feed' : '/profile')}
           className="flex items-center gap-3 cursor-pointer group"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-brand-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">
-            N
-          </div>
-          <div>
-            <div className="font-bold text-white tracking-tight text-lg leading-tight flex items-center gap-1.5">
-              NexaLink
-              <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30">CRM</span>
+          <img src={brandMark} alt="" className="w-9 h-9 rounded-xl shrink-0" />
+          <div className="min-w-0">
+            <div className="font-bold text-white tracking-tight text-lg leading-tight">
+              SansNetworks
             </div>
             <p className="text-[11px] text-slate-400 font-medium truncate max-w-[130px]">Relationship Intel</p>
           </div>

@@ -1,7 +1,7 @@
 {
-  "name": "nexalink-backend",
+  "name": "sansnetworks-backend",
   "version": "1.0.0",
-  "description": "NexaLink CRM Node.js REST API Backend with SQL-first MySQL integration",
+  "description": "SansNetworks Node.js REST API Backend with SQL-first MySQL integration",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",

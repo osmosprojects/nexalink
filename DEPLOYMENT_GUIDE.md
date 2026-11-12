@@ -1,6 +1,6 @@
-# NexaLink CRM — Production Deployment & Configuration Guide
+# SansNetworks — Production Deployment & Configuration Guide
 
-This guide covers everything required to deploy the **NexaLink CRM** on any hosting server (cPanel, Shared Hosting with Node.js, VPS with Ubuntu/Debian/CentOS, Nginx/Apache, or Cloud hosting).
+This guide covers everything required to deploy the **SansNetworks** on any hosting server (cPanel, Shared Hosting with Node.js, VPS with Ubuntu/Debian/CentOS, Nginx/Apache, or Cloud hosting).
 
 ---
 
@@ -184,7 +184,7 @@ The compiled backend includes a built-in static file handler that will automatic
    npm install --omit=dev
    node dist/server.js
    ```
-5. Visiting `http://your-server-ip:5000` (or your domain) will directly load the full NexaLink CRM frontend and handle all `/api` calls on the same host!
+5. Visiting `http://your-server-ip:5000` (or your domain) will directly load the full SansNetworks frontend and handle all `/api` calls on the same host!
 
 ---
 
@@ -204,7 +204,7 @@ The compiled backend includes a built-in static file handler that will automatic
 ## ✅ Post-Deployment Verification Checklist
 
 1. **Check Database Connection:** View Node.js logs (`pm2 logs` or cPanel error logs) to verify:
-   `🚀 NexaLink CRM Server running at http://localhost:5000`
+   `🚀 SansNetworks Server running at http://localhost:5000`
 2. **Visit the Frontend:** Navigate to your website URL in browser.
 3. **Login:** Log in with `demo@nexalink.com` / `password123`.
 4. **Test Core Features:**

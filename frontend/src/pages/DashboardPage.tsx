@@ -37,7 +37,7 @@ const SAMPLE_NETWORK_MEMBERS = [
     userId: 101,
     displayName: 'Sanjeev Sarma',
     jobTitle: 'Strategic Director & Tech Advisor',
-    company: 'NexaLink Enterprise',
+    company: 'SansNetworks Enterprise',
     avatarUrl: null,
     targetBusinesses: ['SaaS', 'FinTech', 'AI Software'],
     connectionsOffered: [

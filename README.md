@@ -1,8 +1,8 @@
-# NexaLink CRM — AI Networking & Relationship Platform
+# SansNetworks — AI Networking & Relationship Platform
 
 > **Build Meaningful Connections. Track Relationships. Achieve Your Goals.**
 
-NexaLink CRM is an AI-powered personal networking and relationship-management platform developed completely using **React + TypeScript + Tailwind CSS** on the frontend and **Node.js + Express + MySQL (SQL-First)** on the backend.
+SansNetworks is an AI-powered personal networking and relationship-management platform developed completely using **React + TypeScript + Tailwind CSS** on the frontend and **Node.js + Express + MySQL (SQL-First)** on the backend.
 
 ---
 

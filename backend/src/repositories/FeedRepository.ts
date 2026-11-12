@@ -110,7 +110,7 @@ export class FeedRepository {
         const skillsObj = typeof m.skills === 'string' ? JSON.parse(m.skills) : m.skills || {};
         const rawGroups = skillsObj.networkingGroup;
         const groupsStr = Array.isArray(rawGroups) ? rawGroups.join(' & ') : typeof rawGroups === 'string' ? rawGroups : '';
-        const introText = `Hello NexaLink Network! Excited to connect with leaders and peers.${groupsStr ? ' Active in ' + groupsStr + '.' : ''}`;
+        const introText = `Hello SansNetworks Network! Excited to connect with leaders and peers.${groupsStr ? ' Active in ' + groupsStr + '.' : ''}`;
 
         await this.create(m.user_id, {
           author_name: m.display_name,

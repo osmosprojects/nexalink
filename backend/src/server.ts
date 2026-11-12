@@ -156,7 +156,7 @@ async function startServer() {
   }
 
   app.listen(config.port, () => {
-    console.log(`🚀 NexaLink CRM Server running at http://localhost:${config.port}`);
+    console.log(`🚀 SansNetworks Server running at http://localhost:${config.port}`);
     console.log(`📡 API endpoints at http://localhost:${config.port}/api`);
     if (staticServed) {
       console.log(`🌐 Static frontend UI served directly by Express`);

@@ -21,7 +21,7 @@ export const apiRouter = Router();
 
 // Health Check
 apiRouter.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'NexaLink CRM API', time: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'SansNetworks API', time: new Date().toISOString() });
 });
 
 // Auth Routes (Public)

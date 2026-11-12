@@ -46,10 +46,10 @@ export const LoginPage: React.FC = () => {
         <section className="login-intro" aria-labelledby="login-title">
           <header className="login-brand">
             <img src={mark} alt="" />
-            <p>Sans<span>Network</span></p>
+            <p>Sans<span>Networks</span></p>
           </header>
           <p className="welcome-login-tagline">The network of networkers!</p>
-          <h1 id="login-title">Welcome to<br /> Sans<span>Network!</span></h1>
+          <h1 id="login-title">Welcome to<br /> Sans<span>Networks!</span></h1>
           <p className="login-description">
             A premier, exclusive network of networkers — connecting professionals,
             business leaders and organisations to build meaningful relationships and grow together.
@@ -60,7 +60,7 @@ export const LoginPage: React.FC = () => {
           <header className="login-brand welcome-login-card-brand">
             <img src={mark} alt="" />
             <div>
-              <p>Sans<span>Network</span></p>
+              <p>Sans<span>Networks</span></p>
               <small>Build Meaningful Connections. Grow Together.</small>
             </div>
           </header>

@@ -47,7 +47,7 @@ export const AppLayout: React.FC = () => {
 
   const path = location.pathname;
   const rawMeta = routeTitleMap[path] || {
-    title: path.startsWith('/connections/') ? 'Contact Detail' : 'NexaLink CRM',
+    title: path.startsWith('/connections/') ? 'Contact Detail' : 'SansNetworks',
     subtitle: 'Relationship intelligence platform',
   };
   const pageMeta = path === '/profile'

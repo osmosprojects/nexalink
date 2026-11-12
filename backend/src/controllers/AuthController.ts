@@ -32,7 +32,7 @@ export class AuthController {
       // Initialize default profile and persona
       await ProfileRepository.upsertProfile(userId, {
         headline: 'Professional & Builder',
-        bio: 'Welcome to NexaLink CRM!',
+        bio: 'Welcome to SansNetworks!',
       });
       await ProfileRepository.upsertPersona(userId, {
         persona_name: 'Strategic Networker',
@@ -230,7 +230,7 @@ export class AuthController {
 
         await ProfileRepository.upsertProfile(userId, {
           headline: 'Professional Networker',
-          bio: 'Welcome to NexaLink CRM!',
+          bio: 'Welcome to SansNetworks!',
           avatar_url: avatarUrl || null,
         });
 
