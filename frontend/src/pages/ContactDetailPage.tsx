@@ -14,10 +14,8 @@ import {
   Linkedin,
   MapPin,
   Building,
-  Plus,
   Trash2,
   Edit3,
-  Copy,
   Check,
   Loader2,
   Users,
@@ -28,6 +26,7 @@ import { api } from '../lib/api';
 import { Contact, Interaction, Meeting, Task, Note } from '../types';
 import { Avatar } from '../components/ui/Avatar';
 import { formatDate, getRelationshipTypeBadge, formatFullName, parseContactNotes } from '../lib/utils';
+import { AddConnectionModal } from '../components/ui/AddConnectionModal';
 import { QuickAddModal } from '../components/ui/QuickAddModal';
 import confetti from 'canvas-confetti';
 
@@ -38,19 +37,14 @@ export const ContactDetailPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'interactions' | 'meetings' | 'tasks' | 'notes'>('overview');
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-  const [quickAddTab, setQuickAddTab] = useState<'interaction' | 'meeting' | 'task' | 'note'>('interaction');
+  const [quickAddTab, setQuickAddTab] = useState<'meeting' | 'task' | 'note'>('meeting');
 
   // Connection Type Private -> Public Flow state
   const [showPublicConfirmModal, setShowPublicConfirmModal] = useState(false);
   const [isPostingFeed, setIsPostingFeed] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
-  // AI Assistant Modal state
-  const [aiModalMode, setAiModalMode] = useState<'conversation' | 'draft' | null>(null);
-  const [aiSuggestions, setAiSuggestions] = useState<any>(null);
-  const [aiDraft, setAiDraft] = useState<any>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
 
   // Fetch full contact details
   const { data, isLoading, error } = useQuery<{
@@ -89,46 +83,6 @@ export const ContactDetailPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
     },
   });
-
-  const handleAISuggestions = async () => {
-    setAiModalMode('conversation');
-    setAiLoading(true);
-    setAiSuggestions(null);
-    try {
-      const res = await api.post('/ai/conversation/suggestions', { contact_id: id });
-      setAiSuggestions(res);
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 } });
-    } catch (err: any) {
-      console.error(err);
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const handleAIDraft = async (purpose = 'follow_up', tone = 'professional') => {
-    setAiModalMode('draft');
-    setAiLoading(true);
-    setAiDraft(null);
-    try {
-      const res = await api.post('/ai/message/draft', {
-        contact_id: id,
-        purpose,
-        tone,
-      });
-      setAiDraft(res);
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 } });
-    } catch (err: any) {
-      console.error(err);
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const handleConnectionTypeChange = (targetType: 'public' | 'private', isCurrentlyPublic: boolean) => {
     if (targetType === 'public' && !isCurrentlyPublic) {
@@ -324,40 +278,14 @@ export const ContactDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
-            <button
-              onClick={() => {
-                setQuickAddTab('interaction');
-                setIsQuickAddOpen(true);
-              }}
-              className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Interaction</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('interactions')}
-              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <MessageSquareShare className="w-4 h-4 text-slate-600" />
-              <span>View Interaction History</span>
-            </button>
-            <button
-              onClick={handleAISuggestions}
-              className="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>AI Prep</span>
-            </button>
-            <button
-              onClick={() => handleAIDraft('follow_up')}
-              className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Mail className="w-4 h-4" />
-              <span>Draft Message</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setContactToEdit(contact)}
+            className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition-colors shrink-0"
+          >
+            <Edit3 className="w-4 h-4" aria-hidden="true" />
+            <span>Edit Profile</span>
+          </button>
         </div>
 
         {/* Relationship Status & Interactive Warmth Selector Row */}
@@ -375,7 +303,7 @@ export const ContactDetailPage: React.FC = () => {
             : '❄️ Cold';
 
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60">
               {/* Interactive Connection Warmth Buttons */}
               <div className="sm:col-span-2 space-y-1.5">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
@@ -405,19 +333,6 @@ export const ContactDetailPage: React.FC = () => {
                     );
                   })}
                   {updateWarmthMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-slate-400 ml-1" />}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Strength Score</span>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-brand-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${contact.relationship_strength}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-bold text-slate-800">{contact.relationship_strength}/100</span>
                 </div>
               </div>
 
@@ -778,18 +693,7 @@ export const ContactDetailPage: React.FC = () => {
       {/* 2. TIMELINE TAB (Guide Section 18) */}
       {activeTab === 'timeline' && (
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-card space-y-6">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-slate-900">Interaction History & Chronology</h4>
-            <button
-              onClick={() => {
-                setQuickAddTab('interaction');
-                setIsQuickAddOpen(true);
-              }}
-              className="px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-sm"
-            >
-              + Add Interaction
-            </button>
-          </div>
+          <h4 className="text-sm font-bold text-slate-900">Interaction History & Chronology</h4>
 
           {interactions.length === 0 ? (
             <p className="text-xs text-slate-400 text-center py-8">No timeline entries yet.</p>
@@ -826,18 +730,7 @@ export const ContactDetailPage: React.FC = () => {
       {/* 3. INTERACTIONS TAB */}
       {activeTab === 'interactions' && (
         <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-slate-900">Logged Interactions</h4>
-            <button
-              onClick={() => {
-                setQuickAddTab('interaction');
-                setIsQuickAddOpen(true);
-              }}
-              className="px-3 py-1.5 bg-brand-600 text-white rounded-xl text-xs font-bold"
-            >
-              + Log Interaction
-            </button>
-          </div>
+          <h4 className="text-sm font-bold text-slate-900">Logged Interactions</h4>
           <div className="space-y-3">
             {interactions.map((i) => (
               <div key={i.interaction_id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-2">
@@ -938,120 +831,6 @@ export const ContactDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* AI ASSISTANT MODAL / SLIDEOUT */}
-      {aiModalMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-100 animate-slideUp">
-            {/* Header */}
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-purple-900 to-indigo-950 text-white">
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="w-5 h-5 text-purple-300" />
-                <div>
-                  <h3 className="text-sm font-bold">
-                    {aiModalMode === 'conversation' ? 'Conversation Intelligence' : 'AI Message Drafting Studio'}
-                  </h3>
-                  <p className="text-[11px] text-purple-200">Tailored context for {contact.first_name} {contact.last_name}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setAiModalMode(null)}
-                className="p-1.5 rounded-full hover:bg-white/10 text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
-              {aiLoading && (
-                <div className="py-12 text-center space-y-3">
-                  <Loader2 className="w-8 h-8 text-purple-600 animate-spin mx-auto" />
-                  <p className="text-xs font-semibold text-slate-600">Analyzing relationship context & historical interactions...</p>
-                </div>
-              )}
-
-              {/* Conversation Suggestion Content */}
-              {!aiLoading && aiModalMode === 'conversation' && aiSuggestions && (
-                <div className="space-y-4">
-                  <div>
-                    <h5 className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Suggested Opener</h5>
-                    <p className="mt-1 p-3 bg-purple-50 text-purple-950 rounded-xl font-medium leading-relaxed border border-purple-100">
-                      "{aiSuggestions.opener}"
-                    </p>
-                  </div>
-
-                  <div>
-                    <h5 className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">High-Signal Discussion Questions</h5>
-                    <ul className="mt-1.5 space-y-2">
-                      {aiSuggestions.discussion_questions.map((q: string, i: number) => (
-                        <li key={i} className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/60 font-medium text-slate-800">
-                          {i + 1}. {q}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h5 className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Strategic Next Step</h5>
-                    <p className="mt-1 text-slate-700 font-medium">
-                      {aiSuggestions.suggested_follow_up}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Message Drafting Content */}
-              {!aiLoading && aiModalMode === 'draft' && aiDraft && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    {['professional', 'warm', 'concise'].map((tone) => (
-                      <button
-                        key={tone}
-                        onClick={() => handleAIDraft('follow_up', tone as any)}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-colors ${
-                          aiDraft.tone === tone ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {tone}
-                      </button>
-                    ))}
-                  </div>
-
-                  {aiDraft.subject && (
-                    <div>
-                      <h5 className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Subject</h5>
-                      <p className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/60 font-semibold text-slate-800 mt-1">
-                        {aiDraft.subject}
-                      </p>
-                    </div>
-                  )}
-
-                  <div>
-                    <h5 className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Draft Content</h5>
-                    <textarea
-                      rows={6}
-                      value={aiDraft.draft}
-                      onChange={(e) => setAiDraft({ ...aiDraft, draft: e.target.value })}
-                      className="w-full mt-1 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:bg-white focus:outline-hidden"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2 pt-2">
-                    <button
-                      onClick={() => copyToClipboard(aiDraft.draft)}
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center gap-1.5 transition-colors"
-                    >
-                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copied ? 'Copied to Clipboard!' : 'Copy Draft'}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Private -> Public Connection Feed Share Prompt Modal */}
       {showPublicConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
@@ -1112,6 +891,17 @@ export const ContactDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {contactToEdit && (
+        <AddConnectionModal
+          isOpen
+          contactToEdit={contactToEdit}
+          onClose={() => setContactToEdit(null)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['contact', id] });
+          }}
+        />
       )}
 
       {/* Quick Add Modal */}

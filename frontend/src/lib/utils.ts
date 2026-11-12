@@ -95,44 +95,43 @@ export interface ExtendedContactNotes {
   followUpTask?: string | null;
 }
 
+export function formatContactNoteSummary(notes: ExtendedContactNotes): string[] {
+  return [
+    notes.meetingIntelligence ? `[Meeting Intelligence]: ${notes.meetingIntelligence}` : null,
+    notes.whereMet ? `[Where Met]: ${notes.whereMet}` : null,
+    notes.businessFocus ? `[Business Focus]: ${notes.businessFocus}` : null,
+    notes.personalDetails?.length ? `[Personal Details]: ${notes.personalDetails.join('; ')}` : null,
+    notes.hobbies?.length ? `[Hobbies]: ${notes.hobbies.join(', ')}` : null,
+  ].filter((line): line is string => line !== null);
+}
+
 export function parseContactNotes(notesStr?: string | null): {
   cleanNotes: string;
   extendedData: ExtendedContactNotes | null;
 } {
-  if (!notesStr) return { cleanNotes: '', extendedData: null };
-
-  let extendedData: ExtendedContactNotes | null = null;
-  let text = notesStr;
-
-  const jsonStartIndex = notesStr.indexOf('{');
-  const jsonEndIndex = notesStr.lastIndexOf('}');
-  if (jsonStartIndex !== -1 && jsonEndIndex > jsonStartIndex) {
-    const possibleJson = notesStr.substring(jsonStartIndex, jsonEndIndex + 1);
+  const text = notesStr?.trim() ?? '';
+  const jsonEndIndex = text.lastIndexOf('}');
+  // Add to Network writes the structured data on its own final line.
+  const finalLineStart = text.lastIndexOf('\n') + 1;
+  const candidates = [finalLineStart, text.indexOf('{')];
+  for (const start of new Set(candidates)) {
+    if (text[start] !== '{' || jsonEndIndex <= start) continue;
     try {
-      const parsed = JSON.parse(possibleJson);
-      if (typeof parsed === 'object' && parsed !== null) {
-        extendedData = parsed;
-        text = (notesStr.substring(0, jsonStartIndex) + notesStr.substring(jsonEndIndex + 1)).trim();
+      const parsed = JSON.parse(text.slice(start, jsonEndIndex + 1));
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) continue;
+      let cleanNotes = text.slice(0, start).trim();
+      // Strip the generated summary while preserving any additional notes.
+      const generatedSummary = formatContactNoteSummary(parsed).join('\n\n');
+      if (generatedSummary && cleanNotes.endsWith(generatedSummary)) {
+        cleanNotes = cleanNotes.slice(0, -generatedSummary.length).trim();
       }
+      return {
+        cleanNotes: [cleanNotes, text.slice(jsonEndIndex + 1).trim()].filter(Boolean).join('\n\n'),
+        extendedData: parsed,
+      };
     } catch {
-      // Not valid JSON
+      // Free-form notes may contain braces without a structured section.
     }
   }
-
-  if (extendedData) {
-    const lines = text.split(/\n+/).filter((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return false;
-      if (/^\[(Meeting Intelligence|Where Met|Business Focus|Personal Details|Hobbies)\]:/.test(trimmed)) {
-        return false;
-      }
-      return true;
-    });
-    text = lines.join('\n\n');
-  }
-
-  return {
-    cleanNotes: text.trim(),
-    extendedData,
-  };
+  return { cleanNotes: text, extendedData: null };
 }

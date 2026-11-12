@@ -20,6 +20,9 @@ import {
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { formatContactNoteSummary, formatFullName, parseContactNotes } from '../../lib/utils';
+import type { ExtendedContactNotes } from '../../lib/utils';
+import type { Contact } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import confetti from 'canvas-confetti';
 
@@ -45,6 +48,7 @@ interface DetailRow {
 
 interface AddConnectionModalProps {
   isOpen: boolean;
+  contactToEdit?: Contact;
   onClose: () => void;
   onSuccess?: (contactId?: number) => void;
 }
@@ -67,6 +71,7 @@ const NETWORK_PRESETS = [
 
 export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
   isOpen,
+  contactToEdit,
   onClose,
   onSuccess,
 }) => {
@@ -120,46 +125,102 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
   const networkInputRef = useRef<HTMLInputElement>(null);
   const saveButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Reset form when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setRelationship('warm');
-      setConnectionType('public');
-      setFullName('');
-      setPhone('');
-      setEmail('');
-      setCompany('');
-      setRole('');
-      setBusinessFocus('');
-      setWhereMet('');
-      setNetworks([]);
-      setNetworkInput('');
-      setConnectableRows([]);
-      setWantToMeetRows([]);
-      setPersonalDetails([]);
-      setHobbies([]);
-      setMilestones([]);
-      setMeetingIntelligence('');
-      setFollowUpDate('');
-      setFollowUpTask('');
-      setErrors({});
-      setIsSaving(false);
-      setPossibleDuplicate(null);
-      setShowDiscardConfirm(false);
-      setSavedContact(null);
-      setIsPostingToFeed(false);
-      setHasPostedToFeed(false);
+  const formValues = {
+    relationship, connectionType, fullName, phone, email, company, role, businessFocus, whereMet,
+    networks, networkInput, connectableRows, wantToMeetRows, personalDetails, hobbies, milestones,
+    meetingIntelligence, followUpDate, followUpTask,
+  };
+  const initialValues = useRef<typeof formValues | null>(null);
 
-      setTimeout(() => {
-        nameInputRef.current?.focus();
-      }, 100);
-    }
-  }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const { extendedData } = parseContactNotes(contactToEdit?.notes);
+    const tags = contactToEdit?.tags?.map(({ name }) => name) ?? [];
+    const reservedTags = ['🔥 Hot', '☀️ Warm', '❄️ Cold', '🌐 Public Connection', '🔒 Private Network'];
+    const strength = contactToEdit?.relationship_strength ?? 60;
+    const warmthTag = tags.find((tag) => reservedTags.slice(0, 3).includes(tag));
+    const relationship = warmthTag
+      ? warmthTag === '🔥 Hot' ? 'hot' : warmthTag === '❄️ Cold' ? 'cold' : 'warm'
+      : strength >= 80 ? 'hot' : strength >= 50 ? 'warm' : 'cold';
+
+    const toPersonRows = (rows: ExtendedContactNotes['connectablePersons']): ConnectableRow[] =>
+      (rows ?? []).map((person, index) => ({
+        id: `existing-${index}`,
+        name: person.personName ?? '',
+        company: person.company ?? '',
+        domain: person.businessDomain ?? '',
+        role: person.role ?? '',
+      }));
+    const toDetailRows = (values: string[] = []): DetailRow[] =>
+      values.map((value, index) => ({ id: `existing-${index}`, value }));
+
+    const initial: typeof formValues = {
+      relationship,
+      connectionType: contactToEdit && !tags.includes('🌐 Public Connection') ? 'private' : 'public',
+      fullName: contactToEdit ? formatFullName(contactToEdit.first_name, contactToEdit.last_name) : '',
+      phone: contactToEdit?.phone ?? '',
+      email: contactToEdit?.email ?? '',
+      company: contactToEdit?.company ?? '',
+      role: contactToEdit?.job_title ?? '',
+      businessFocus: extendedData?.businessFocus ?? '',
+      whereMet: extendedData?.whereMet ?? '',
+      networks: [...new Set([...(extendedData?.otherNetworks ?? []), ...tags.filter((tag) => !reservedTags.includes(tag))])],
+      networkInput: '',
+      connectableRows: toPersonRows(extendedData?.connectablePersons),
+      wantToMeetRows: toPersonRows(extendedData?.wantToMeetPersons),
+      personalDetails: toDetailRows(extendedData?.personalDetails),
+      hobbies: toDetailRows(extendedData?.hobbies),
+      milestones: (extendedData?.milestones ?? []).map((milestone, index) => ({
+        id: `existing-${index}`,
+        type: milestone.type === 'Birthday' || milestone.type === 'Anniversary / Founding'
+          ? milestone.type
+          : 'Other Special Milestone',
+        date: milestone.date ?? '',
+        note: milestone.note ?? '',
+      })),
+      meetingIntelligence: extendedData?.meetingIntelligence ?? '',
+      followUpDate: contactToEdit?.next_follow_up_at?.slice(0, 10) ?? '',
+      followUpTask: extendedData?.followUpTask ?? '',
+    };
+    initialValues.current = initial;
+    setRelationship(initial.relationship);
+    setConnectionType(initial.connectionType);
+    setFullName(initial.fullName);
+    setPhone(initial.phone);
+    setEmail(initial.email);
+    setCompany(initial.company);
+    setRole(initial.role);
+    setBusinessFocus(initial.businessFocus);
+    setWhereMet(initial.whereMet);
+    setNetworks(initial.networks);
+    setNetworkInput(initial.networkInput);
+    setIsNetworkDropdownOpen(false);
+    setNetworkDuplicateWarning(false);
+    setConnectableRows(initial.connectableRows);
+    setWantToMeetRows(initial.wantToMeetRows);
+    setPersonalDetails(initial.personalDetails);
+    setHobbies(initial.hobbies);
+    setMilestones(initial.milestones);
+    setMeetingIntelligence(initial.meetingIntelligence);
+    setFollowUpDate(initial.followUpDate);
+    setFollowUpTask(initial.followUpTask);
+    setErrors({});
+    setIsSaving(false);
+    setPossibleDuplicate(null);
+    setShowDiscardConfirm(false);
+    setSavedContact(null);
+    setIsPostingToFeed(false);
+    setHasPostedToFeed(false);
+
+    const focusTimer = window.setTimeout(() => nameInputRef.current?.focus(), 100);
+    return () => window.clearTimeout(focusTimer);
+  }, [isOpen, contactToEdit]);
 
   // Handle ESC key press
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
+      if (!isOpen || isSaving) return;
       if (e.key === 'Escape') {
         if (showDiscardConfirm) {
           setShowDiscardConfirm(false);
@@ -174,38 +235,17 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, showDiscardConfirm, possibleDuplicate, savedContact, fullName, email, phone, company, role]);
+  });
 
   if (!isOpen) return null;
 
-  // Check if form has unsaved edits
-  const isDirty = () => {
-    return (
-      fullName.trim() !== '' ||
-      phone.trim() !== '' ||
-      email.trim() !== '' ||
-      company.trim() !== '' ||
-      role.trim() !== '' ||
-      businessFocus.trim() !== '' ||
-      whereMet.trim() !== '' ||
-      networks.length > 0 ||
-      connectableRows.some((r) => r.name || r.company || r.domain || r.role) ||
-      wantToMeetRows.some((r) => r.name || r.company || r.domain || r.role) ||
-      personalDetails.some((d) => d.value) ||
-      hobbies.some((h) => h.value) ||
-      milestones.some((m) => m.date || m.note) ||
-      meetingIntelligence.trim() !== '' ||
-      followUpDate !== '' ||
-      followUpTask.trim() !== ''
-    );
-  };
-
   const handleAttemptClose = () => {
+    if (isSaving) return;
     if (savedContact) {
       handleDone();
       return;
     }
-    if (isDirty()) {
+    if (JSON.stringify(formValues) !== JSON.stringify(initialValues.current)) {
       setShowDiscardConfirm(true);
     } else {
       onClose();
@@ -229,14 +269,14 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
       newErrors.fullName = 'Full name is required.';
     }
 
-    if (email.trim()) {
+    if (email.trim() && (!contactToEdit || email !== initialValues.current?.email)) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email.trim())) {
         newErrors.email = 'Enter a valid email address.';
       }
     }
 
-    if (phone.trim()) {
+    if (phone.trim() && (!contactToEdit || phone !== initialValues.current?.phone)) {
       const cleanPhone = phone.trim().replace(/[\s\-\+\(\)]/g, '');
       if (cleanPhone.length > 0 && (!/^\d+$/.test(cleanPhone) || cleanPhone.length < 5)) {
         newErrors.phone = 'Enter a valid phone number.';
@@ -332,7 +372,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
 
     setIsSaving(true);
 
-    if (!bypassDuplicateCheck) {
+    if (!contactToEdit && !bypassDuplicateCheck) {
       try {
         // Query existing contacts for duplicate check
         const contactsRes = await api.get<any>('/contacts?limit=100');
@@ -377,8 +417,9 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
     setIsSaving(true);
     try {
       const nameParts = fullName.trim().split(/\s+/);
-      const first_name = nameParts[0] || '';
-      const last_name = nameParts.slice(1).join(' ') || '';
+      const nameUnchanged = contactToEdit && fullName === initialValues.current?.fullName;
+      const first_name = nameUnchanged ? contactToEdit.first_name : nameParts[0] || '';
+      const last_name = nameUnchanged ? contactToEdit.last_name : nameParts.slice(1).join(' ');
 
       // Clean repeatable rows
       const validConnectables = connectableRows
@@ -416,7 +457,9 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
         }));
 
       // Combine extended structured intelligence into notes string
+      const originalNotes = parseContactNotes(contactToEdit?.notes);
       const extendedNotesObject = {
+        ...originalNotes.extendedData,
         whereMet: whereMet.trim() || null,
         businessFocus: businessFocus.trim() || null,
         otherNetworks: networks,
@@ -430,15 +473,10 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
       };
 
       const notesText = [
-        meetingIntelligence.trim() ? `[Meeting Intelligence]: ${meetingIntelligence.trim()}` : null,
-        whereMet.trim() ? `[Where Met]: ${whereMet.trim()}` : null,
-        businessFocus.trim() ? `[Business Focus]: ${businessFocus.trim()}` : null,
-        validDetails.length > 0 ? `[Personal Details]: ${validDetails.join('; ')}` : null,
-        validHobbies.length > 0 ? `[Hobbies]: ${validHobbies.join(', ')}` : null,
+        originalNotes.cleanNotes,
+        ...formatContactNoteSummary(extendedNotesObject),
         JSON.stringify(extendedNotesObject),
-      ]
-        .filter(Boolean)
-        .join('\n\n');
+      ].filter(Boolean).join('\n\n');
 
       const strengthMap: Record<string, number> = { hot: 90, warm: 60, cold: 30 };
       const warmthTagMap: Record<string, string> = { hot: '🔥 Hot', warm: '☀️ Warm', cold: '❄️ Cold' };
@@ -453,15 +491,45 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
         phone: phone.trim() || null,
         company: company.trim() || null,
         job_title: role.trim() || null,
+        notes: notesText,
+        tagNames: allTags,
+      };
+
+      if (contactToEdit) {
+        const changed = (key: keyof typeof formValues) =>
+          JSON.stringify(formValues[key]) !== JSON.stringify(initialValues.current?.[key]);
+        const notesFields = [
+          'whereMet', 'businessFocus', 'networks', 'connectableRows', 'wantToMeetRows',
+          'personalDetails', 'hobbies', 'milestones', 'meetingIntelligence', 'followUpTask',
+        ] as const;
+        const updates = {
+          ...(changed('fullName') && { first_name, last_name }),
+          ...(changed('email') && { email: payload.email }),
+          ...(changed('phone') && { phone: payload.phone }),
+          ...(changed('company') && { company: payload.company }),
+          ...(changed('role') && { job_title: payload.job_title }),
+          ...(notesFields.some(changed) && { notes: notesText }),
+          ...(changed('networks') || changed('relationship') || changed('connectionType') ? { tagNames: allTags } : {}),
+          ...(changed('relationship') && { relationship_strength: strengthMap[relationship] }),
+          ...(changed('followUpDate') && { next_follow_up_at: followUpDate || null }),
+        };
+        if (Object.keys(updates).length > 0) {
+          await api.put(`/contacts/${contactToEdit.contact_id}`, updates);
+        }
+        queryClient.invalidateQueries({ queryKey: ['contacts'] });
+        queryClient.invalidateQueries({ queryKey: ['tags'] });
+        onSuccess?.(contactToEdit.contact_id);
+        onClose();
+        return;
+      }
+
+      const res = await api.post<any>('/contacts', {
+        ...payload,
+        is_public: connectionType === 'public',
         relationship_type: relationship,
         relationship_strength: strengthMap[relationship],
         next_follow_up_at: followUpDate || null,
-        notes: notesText,
-        tagNames: allTags,
-        is_public: connectionType === 'public',
-      };
-
-      const res = await api.post<any>('/contacts', payload);
+      });
 
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       setIsSaving(false);
@@ -523,10 +591,10 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="text-base sm:text-lg font-bold text-slate-900 truncate">
-                Add to Network
+                {contactToEdit ? 'Edit Profile' : 'Add to Network'}
               </h2>
               <p className="text-xs text-slate-500 truncate mt-0.5">
-                Capture a new relationship and all important details
+                {contactToEdit ? 'Update this contact’s details' : 'Capture a new relationship and all important details'}
               </p>
             </div>
           </div>
@@ -1577,7 +1645,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Save Record</span>
+                  <span>{contactToEdit ? 'Save Changes' : 'Save Record'}</span>
                 </>
               )}
             </button>
