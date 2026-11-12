@@ -97,18 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd, onClose }) => 
         )}
       </div>
 
-      {/* Quick Action Button */}
-      {isProfileComplete ? (
-        <div className="px-4 pt-4 pb-2">
-          <button
-            onClick={onOpenQuickAdd}
-            className="w-full bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-medium text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition-all hover:shadow-brand-600/30 active:scale-[0.98]"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Quick Add</span>
-          </button>
-        </div>
-      ) : (
+      {!isProfileComplete && (
         <div className="p-4 m-3 rounded-2xl bg-brand-950/80 border border-brand-500/30 shadow-lg">
           <div className="flex items-center gap-2 text-brand-400 font-bold text-xs mb-1.5">
             <Sparkles className="w-4 h-4 text-brand-400 animate-pulse" />
