@@ -232,8 +232,8 @@
 }
 
 .login-options input { width: 1.1rem; height: 1.1rem; accent-color: #215dfa; }
-.login-options button, .login-membership a, .login-footer button { color: var(--login-accent); }
-.login-options button:hover, .login-membership a:hover, .login-footer button:hover { text-decoration: underline; }
+.login-options button, .login-membership a { color: var(--login-accent); }
+.login-options button:hover, .login-membership a:hover { text-decoration: underline; }
 
 .login-submit {
   display: flex;
@@ -279,7 +279,6 @@
   text-align: center;
 }
 .login-footer svg { flex: none; width: 1.35em; height: auto; color: var(--login-accent); }
-.login-footer button { margin-top: .3rem; min-height: 2rem; font-size: .86rem; font-weight: 600; }
 
 @media (max-width: 800px) {
   .login-page { padding: 1.5rem clamp(1rem, 4vw, 2rem); }

@@ -19,7 +19,7 @@ export const LoginPage: React.FC = () => {
 
   const [showRecoveryHelp, setShowRecoveryHelp] = useState(false);
 
-  const { login, demoLogin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -35,23 +35,6 @@ export const LoginPage: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemo = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await demoLogin();
-      if (res.isComplete) {
-        navigate('/feed');
-      } else {
-        navigate('/profile');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to initialize demo account');
     } finally {
       setLoading(false);
     }
@@ -144,14 +127,13 @@ export const LoginPage: React.FC = () => {
           </form>
 
           <div className="login-membership">
-            <span>New to SansNetwork?</span> <Link to="/register">Apply for membership</Link>
+            <span>New to SansNetwork?</span> <Link to="/register">Create an account</Link>
           </div>
         </section>
       </div>
 
       <footer className="login-footer">
         <p className="login-rule"><ShieldCheck aria-hidden="true" /> A community for meaningful B2B relationships.</p>
-        <button type="button" onClick={handleDemo} disabled={loading}>Try the demo</button>
       </footer>
     </main>
   );
