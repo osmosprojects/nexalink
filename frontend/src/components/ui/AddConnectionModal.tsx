@@ -526,7 +526,6 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
       const res = await api.post<any>('/contacts', {
         ...payload,
         is_public: connectionType === 'public',
-        relationship_type: relationship,
         relationship_strength: strengthMap[relationship],
         next_follow_up_at: followUpDate || null,
       });

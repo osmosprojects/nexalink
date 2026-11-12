@@ -7,7 +7,6 @@ import {
   MessageSquareShare,
   Calendar,
   FileText,
-  Clock,
   Mail,
   Phone,
   Linkedin,
@@ -157,7 +156,36 @@ export const ContactDetailPage: React.FC = () => {
 
   const { contact, interactions, meetings, tasks, notes } = data;
   const badge = getRelationshipTypeBadge(contact.relationship_type);
+  const { cleanNotes, extendedData } = parseContactNotes(contact.notes);
+  const interactionHistory = [
+    ...interactions.map((interaction) => ({
+      ...interaction,
+      key: `interaction-${interaction.interaction_id}`,
+    })),
+    {
+      key: `contact-added-${contact.contact_id}`,
+      title: 'Added to Network',
+      interaction_type: 'Networking',
+      interaction_date: contact.created_at,
+      summary: extendedData?.meetingIntelligence,
+      outcome: null,
+    },
+  ].sort((a, b) => (Date.parse(b.interaction_date) || 0) - (Date.parse(a.interaction_date) || 0));
+
+  const followUpTask = extendedData?.followUpTask?.trim();
+  const followUps = followUpTask || contact.next_follow_up_at
+    ? [{
+      key: `contact-follow-up-${contact.contact_id}`,
+      kind: 'Follow-up',
+      title: followUpTask || 'Follow up with this contact',
+      date: contact.next_follow_up_at,
+      label: null,
+      agenda: null,
+    }]
+    : [];
+
   const engagements = [
+    ...followUps,
     ...meetings.map((meeting) => ({
       key: `meeting-${meeting.meeting_id}`,
       kind: 'Meeting',
@@ -263,7 +291,6 @@ export const ContactDetailPage: React.FC = () => {
 
               {/* Network Memberships & Tag Pills */}
               {(() => {
-                const { extendedData } = parseContactNotes(contact.notes);
                 const isSpecialTag = (name: string) =>
                   name.includes('Hot') || name.includes('Warm') || name.includes('Cold') || name.includes('🔥') || name.includes('☀️') || name.includes('❄️') || name.includes('Public') || name.includes('Private');
 
@@ -324,45 +351,34 @@ export const ContactDetailPage: React.FC = () => {
             : '❄️ Cold';
 
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60">
-              {/* Interactive Connection Warmth Buttons */}
-              <div className="sm:col-span-2 space-y-1.5">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Connection Warmth Rating
-                </span>
-                <div className="flex flex-wrap items-center gap-2">
-                  {[
-                    { name: '🔥 Hot', label: '🔥 Hot', color: 'bg-rose-500 text-white border-rose-600 shadow-rose-500/20' },
-                    { name: '☀️ Warm', label: '☀️ Warm', color: 'bg-amber-500 text-white border-amber-600 shadow-amber-500/20' },
-                    { name: '❄️ Cold', label: '❄️ Cold', color: 'bg-blue-500 text-white border-blue-600 shadow-blue-500/20' },
-                  ].map((w) => {
-                    const isActive = currentWarmthName.includes(w.name.replace(/[^a-zA-Z]/g, '')) || currentWarmthName === w.name;
-                    return (
-                      <button
-                        key={w.name}
-                        onClick={() => updateWarmthMutation.mutate(w.name as any)}
-                        disabled={updateWarmthMutation.isPending}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
-                          isActive
-                            ? `${w.color} shadow-sm scale-105 ring-2 ring-offset-1 ring-slate-400`
-                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
-                        }`}
-                      >
-                        <span>{w.label}</span>
-                        {isActive && <Check className="w-3.5 h-3.5" />}
-                      </button>
-                    );
-                  })}
-                  {updateWarmthMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-slate-400 ml-1" />}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Last Touch</span>
-                <p className="text-xs font-bold text-slate-800 mt-2 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{formatDate(contact.last_interaction_at, 'relative')}</span>
-                </p>
+            <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60 space-y-1.5">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Connection Warmth Rating
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {[
+                  { name: '🔥 Hot', label: '🔥 Hot', color: 'bg-rose-500 text-white border-rose-600 shadow-rose-500/20' },
+                  { name: '☀️ Warm', label: '☀️ Warm', color: 'bg-amber-500 text-white border-amber-600 shadow-amber-500/20' },
+                  { name: '❄️ Cold', label: '❄️ Cold', color: 'bg-blue-500 text-white border-blue-600 shadow-blue-500/20' },
+                ].map((w) => {
+                  const isActive = currentWarmthName.includes(w.name.replace(/[^a-zA-Z]/g, '')) || currentWarmthName === w.name;
+                  return (
+                    <button
+                      key={w.name}
+                      onClick={() => updateWarmthMutation.mutate(w.name as any)}
+                      disabled={updateWarmthMutation.isPending}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
+                        isActive
+                          ? `${w.color} shadow-sm scale-105 ring-2 ring-offset-1 ring-slate-400`
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>{w.label}</span>
+                      {isActive && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  );
+                })}
+                {updateWarmthMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-slate-400 ml-1" />}
               </div>
             </div>
           );
@@ -373,8 +389,8 @@ export const ContactDetailPage: React.FC = () => {
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-slate-200/80 pb-2">
         {([
           { id: 'overview', label: 'Overview', icon: FileText, count: undefined },
-          { id: 'interactions', label: 'Interactions', icon: MessageSquareShare, count: interactions.length },
-          { id: 'engagement', label: 'Upcoming Engagement', icon: Calendar, count: meetings.length + tasks.length },
+          { id: 'interactions', label: 'Interactions', icon: MessageSquareShare, count: interactionHistory.length },
+          { id: 'engagement', label: 'Upcoming Engagement', icon: Calendar, count: engagements.length },
           { id: 'notes', label: 'Notes', icon: FileText, count: notes.length },
         ] as const).map((tab) => {
           const Icon = tab.icon;
@@ -404,7 +420,6 @@ export const ContactDetailPage: React.FC = () => {
       {/* TAB CONTENT */}
       {/* 1. OVERVIEW TAB */}
       {activeTab === 'overview' && (() => {
-        const { cleanNotes, extendedData } = parseContactNotes(contact.notes);
         const isWarmthTagName = (name: string) =>
           name.includes('Hot') || name.includes('Warm') || name.includes('Cold') || name.includes('🔥') || name.includes('☀️') || name.includes('❄️');
 
@@ -588,9 +603,9 @@ export const ContactDetailPage: React.FC = () => {
                   )}
 
                   {/* 4. Where Met & Business Focus */}
-                  {(extendedData.whereMet || extendedData.businessFocus || extendedData.meetingIntelligence) && (
+                  {(extendedData.whereMet || extendedData.businessFocus) && (
                     <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-3">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Context & Meeting Intelligence</h4>
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Professional Context</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                         {extendedData.whereMet && (
                           <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/60">
@@ -604,28 +619,6 @@ export const ContactDetailPage: React.FC = () => {
                             <span className="font-semibold text-slate-900">{extendedData.businessFocus}</span>
                           </div>
                         )}
-                        {extendedData.meetingIntelligence && (
-                          <div className="sm:col-span-2 p-3 rounded-2xl bg-blue-50/50 border border-blue-100">
-                            <span className="text-[10px] uppercase font-bold text-blue-800 block">Meeting Intelligence Summary</span>
-                            <p className="text-xs text-slate-800 mt-0.5">{extendedData.meetingIntelligence}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 5. Follow-up Task */}
-                  {extendedData.followUpTask && (
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-card space-y-2">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Scheduled Follow-up Action</h4>
-                      <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between">
-                        <div>
-                          <span className="text-xs font-bold text-emerald-950 block">{extendedData.followUpTask}</span>
-                          {contact.next_follow_up_at && (
-                            <span className="text-[11px] font-medium text-emerald-700">Due: {formatDate(contact.next_follow_up_at, 'short')}</span>
-                          )}
-                        </div>
-                        <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg bg-emerald-600 text-white">Pending</span>
                       </div>
                     </div>
                   )}
@@ -644,24 +637,20 @@ export const ContactDetailPage: React.FC = () => {
                   </button>
                 </div>
 
-                {interactions.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-4 text-center">No interactions recorded yet.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {interactions.slice(0, 3).map((inter) => (
-                      <div key={inter.interaction_id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/50 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-900">{inter.title}</span>
-                          <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">
-                            {inter.interaction_type}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-500">{formatDate(inter.interaction_date, 'long')}</p>
-                        {inter.outcome && <p className="text-xs text-slate-600 mt-1"><span className="font-semibold">Outcome:</span> {inter.outcome}</p>}
+                <div className="space-y-3">
+                  {interactionHistory.slice(0, 3).map((inter) => (
+                    <div key={inter.key} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/50 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-900">{inter.title}</span>
+                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                          {inter.interaction_type}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <p className="text-[11px] text-slate-500">{formatDate(inter.interaction_date, 'long')}</p>
+                      {inter.outcome && <p className="text-xs text-slate-600 mt-1"><span className="font-semibold">Outcome:</span> {inter.outcome}</p>}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -713,35 +702,31 @@ export const ContactDetailPage: React.FC = () => {
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-card space-y-6">
           <h4 className="text-sm font-bold text-slate-900">Interactions</h4>
 
-          {interactions.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-8">No interactions recorded yet.</p>
-          ) : (
-            <div className="relative pl-6 border-l-2 border-brand-200 space-y-6">
-              {interactions.map((inter) => (
-                <div key={inter.interaction_id} className="relative space-y-2 group">
-                  {/* Dot */}
-                  <div className="absolute -left-[31px] top-1 w-3.5 h-3.5 rounded-full bg-brand-600 ring-4 ring-brand-100" />
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-bold text-slate-900">{inter.title}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800 uppercase">
-                      {inter.interaction_type}
-                    </span>
-                    <span className="text-[11px] text-slate-400 ml-auto">{formatDate(inter.interaction_date, 'long')}</span>
-                  </div>
-                  {inter.summary && (
-                    <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200/50">
-                      {inter.summary}
-                    </p>
-                  )}
-                  {inter.outcome && (
-                    <p className="text-xs text-emerald-800 font-semibold">
-                      Outcome: {inter.outcome}
-                    </p>
-                  )}
+          <div className="relative pl-6 border-l-2 border-brand-200 space-y-6">
+            {interactionHistory.map((inter) => (
+              <div key={inter.key} className="relative space-y-2 group">
+                {/* Dot */}
+                <div className="absolute -left-[31px] top-1 w-3.5 h-3.5 rounded-full bg-brand-600 ring-4 ring-brand-100" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900">{inter.title}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800 uppercase">
+                    {inter.interaction_type}
+                  </span>
+                  <span className="text-[11px] text-slate-400 ml-auto">{formatDate(inter.interaction_date, 'long')}</span>
                 </div>
-              ))}
-            </div>
-          )}
+                {inter.summary && (
+                  <p className="text-xs text-slate-600 whitespace-pre-wrap bg-slate-50 p-3 rounded-xl border border-slate-200/50">
+                    {inter.summary}
+                  </p>
+                )}
+                {inter.outcome && (
+                  <p className="text-xs text-emerald-800 font-semibold">
+                    Outcome: {inter.outcome}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -774,7 +759,7 @@ export const ContactDetailPage: React.FC = () => {
           </div>
 
           {engagements.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-8">No meetings or tasks linked to this contact yet.</p>
+            <p className="text-xs text-slate-400 text-center py-8">No meetings, tasks, or follow-ups yet.</p>
           ) : (
             <div className="space-y-3">
               {engagements.map((item) => (
@@ -782,9 +767,9 @@ export const ContactDetailPage: React.FC = () => {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-900">{item.title}</span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                      item.kind === 'Meeting' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-700'
+                      item.kind === 'Follow-up' ? 'bg-emerald-100 text-emerald-800' : item.kind === 'Meeting' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-700'
                     }`}>
-                      {item.kind} · {item.label}
+                      {item.kind}{item.label && ` · ${item.label}`}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500">
