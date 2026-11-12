@@ -18,7 +18,7 @@ import {
   UserCheck,
   UserPlus,
   LogOut,
-  ChevronRight,
+  X,
   Plus,
   Lock
 } from 'lucide-react';
@@ -27,10 +27,10 @@ import { Avatar } from '../ui/Avatar';
 
 interface SidebarProps {
   onOpenQuickAdd: () => void;
-  onOpenSearch: () => void;
+  onClose?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd, onClose }) => {
   const { user, profile, isProfileComplete, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -67,12 +67,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-slate-900 text-slate-300 h-screen shrink-0 border-r border-slate-800 z-30 select-none">
+    <aside
+      aria-label="Sidebar"
+      className="flex h-dvh w-full flex-col overflow-y-auto bg-slate-900 text-slate-300 border-r border-slate-800 select-none"
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest('a') &&
+            !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+          onClose?.();
+        }
+      }}
+    >
       {/* Brand Header */}
       <div className="p-5 flex items-center justify-between border-b border-slate-800/80">
-        <div 
-          onClick={() => navigate(isProfileComplete ? '/feed' : '/profile')}
-          className="flex items-center gap-3 cursor-pointer group"
+        <NavLink
+          to={isProfileComplete ? '/feed' : '/profile'}
+          className="flex min-w-0 items-center gap-3"
         >
           <img src={brandMark} alt="" className="w-9 h-9 rounded-xl shrink-0" />
           <div className="min-w-0">
@@ -81,7 +90,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
             </div>
             <p className="text-[11px] text-slate-400 font-medium truncate max-w-[130px]">Relationship Intel</p>
           </div>
-        </div>
+        </NavLink>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close sidebar"
+            className="grid size-9 shrink-0 place-items-center rounded-lg hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400"
+          >
+            <X className="size-5" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Quick Action Button */}
@@ -123,6 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd }) => {
                 } else {
                   navigate('/profile');
                 }
+                onClose?.();
               }}
               className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow-md shadow-brand-600/30 cursor-pointer active:scale-95"
             >

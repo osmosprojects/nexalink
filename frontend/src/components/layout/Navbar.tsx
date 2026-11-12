@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, Plus, Sparkles, User, UserPlus, Target } from 'lucide-react';
+import { Search, Bell, Menu, PanelLeftClose, PanelLeftOpen, UserPlus, Target } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 
@@ -12,6 +12,10 @@ interface NavbarProps {
   onOpenAddGoal?: () => void;
   onOpenSearch: () => void;
   unreadCount?: number;
+  isDesktopSidebarOpen: boolean;
+  onToggleDesktopSidebar: () => void;
+  isMobileSidebarOpen: boolean;
+  onOpenMobileSidebar: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,17 +26,41 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAddGoal,
   onOpenSearch,
   unreadCount = 0,
+  isDesktopSidebarOpen,
+  onToggleDesktopSidebar,
+  isMobileSidebarOpen,
+  onOpenMobileSidebar,
 }) => {
   const { user, profile, isProfileComplete } = useAuth();
   const navigate = useNavigate();
+  const sidebarLabel = isDesktopSidebarOpen ? 'Close sidebar' : 'Open sidebar';
+  const SidebarIcon = isDesktopSidebarOpen ? PanelLeftClose : PanelLeftOpen;
 
   return (
     <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-8 py-3 flex items-center justify-between transition-all w-full max-w-full">
-      {/* Page Title & Mobile Logo */}
       <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
-        <div className="lg:hidden shrink-0 w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-brand-500/20">
-          N
-        </div>
+        <button
+          type="button"
+          onClick={onToggleDesktopSidebar}
+          aria-controls="desktop-sidebar"
+          aria-expanded={isDesktopSidebarOpen}
+          aria-label={sidebarLabel}
+          title={sidebarLabel}
+          className="hidden size-9 shrink-0 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 lg:grid"
+        >
+          <SidebarIcon className="size-5" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={onOpenMobileSidebar}
+          aria-controls="mobile-sidebar"
+          aria-expanded={isMobileSidebarOpen}
+          aria-haspopup="dialog"
+          aria-label="Open sidebar"
+          className="grid size-9 shrink-0 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 lg:hidden"
+        >
+          <Menu className="size-5" aria-hidden="true" />
+        </button>
         <div className="min-w-0">
           <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-slate-900 tracking-tight leading-tight truncate">
             {title}

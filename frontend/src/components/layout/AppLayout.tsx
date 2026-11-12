@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
@@ -34,6 +34,9 @@ export const AppLayout: React.FC = () => {
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickAddTab, setQuickAddTab] = useState<'contact' | 'interaction' | 'meeting' | 'task' | 'goal' | 'note'>('goal');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const mobileSidebarRef = useRef<HTMLDialogElement>(null);
   const { user, profile, persona, isProfileComplete, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -44,6 +47,21 @@ export const AppLayout: React.FC = () => {
     refetchInterval: 30000,
     enabled: isProfileComplete,
   });
+
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const closeDrawerOnDesktop = () => {
+      if (desktop.matches) mobileSidebarRef.current?.close();
+    };
+    desktop.addEventListener('change', closeDrawerOnDesktop);
+    return () => desktop.removeEventListener('change', closeDrawerOnDesktop);
+  }, []);
+
+  const openSidebarQuickAdd = () => {
+    mobileSidebarRef.current?.close();
+    if (isProfileComplete) setIsAddPersonOpen(true);
+    else navigate('/profile');
+  };
 
   const path = location.pathname;
   const rawMeta = routeTitleMap[path] || {
@@ -66,23 +84,27 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] w-full min-w-0 overflow-hidden">
-      {/* Desktop Left Sidebar */}
-      <Sidebar
-        onOpenQuickAdd={() => {
-          if (!isProfileComplete) {
-            navigate('/profile');
-            return;
-          }
-          setIsAddPersonOpen(true);
+      <div id="desktop-sidebar" hidden={!isDesktopSidebarOpen} className={isDesktopSidebarOpen ? 'hidden w-64 shrink-0 lg:block' : 'hidden'}>
+        {isDesktopSidebarOpen && <Sidebar onOpenQuickAdd={openSidebarQuickAdd} />}
+      </div>
+
+      <dialog
+        id="mobile-sidebar"
+        ref={mobileSidebarRef}
+        aria-label="Main navigation"
+        className="fixed inset-y-0 left-0 right-auto m-0 h-dvh max-h-none w-72 max-w-[85vw] overflow-hidden bg-slate-900 p-0 text-slate-300 backdrop:bg-slate-950/60"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) event.currentTarget.close();
         }}
-        onOpenSearch={() => {
-          if (!isProfileComplete) {
-            navigate('/profile');
-            return;
-          }
-          setIsSearchOpen(true);
-        }}
-      />
+        onClose={() => setIsMobileSidebarOpen(false)}
+      >
+        {isMobileSidebarOpen && (
+          <Sidebar
+            onOpenQuickAdd={openSidebarQuickAdd}
+            onClose={() => mobileSidebarRef.current?.close()}
+          />
+        )}
+      </dialog>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
@@ -114,6 +136,13 @@ export const AppLayout: React.FC = () => {
         <Navbar
           title={pageMeta.title}
           subtitle={pageMeta.subtitle}
+          isDesktopSidebarOpen={isDesktopSidebarOpen}
+          onToggleDesktopSidebar={() => setIsDesktopSidebarOpen((open) => !open)}
+          isMobileSidebarOpen={isMobileSidebarOpen}
+          onOpenMobileSidebar={() => {
+            mobileSidebarRef.current?.showModal();
+            setIsMobileSidebarOpen(true);
+          }}
           onOpenAddPerson={() => {
             if (!isProfileComplete) {
               navigate('/profile');
