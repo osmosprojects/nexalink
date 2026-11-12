@@ -2,12 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { GoogleOAuthButton } from '../components/auth/GoogleOAuthButton';
-import { ArrowRight, Lock, Mail, ShieldCheck } from 'lucide-react';
-import mark from '../assets/login/mark.webp';
-import portraitTop from '../assets/login/portrait-top.webp';
-import portraitLeft from '../assets/login/portrait-left.webp';
-import portraitRight from '../assets/login/portrait-right.webp';
-import portraitBottom from '../assets/login/portrait-bottom.webp';
+import { ArrowRight, Lock, Mail } from 'lucide-react';
+import mark from '../assets/login/blue-mark.webp';
+import portrait from '../assets/login/welcome-portrait.webp';
 import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
@@ -41,32 +38,32 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <main className="login-page">
+    <main className="login-page welcome-login">
+      <div className="welcome-login-art" aria-hidden="true">
+        <img src={portrait} alt="" className="welcome-login-portrait" />
+      </div>
       <div className="login-layout">
         <section className="login-intro" aria-labelledby="login-title">
           <header className="login-brand">
+            <img src={mark} alt="" />
+            <p>Sans<span>Network</span></p>
+          </header>
+          <p className="welcome-login-tagline">The network of networkers!</p>
+          <h1 id="login-title">Welcome to<br /> Sans<span>Network!</span></h1>
+          <p className="login-description">
+            A premier, exclusive network of networkers — connecting professionals,
+            business leaders and organisations to build meaningful relationships and grow together.
+          </p>
+        </section>
+
+        <section className="login-card" aria-label="Sign in">
+          <header className="login-brand welcome-login-card-brand">
             <img src={mark} alt="" />
             <div>
               <p>Sans<span>Network</span></p>
               <small>Build Meaningful Connections. Grow Together.</small>
             </div>
           </header>
-          <h1 id="login-title">Welcome <span>Back!</span></h1>
-          <p className="login-description">Sign in to continue your<br className="login-desktop-break" /> networking journey.</p>
-
-          <div className="login-network" aria-hidden="true">
-            <div className="login-orbit login-orbit-outer"><i /><i /><i /><i /></div>
-            <div className="login-orbit login-orbit-inner"><i /><i /><i /><i /></div>
-            <img className="login-network-mark" src={mark} alt="" />
-            <img className="login-portrait login-portrait-top" src={portraitTop} alt="" />
-            <img className="login-portrait login-portrait-left" src={portraitLeft} alt="" />
-            <img className="login-portrait login-portrait-right" src={portraitRight} alt="" />
-            <img className="login-portrait login-portrait-bottom" src={portraitBottom} alt="" />
-          </div>
-        </section>
-
-        <section className="login-card" aria-label="Sign in">
-          <div className="login-rule login-card-mark" aria-hidden="true"><img src={mark} alt="" /></div>
           <div className="login-google">
             <GoogleOAuthButton
               buttonText="Continue with Google"
@@ -127,14 +124,11 @@ export const LoginPage: React.FC = () => {
           </form>
 
           <div className="login-membership">
-            <span>New to SansNetwork?</span> <Link to="/register">Create an account</Link>
+            <span>Don't have an account?</span> <Link to="/register">Create an account</Link>
           </div>
         </section>
       </div>
 
-      <footer className="login-footer">
-        <p className="login-rule"><ShieldCheck aria-hidden="true" /> A community for meaningful B2B relationships.</p>
-      </footer>
     </main>
   );
 };
