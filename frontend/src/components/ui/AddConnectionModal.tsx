@@ -112,6 +112,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
   // Feed Posting State
   const [isPostingToFeed, setIsPostingToFeed] = useState(false);
   const [hasPostedToFeed, setHasPostedToFeed] = useState(false);
+  const [feedShareError, setFeedShareError] = useState<string | null>(null);
 
   // UI States
   const [errors, setErrors] = useState<{ fullName?: string; email?: string; phone?: string }>({});
@@ -212,6 +213,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
     setSavedContact(null);
     setIsPostingToFeed(false);
     setHasPostedToFeed(false);
+    setFeedShareError(null);
 
     const focusTimer = window.setTimeout(() => nameInputRef.current?.focus(), 100);
     return () => window.clearTimeout(focusTimer);
@@ -655,6 +657,8 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 </p>
               </div>
 
+              {feedShareError && <p role="alert" className="text-xs text-rose-700">{feedShareError}</p>}
+
               {/* Share Actions */}
               {hasPostedToFeed ? (
                 <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 animate-fadeIn">
@@ -667,14 +671,14 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                     type="button"
                     disabled={isPostingToFeed}
                     onClick={async () => {
+                      if (!savedContact?.contact_id) return;
                       setIsPostingToFeed(true);
+                      setFeedShareError(null);
                       try {
-                        const targetDetails = `${fullName}${role ? `, ${role}` : ''}${company ? `, ${company}` : ''}`;
-                        const postContent = `[can connect you to] ${targetDetails}`;
-                        await api.post('/feed', { content: postContent, tags: null });
-                        if (savedContact?.contact_id) {
-                          await api.put(`/contacts/${savedContact.contact_id}`, { privacyTag: '🌐 Public Connection' });
-                        }
+                        await api.put(`/contacts/${savedContact.contact_id}`, {
+                          privacyTag: '🌐 Public Connection',
+                          shareOnFeed: true,
+                        });
                         queryClient.invalidateQueries({ queryKey: ['contacts'] });
                         queryClient.invalidateQueries({ queryKey: ['feed'] });
                         setHasPostedToFeed(true);
@@ -682,7 +686,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                           confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
                         } catch {}
                       } catch (feedErr) {
-                        console.error('Failed to post to feed:', feedErr);
+                        setFeedShareError(feedErr instanceof Error ? feedErr.message : 'Could not share this connection. Please try again.');
                       } finally {
                         setIsPostingToFeed(false);
                       }
@@ -744,6 +748,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 onClick={() => {
                   setSavedContact(null);
                   setHasPostedToFeed(false);
+                  setFeedShareError(null);
                   setFullName('');
                   setPhone('');
                   setEmail('');

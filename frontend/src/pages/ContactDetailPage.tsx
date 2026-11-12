@@ -98,15 +98,9 @@ export const ContactDetailPage: React.FC = () => {
   const handleConfirmPublicShare = async (shareOnFeed: boolean) => {
     setIsPostingFeed(true);
     try {
-      await api.put(`/contacts/${id}`, { privacyTag: '🌐 Public Connection' });
+      await api.put(`/contacts/${id}`, { privacyTag: '🌐 Public Connection', shareOnFeed });
 
-      if (shareOnFeed && data?.contact) {
-        const c = data.contact;
-        const last = c.last_name && c.last_name !== '.' ? ` ${c.last_name}` : '';
-        const nameStr = `${c.first_name || ''}${last}`.trim();
-        const targetDetails = `${nameStr}${c.job_title ? `, ${c.job_title}` : ''}${c.company ? `, ${c.company}` : ''}`;
-        const postContent = `[can connect you to] ${targetDetails}`;
-        await api.post('/feed', { content: postContent, tags: null });
+      if (shareOnFeed) {
         try {
           confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
         } catch {}

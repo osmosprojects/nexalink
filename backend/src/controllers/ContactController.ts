@@ -8,7 +8,6 @@ import { NoteRepository } from '../repositories/NoteRepository';
 import { UserRepository } from '../repositories/UserRepository';
 import { ProfileRepository } from '../repositories/ProfileRepository';
 import { FeedRepository } from '../repositories/FeedRepository';
-import { query } from '../config/db';
 import { sendSuccess, sendError } from '../helpers/response';
 import { logAudit } from '../middleware/audit';
 
@@ -112,26 +111,6 @@ export class ContactController {
       const isPublicVal = Boolean(req.body.is_public || req.body.isPublic || (req.body.privacyTag && req.body.privacyTag.includes('Public')) || (tagNames && Array.isArray(tagNames) && tagNames.some((t: string) => t.includes('Public'))));
       await TagRepository.setContactPrivacy(userId, contactId, isPublicVal);
 
-      if (isPublicVal) {
-        try {
-          const user = await UserRepository.findById(userId);
-          const profile = await ProfileRepository.getProfileByUserId(userId);
-          const authorTitle = profile?.headline || (profile?.job_title && profile?.company ? `${profile.job_title} at ${profile.company}` : profile?.job_title || profile?.company || 'Network Member');
-          const targetDetails = `${safeFirstName}${safeLastName ? ` ${safeLastName}` : ''}${job_title ? `, ${job_title}` : ''}${company ? `, ${company}` : ''}`;
-          const postContent = `[can connect you to] ${targetDetails}`;
-
-          await FeedRepository.create(userId, {
-            author_name: user?.display_name || 'Connection Owner',
-            author_title: authorTitle,
-            author_avatar: user?.avatar_url || null,
-            content: postContent,
-            tags: null,
-          });
-        } catch (feedErr) {
-          console.warn('Auto feed post error during contact creation:', feedErr);
-        }
-      }
-
       const contact = await ContactRepository.getById(userId, contactId);
       await logAudit(req, 'CONTACT_CREATED', 'contact', contactId);
 
@@ -161,37 +140,24 @@ export class ContactController {
         const isPub = req.body.privacyTag ? req.body.privacyTag.includes('Public') : Boolean(req.body.is_public || req.body.isPublic);
         await TagRepository.setContactPrivacy(userId, contactId, isPub);
 
-        // ONLY post connection to Network Feed if user explicitly opted to share on feed
         if (isPub && req.body.shareOnFeed === true) {
-          try {
-            const contact = await ContactRepository.getById(userId, contactId);
-            if (contact) {
-              const user = await UserRepository.findById(userId);
-              const profile = await ProfileRepository.getProfileByUserId(userId);
-              const authorTitle = profile?.headline || (profile?.job_title && profile?.company ? `${profile.job_title} at ${profile.company}` : profile?.job_title || profile?.company || 'Network Member');
-              const last = contact.last_name && contact.last_name !== '.' ? ` ${contact.last_name}` : '';
-              const nameStr = `${contact.first_name || ''}${last}`.trim();
-              const targetDetails = `${nameStr}${contact.job_title ? `, ${contact.job_title}` : ''}${contact.company ? `, ${contact.company}` : ''}`;
-              const postContent = `[can connect you to] ${targetDetails}`;
+          const contact = await ContactRepository.getById(userId, contactId);
+          if (!contact) return sendError(res, 'Contact not found', 404);
 
-              const existingPosts = await query<any[]>(
-                `SELECT post_id FROM posts WHERE user_id = ? AND content LIKE ? LIMIT 1`,
-                [userId, `%${nameStr}%`]
-              );
-
-              if (existingPosts.length === 0) {
-                await FeedRepository.create(userId, {
-                  author_name: user?.display_name || 'Connection Owner',
-                  author_title: authorTitle,
-                  author_avatar: user?.avatar_url || null,
-                  content: postContent,
-                  tags: null,
-                });
-              }
-            }
-          } catch (feedErr) {
-            console.warn('Auto feed post error during contact update:', feedErr);
-          }
+          const user = await UserRepository.findById(userId);
+          const profile = await ProfileRepository.getProfileByUserId(userId);
+          const authorTitle = profile?.headline || (profile?.job_title && profile?.company
+            ? `${profile.job_title} at ${profile.company}`
+            : profile?.job_title || profile?.company || 'Network Member');
+          const last = contact.last_name && contact.last_name !== '.' ? ` ${contact.last_name}` : '';
+          const name = `${contact.first_name || ''}${last}`.trim();
+          const details = [name, contact.job_title, contact.company].filter(Boolean).join(', ');
+          await FeedRepository.createContactShare(userId, {
+            author_name: user?.display_name || 'Connection Owner',
+            author_title: authorTitle,
+            author_avatar: user?.avatar_url || null,
+            content: `[can connect you to] ${details}`,
+          });
         }
       }
 
