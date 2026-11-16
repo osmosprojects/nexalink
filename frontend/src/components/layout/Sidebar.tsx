@@ -33,17 +33,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd, onClose }) => 
   const { user, profile, isProfileComplete, logout } = useAuth();
   const navigate = useNavigate();
 
-  const networkingNav = [
-    { to: '/connections', label: 'My Networks', icon: Users },
-    { to: '/calendar', label: 'My Networking Calendar', icon: Calendar },
+  const primaryNav = [
+    { to: '/feed', label: 'Home', icon: Rss },
+    { to: '/connections', label: 'My Network', icon: Users },
+    { to: '/discover', label: 'Discover', icon: Compass },
+    { to: '/profile', label: 'Profile', icon: UserCheck },
   ];
 
-  const mainNav = [
-    { to: '/feed', label: 'Home / Feed', icon: Rss },
-    { to: '/discover', label: 'Discover', icon: Compass },
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  const networkingNav = [
+    { to: '/calendar', label: 'My Networking Calendar', icon: Calendar },
     { to: '/interactions', label: 'Interactions', icon: MessageSquareShare },
     { to: '/goals', label: 'Goals', icon: Target },
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   ];
 
   const productivityNav = [
@@ -150,8 +151,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd, onClose }) => 
           </div>
         ) : (
           <>
-            {/* Networking Core Section */}
+            {/* Primary Navigation: Home, My Network, Discover, Profile */}
             <div className="space-y-1">
+              {primaryNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                        isActive
+                          ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
+                          : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
+                      }`
+                    }
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </div>
+                  </NavLink>
+                );
+              })}
+            </div>
+
+            {/* Networking Section */}
+            <div className="space-y-1 pt-2">
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-brand-400">Networking</p>
               <button
                 type="button"
@@ -187,34 +213,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd, onClose }) => 
               })}
             </div>
 
-            {/* Core CRM */}
-            <div className="space-y-1">
-              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Core CRM</p>
-              {mainNav.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                        isActive
-                          ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 font-semibold'
-                          : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
-                      }`
-                    }
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-                    </div>
-                  </NavLink>
-                );
-              })}
-            </div>
-
             {/* Productivity Workspace */}
-            <div className="space-y-1">
+            <div className="space-y-1 pt-2">
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Productivity</p>
               {productivityNav.map((item) => {
                 const Icon = item.icon;

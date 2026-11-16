@@ -33,8 +33,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
 
   const primaryTabs = [
     { to: '/feed', label: 'Home', icon: Rss },
+    { to: '/connections', label: 'My Network', icon: Users },
     { to: '/discover', label: 'Discover', icon: Compass },
-    { to: '/connections', label: 'People', icon: Users },
     { to: '/profile', label: 'Profile', icon: UserCheck, highlight: !isProfileComplete },
   ];
 
