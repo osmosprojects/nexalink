@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Rss,
   Heart,
   Send,
   MessageCircle,
@@ -89,7 +88,9 @@ function getReplyIntent(replyType: ReplyItem['replyType']) {
     : 'WANTS_TO_MEET';
 }
 
-export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false }) => {
+export const FeedPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const personal = searchParams.get('view') === 'personal';
   const [postType, setPostType] = useState<'wants to meet' | 'can connect you to'>('wants to meet');
   const [content, setContent] = useState('');
   const { user, profile } = useAuth();
@@ -280,31 +281,42 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 pb-12">
-      {/* Header */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900">{personal ? 'Personal Feed' : 'Feed'}</h2>
-          <p className="text-xs text-slate-500">
-            {personal ? 'Your networking posts and posts you responded to' : 'Share networking requirements, updates, and community connections'}
-          </p>
-        </div>
-        <div className="flex items-center gap-2.5">
+      <div className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <nav aria-label="Feed views" className="inline-flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
+            {[
+              { label: 'Generic Feed', to: '/feed', active: !personal },
+              { label: 'Personal Feed', to: '/feed?view=personal', active: personal },
+            ].map(({ label, to, active }) => (
+              <Link
+                key={to}
+                to={to}
+                aria-current={active ? 'page' : undefined}
+                className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                  active ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
           <button
             type="button"
             onClick={handleOpenPostFeature}
-            className={`w-9 h-9 rounded-2xl flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer ${
+            aria-label={isComposerOpen ? 'Close composer' : 'Create post'}
+            aria-expanded={isComposerOpen}
+            className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-2xl shadow-md transition-all active:scale-95 ${
               isComposerOpen
                 ? 'bg-slate-700 hover:bg-slate-800 text-white shadow-slate-700/20'
                 : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/20'
             }`}
-            title={isComposerOpen ? 'Close / Cancel (X)' : 'Create Post / Share Update (+)'}
           >
-            {isComposerOpen ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+            {isComposerOpen ? <X className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
           </button>
-          <div className="w-9 h-9 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center">
-            <Rss className="w-4 h-4" />
-          </div>
         </div>
+        <p className="text-xs text-slate-500">
+          {personal ? 'Your networking posts and posts you responded to' : 'Share networking requirements, updates, and community connections'}
+        </p>
       </div>
 
       {/* Share Networking Requirement & Update Composer */}
@@ -415,7 +427,7 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
         <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 space-y-2">
           <h3 className="text-base font-bold text-slate-800">No posts in feed</h3>
           <p className="text-xs text-slate-500">
-            {personal ? 'Create a post or respond to one on Home to see it here.' : 'Share your first requirement or update above.'}
+            {personal ? 'Create a post or respond to one in Generic Feed to see it here.' : 'Share your first requirement or update above.'}
           </p>
         </div>
       ) : (

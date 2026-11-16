@@ -12,7 +12,6 @@ import {
   Calendar,
   FileText,
   Rss,
-  Newspaper,
   Settings,
   UserCheck,
   LogOut,
@@ -34,7 +33,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
 
   const primaryTabs = [
     { to: '/feed', label: 'Home', icon: Rss },
-    { to: '/personal-feed', label: 'Personal Feed', icon: Newspaper },
     { to: '/connections', label: 'My Network', icon: Users },
     { to: '/discover', label: 'Discover', icon: Compass },
     { to: '/profile', label: 'Profile', icon: UserCheck, highlight: !isProfileComplete },

@@ -15,7 +15,6 @@ const routeTitleMap: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': { title: 'Dashboard', subtitle: 'Overview of your network and daily priorities' },
   '/discover': { title: 'Discover Network', subtitle: 'Discover founders, mentors, and strategic partners' },
   '/connections': { title: 'Connections CRM', subtitle: 'Manage your contacts, relationship depth, and tags' },
-  '/personal-feed': { title: 'Personal Feed', subtitle: 'Your networking posts and posts you responded to' },
   '/interactions': { title: 'Interactions', subtitle: 'Track meetings, calls, coffee chats, and outcomes' },
   '/goals': { title: 'Goal Engine', subtitle: 'Turn networking ambitions into measurable targets' },
   '/kanban': { title: 'Kanban Board', subtitle: 'Visual workflow management for relationship tasks' },

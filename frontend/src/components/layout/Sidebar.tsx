@@ -13,7 +13,6 @@ import {
   FileText,
   Sparkles,
   Rss,
-  Newspaper,
   Settings,
   UserCheck,
   UserPlus,
@@ -36,7 +35,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenQuickAdd, onClose }) => 
 
   const primaryNav = [
     { to: '/feed', label: 'Home', icon: Rss },
-    { to: '/personal-feed', label: 'Personal Feed', icon: Newspaper },
     { to: '/connections', label: 'My Network', icon: Users },
     { to: '/discover', label: 'Discover', icon: Compass },
     { to: '/profile', label: 'Profile', icon: UserCheck },
