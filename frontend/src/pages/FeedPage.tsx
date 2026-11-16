@@ -451,14 +451,17 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
               : intentConfig;
             const displayAuthor = displayedReply?.authorName ?? post.author_name;
             const displayAvatar = displayedReply ? displayedReply.authorAvatar : post.author_avatar;
-            const displayDetails = displayedReply ? displayedReply.targetPerson.trim() || targetPersonInPost : details;
-            const displayLabel = personal
-              ? displayIntent.intentLabel[0].toUpperCase() + displayIntent.intentLabel.slice(1)
-              : displayIntent.intentLabel;
-            const originalPostContext = displayedReply && (
-              <p className="basis-full text-xs text-slate-500">
-                In response to {post.author_name}’s post
-              </p>
+            const offersIntroduction = displayIntent.intentKey === 'CAN_CONNECT';
+            const replyTarget = displayedReply?.targetPerson.trim() || targetPersonInPost;
+            const displayLabel = displayedReply && offersIntroduction
+              ? 'Can introduce'
+              : personal
+                ? displayIntent.intentLabel[0].toUpperCase() + displayIntent.intentLabel.slice(1)
+                : displayIntent.intentLabel;
+            const displayDetails = !displayedReply ? details : offersIntroduction ? (
+              <>You can connect <strong>{post.author_name}</strong> with <strong>{replyTarget}</strong>.</>
+            ) : (
+              <>You want to meet <strong>{replyTarget}</strong> via <strong>{post.author_name}</strong>.</>
             );
 
             const requestButton = !isOwnPost && (
@@ -511,7 +514,6 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                         {displayDetails}
                       </span>
                       {requestButton}
-                      {originalPostContext}
                     </div>
                   </div>
                 </div>
@@ -544,7 +546,6 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                         {displayDetails}
                       </span>
                       {requestButton}
-                      {originalPostContext}
                     </div>
                   </div>
 
