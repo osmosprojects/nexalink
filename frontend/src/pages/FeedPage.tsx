@@ -31,13 +31,12 @@ const SHOW_THREAD_CONVERSATION = false;
 export const NETWORKING_INTENT_ACTIONS = {
   WANTS_TO_MEET: {
     intentKey: 'WANTS_TO_MEET' as const,
-    displayIntent: '🤝 wants to meet',
     intentBadgeIcon: '🤝',
     intentLabel: 'wants to meet',
     badgeStyle: 'bg-blue-800 text-white font-bold border border-blue-900',
-    responseAction: '✨ Can Connect',
+    responseAction: (target: string) => `✨ I can introduce you to ${target}`,
     responseType: 'CAN_CONNECT',
-    respondedText: '✓ Can Connect sent',
+    respondedText: '✓ Introduction offer sent',
     responseBtnStyle: 'bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-xs',
     respondedBtnStyle: 'bg-emerald-800 text-white font-bold border border-emerald-950',
     ownerSummaryText: (count: number) =>
@@ -47,13 +46,12 @@ export const NETWORKING_INTENT_ACTIONS = {
   },
   CAN_CONNECT: {
     intentKey: 'CAN_CONNECT' as const,
-    displayIntent: '🌟 can connect you to',
     intentBadgeIcon: '🌟',
-    intentLabel: 'can connect you to',
+    intentLabel: 'can introduce you to',
     badgeStyle: 'bg-emerald-700 text-white font-bold border border-emerald-800',
-    responseAction: '🤝 Wants to Meet',
+    responseAction: (target: string) => `🤝 I want to meet ${target}`,
     responseType: 'WANTS_TO_MEET',
-    respondedText: '✓ Want to Meet sent',
+    respondedText: '✓ Meeting interest sent',
     responseBtnStyle: 'bg-blue-800 hover:bg-blue-900 text-white font-bold shadow-xs',
     respondedBtnStyle: 'bg-blue-900 text-white font-bold border border-blue-950',
     ownerSummaryText: (count: number, target: string) =>
@@ -83,6 +81,12 @@ export interface ReplyItem {
   content?: string | null;
   timeAgo: string;
   likesCount: number;
+}
+
+function getReplyIntent(replyType: ReplyItem['replyType']) {
+  return replyType === 'CAN_CONNECT' || replyType === 'can connect' || replyType === 'can connect to'
+    ? 'CAN_CONNECT'
+    : 'WANTS_TO_MEET';
 }
 
 export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false }) => {
@@ -158,7 +162,7 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
           authorName: r.author_name,
           authorAvatar: r.author_avatar,
           replyType: r.reply_type || 'wants to meet to',
-          targetPerson: r.target_person || 'Sanjeev Sarma',
+          targetPerson: r.target_person || '',
           content: r.content || null,
           timeAgo: formatDate(r.created_at, 'relative'),
           likesCount: 0,
@@ -352,8 +356,8 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                     : 'bg-blue-800 text-white border-blue-900'
                 }`}
               >
-                <option value="wants to meet" className="bg-white text-slate-900">🤝 wants to meet</option>
-                <option value="can connect you to" className="bg-white text-slate-900">🌟 can connect you to</option>
+                <option value="wants to meet" className="bg-white text-slate-900">🤝 I Want To Meet</option>
+                <option value="can connect you to" className="bg-white text-slate-900">🤝 I Can Connect You To</option>
               </select>
             </div>
 
@@ -422,7 +426,7 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
             const originalIntentKey = isWantToMeet ? 'WANTS_TO_MEET' : 'CAN_CONNECT';
             const intentConfig = NETWORKING_INTENT_ACTIONS[originalIntentKey];
 
-            let details = post.content
+            const details = post.content
               .replace('[wants to meet]', '')
               .replace('[I want to meet]', '')
               .replace('[can connect you to]', '')
@@ -439,18 +443,34 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
 
             const isOwnPost = Number(user?.userId) === Number(post.user_id);
             const replies: ReplyItem[] = postReplies[post.post_id] || [];
-            const userHasResponded = replies.some((reply) => Number(user?.userId) === reply.userId);
+            const viewerReply = replies.find((reply) => Number(user?.userId) === reply.userId);
+            const userHasResponded = Boolean(viewerReply);
+            const displayedReply = personal && !isOwnPost ? viewerReply : undefined;
+            const displayIntent = displayedReply
+              ? NETWORKING_INTENT_ACTIONS[getReplyIntent(displayedReply.replyType)]
+              : intentConfig;
+            const displayAuthor = displayedReply?.authorName ?? post.author_name;
+            const displayAvatar = displayedReply ? displayedReply.authorAvatar : post.author_avatar;
+            const displayDetails = displayedReply ? displayedReply.targetPerson.trim() || targetPersonInPost : details;
+            const displayLabel = personal
+              ? displayIntent.intentLabel[0].toUpperCase() + displayIntent.intentLabel.slice(1)
+              : displayIntent.intentLabel;
+            const originalPostContext = displayedReply && (
+              <p className="basis-full text-xs text-slate-500">
+                In response to {post.author_name}’s post
+              </p>
+            );
 
             const requestButton = !isOwnPost && (
               <button
                 type="button"
                 disabled={userHasResponded}
                 onClick={() => handleRespondToPost(post.post_id, targetPersonInPost, intentConfig.responseType)}
-                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs whitespace-nowrap transition-colors ${
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs max-w-full whitespace-normal transition-colors ${
                   userHasResponded ? intentConfig.respondedBtnStyle : intentConfig.responseBtnStyle
                 }`}
               >
-                {userHasResponded ? intentConfig.respondedText : intentConfig.responseAction}
+                {userHasResponded ? intentConfig.respondedText : intentConfig.responseAction(targetPersonInPost)}
               </button>
             );
 
@@ -473,24 +493,25 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                         onClick={() => navigate('/profile')}
                         className="text-sm font-bold text-slate-900 cursor-pointer hover:text-brand-600 transition-colors"
                       >
-                        {post.author_name}
+                        {displayAuthor}
                       </h4>
-                      <p className="text-xs text-slate-500 font-medium">{authorRoleTitle}</p>
+                      <p className="text-xs text-slate-500 font-medium">{displayedReply ? userSubtitle : authorRoleTitle}</p>
                     </div>
                     <span className="text-[11px] text-slate-400 font-medium">{formatDate(post.created_at, 'relative')}</span>
                   </div>
 
                   <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3.5 space-y-2">
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] ${intentConfig.badgeStyle}`}>
-                      <span>{intentConfig.intentBadgeIcon}</span>
-                      <span>{intentConfig.intentLabel}</span>
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] ${displayIntent.badgeStyle}`}>
+                      <span>{personal ? '🤝' : displayIntent.intentBadgeIcon}</span>
+                      <span>{displayLabel}</span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="min-w-0 text-xs font-semibold text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
-                        {details}
+                        {displayDetails}
                       </span>
                       {requestButton}
+                      {originalPostContext}
                     </div>
                   </div>
                 </div>
@@ -499,8 +520,8 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                 <div className="hidden md:flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap">
                     <Avatar
-                      src={post.author_avatar}
-                      name={post.author_name}
+                      src={displayAvatar}
+                      name={displayAuthor}
                       onClick={() => navigate('/profile')}
                       className="w-10 h-10 rounded-full ring-2 ring-slate-200 hover:ring-brand-500 transition-all cursor-pointer shrink-0"
                       title="View Profile"
@@ -511,18 +532,19 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                         onClick={() => navigate('/profile')}
                         className="font-bold text-slate-900 text-sm cursor-pointer hover:text-brand-600 transition-colors shrink-0"
                       >
-                        {post.author_name}
+                        {displayAuthor}
                       </span>
 
-                      <span className={`px-2.5 py-1 rounded-md text-xs inline-flex items-center gap-1 shrink-0 ${intentConfig.badgeStyle}`}>
-                        <span>{intentConfig.intentBadgeIcon}</span>
-                        <span>{intentConfig.intentLabel}</span>
+                      <span className={`px-2.5 py-1 rounded-md text-xs inline-flex items-center gap-1 shrink-0 ${displayIntent.badgeStyle}`}>
+                        <span>{personal ? '🤝' : displayIntent.intentBadgeIcon}</span>
+                        <span>{displayLabel}</span>
                       </span>
 
                       <span className="min-w-0 break-words font-semibold text-slate-700 text-xs">
-                        {details}
+                        {displayDetails}
                       </span>
                       {requestButton}
+                      {originalPostContext}
                     </div>
                   </div>
 

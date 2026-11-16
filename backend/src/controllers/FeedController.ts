@@ -129,18 +129,24 @@ export class FeedController {
 
           // Return only users who actually reacted / replied to this post
           const replies = await FeedRepository.getRepliesForPost(postId);
-          const responders = replies.map((r) => ({
-            id: `reply-${r.reply_id}`,
-            name: r.author_name,
-            role: r.reply_type === 'CAN_CONNECT' || r.reply_type === 'can connect' ? 'Responded: Can Connect' : 'Responded: Wants to Meet',
-            company: 'Responded to post',
-            avatarUrl: r.author_avatar,
-            mutualConnectionsCount: 1,
-            relationshipStatus: 'Responded to post',
-            networkingContext: r.content || `Responded to connect with ${r.target_person}`,
-            targetPersonName: targetName,
-            userId: r.user_id,
-          }));
+          const responders = replies.map((r) => {
+            const offersIntroduction = ['CAN_CONNECT', 'can connect', 'can connect to'].includes(r.reply_type);
+            const responseTarget = r.target_person?.trim() || targetName;
+            return {
+              id: `reply-${r.reply_id}`,
+              name: r.author_name,
+              role: offersIntroduction ? 'Offered an introduction' : 'Asked to meet',
+              company: '',
+              avatarUrl: r.author_avatar,
+              mutualConnectionsCount: 1,
+              relationshipStatus: 'Responded to post',
+              networkingContext: r.content || (offersIntroduction
+                ? `Can introduce ${post.author_name} to ${responseTarget}`
+                : `Wants to meet ${responseTarget}`),
+              targetPersonName: targetName,
+              userId: r.user_id,
+            };
+          });
           return sendSuccess(res, responders);
         }
       }
