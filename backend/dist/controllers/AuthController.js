@@ -33,7 +33,7 @@ class AuthController {
             // Initialize default profile and persona
             await ProfileRepository_1.ProfileRepository.upsertProfile(userId, {
                 headline: 'Professional & Builder',
-                bio: 'Welcome to NexaLink CRM!',
+                bio: 'Welcome to SansNetworks!',
             });
             await ProfileRepository_1.ProfileRepository.upsertPersona(userId, {
                 persona_name: 'Strategic Networker',
@@ -61,7 +61,7 @@ class AuthController {
     }
     static async login(req, res, next) {
         try {
-            const { email, password } = req.body;
+            const { email, password, rememberMe } = req.body;
             if (!email || !password) {
                 return (0, response_1.sendError)(res, 'Email and password are required', 400);
             }
@@ -78,7 +78,7 @@ class AuthController {
                 httpOnly: true,
                 secure: env_1.config.nodeEnv === 'production',
                 sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000,
+                maxAge: rememberMe === false ? undefined : 7 * 24 * 60 * 60 * 1000,
             });
             await (0, audit_1.logAudit)(req, 'USER_LOGIN', 'user', user.user_id);
             const isComplete = await ProfileRepository_1.ProfileRepository.isProfileComplete(user.user_id);
@@ -195,7 +195,7 @@ class AuthController {
                 }
                 await ProfileRepository_1.ProfileRepository.upsertProfile(userId, {
                     headline: 'Professional Networker',
-                    bio: 'Welcome to NexaLink CRM!',
+                    bio: 'Welcome to SansNetworks!',
                     avatar_url: avatarUrl || null,
                 });
                 await ProfileRepository_1.ProfileRepository.upsertPersona(userId, {

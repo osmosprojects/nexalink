@@ -46,8 +46,40 @@ class FeedRepository {
             return result.insertId;
         }
     }
+    static async hideRedundantContactShares(posts) {
+        const groups = new Map();
+        for (const post of posts) {
+            if (!post.content.startsWith('[can connect you to] '))
+                continue;
+            const key = JSON.stringify([post.user_id, post.content.trim()]);
+            const group = groups.get(key) ?? [];
+            group.push(post);
+            groups.set(key, group);
+        }
+        const duplicateGroups = [...groups.values()].filter((group) => group.length > 1);
+        const postIds = duplicateGroups.flat().map((post) => post.post_id);
+        if (postIds.length === 0)
+            return posts;
+        await this.ensureRepliesTableExist();
+        const replies = await (0, db_1.query)(`SELECT DISTINCT post_id FROM post_replies WHERE post_id IN (${postIds.map(() => '?').join(',')})`, postIds);
+        const repliedTo = new Set(replies.map(({ post_id }) => post_id));
+        const hasActivity = (post) => post.likes_count > 0 || repliedTo.has(post.post_id);
+        const hidden = new Set();
+        for (const group of duplicateGroups) {
+            for (const post of group) {
+                if (hasActivity(post))
+                    continue;
+                const redundant = group.some((other) => other.post_id !== post.post_id &&
+                    Math.abs(Date.parse(other.created_at) - Date.parse(post.created_at)) <= 5 * 60 * 1000 &&
+                    (hasActivity(other) || other.post_id > post.post_id));
+                if (redundant)
+                    hidden.add(post.post_id);
+            }
+        }
+        return posts.filter((post) => !hidden.has(post.post_id));
+    }
     static async list(userId, limit = 30) {
-        let rows = await (0, db_1.query)(`SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`);
+        let rows = await (0, db_1.query)(`SELECT * FROM posts WHERE user_id != ? ORDER BY created_at DESC LIMIT 100`, [userId]);
         // Auto-generate welcome network posts disabled on TRUNCATE
         /*
         if (rows.length === 0) {
@@ -62,7 +94,7 @@ class FeedRepository {
             const skillsObj = typeof m.skills === 'string' ? JSON.parse(m.skills) : m.skills || {};
             const rawGroups = skillsObj.networkingGroup;
             const groupsStr = Array.isArray(rawGroups) ? rawGroups.join(' & ') : typeof rawGroups === 'string' ? rawGroups : '';
-            const introText = `Hello NexaLink Network! Excited to connect with leaders and peers.${groupsStr ? ' Active in ' + groupsStr + '.' : ''}`;
+            const introText = `Hello SansNetworks Network! Excited to connect with leaders and peers.${groupsStr ? ' Active in ' + groupsStr + '.' : ''}`;
     
             await this.create(m.user_id, {
               author_name: m.display_name,
@@ -80,6 +112,10 @@ class FeedRepository {
         */
         if (rows.length === 0)
             return [];
+        rows = await this.hideRedundantContactShares(rows).catch((error) => {
+            console.warn('Could not check for duplicate contact shares:', error);
+            return rows;
+        });
         const authorIds = [...new Set(rows.map((p) => p.user_id))];
         // Fetch precomputed match scores for authors
         const scores = await (0, db_1.query)(`SELECT user_b_id, score FROM user_match_scores WHERE user_a_id = ? AND user_b_id IN (${authorIds.map(() => '?').join(',')})`, [userId, ...authorIds]);
@@ -104,15 +140,25 @@ class FeedRepository {
         rankedPosts.sort((a, b) => (b.combinedScore || 0) - (a.combinedScore || 0));
         return rankedPosts.slice(0, limit);
     }
-    static async create(userId, data) {
-        const result = await (0, db_1.query)(`INSERT INTO posts (user_id, author_name, author_title, author_avatar, content, tags, likes_count)
-       VALUES (?, ?, ?, ?, ?, NULL, 0)`, [
+    static async createContactShare(userId, data) {
+        return (0, db_1.withTransaction)(async (conn) => {
+            // Serialize contact shares by author so concurrent confirmations cannot create two posts.
+            await conn.execute('SELECT user_id FROM users WHERE user_id = ? FOR UPDATE', [userId]);
+            const [existing] = await conn.execute('SELECT post_id FROM posts WHERE user_id = ? AND BINARY content = ? LIMIT 1', [userId, data.content]);
+            return existing[0]?.post_id ?? this.create(userId, data, conn);
+        });
+    }
+    static async create(userId, data, conn) {
+        const sql = `INSERT INTO posts (user_id, author_name, author_title, author_avatar, content, tags, likes_count)
+       VALUES (?, ?, ?, ?, ?, NULL, 0)`;
+        const params = [
             userId,
             data.author_name,
             data.author_title || null,
             data.author_avatar || null,
             data.content,
-        ]);
+        ];
+        const result = conn ? (await conn.execute(sql, params))[0] : await (0, db_1.query)(sql, params);
         return result.insertId;
     }
     static async findById(postId) {

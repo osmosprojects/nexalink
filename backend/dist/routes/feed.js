@@ -11,11 +11,12 @@ router.get('/', async (req, res, next) => {
     try {
         const userId = req.user.userId;
         const limit = parseInt(String(req.query.limit || '20'), 10);
-        // 1. Fetch recent network posts
+        // 1. Fetch recent network posts (excluding own posts)
         const posts = await (0, db_1.query)(`SELECT post_id, user_id, author_name, author_title, author_avatar, content, tags, likes_count, created_at
        FROM posts
+       WHERE user_id != ?
        ORDER BY created_at DESC
-       LIMIT 100`);
+       LIMIT 100`, [userId]);
         if (posts.length === 0) {
             return res.json({ success: true, data: [] });
         }

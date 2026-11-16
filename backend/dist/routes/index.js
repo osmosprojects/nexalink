@@ -22,7 +22,7 @@ const requireProfile_1 = require("../middleware/requireProfile");
 exports.apiRouter = (0, express_1.Router)();
 // Health Check
 exports.apiRouter.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'NexaLink CRM API', time: new Date().toISOString() });
+    res.json({ status: 'ok', service: 'SansNetworks API', time: new Date().toISOString() });
 });
 // Auth Routes (Public)
 exports.apiRouter.post('/auth/register', AuthController_1.AuthController.register);

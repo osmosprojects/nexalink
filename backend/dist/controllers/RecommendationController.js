@@ -77,7 +77,7 @@ class RecommendationController {
                 avatar_url: rec.avatar_url,
                 relationship_type: 'prospect',
                 relationship_strength: rec.score,
-                notes: `Discovered through NexaLink Recommendation: ${rec.reason}`,
+                notes: `Discovered through SansNetworks Recommendation: ${rec.reason}`,
                 tagNames: ['Discovery', rec.industry || 'Tech'].filter(Boolean),
             });
             await RecommendationRepository_1.RecommendationRepository.updateStatus(userId, recommendationId, 'connected');

@@ -4,8 +4,6 @@ exports.FeedController = void 0;
 const FeedRepository_1 = require("../repositories/FeedRepository");
 const UserRepository_1 = require("../repositories/UserRepository");
 const ProfileRepository_1 = require("../repositories/ProfileRepository");
-const ContactRepository_1 = require("../repositories/ContactRepository");
-const db_1 = require("../config/db");
 const response_1 = require("../helpers/response");
 const audit_1 = require("../middleware/audit");
 class FeedController {
@@ -107,83 +105,24 @@ class FeedController {
                         targetRole = parts[1];
                     if (parts[2])
                         targetCompany = parts[2];
-                    // If post owner is viewing, return the list of people who responded to their post
-                    if (post.user_id === userId) {
-                        const replies = await FeedRepository_1.FeedRepository.getRepliesForPost(postId);
-                        const ownerPaths = replies.map((r) => ({
-                            id: `reply-${r.reply_id}`,
-                            name: r.author_name,
-                            role: r.reply_type === 'CAN_CONNECT' || r.reply_type === 'can connect' ? 'Responded: Can Connect' : 'Responded: Wants to Meet',
-                            company: 'Responded to your request',
-                            avatarUrl: r.author_avatar,
-                            mutualConnectionsCount: 3,
-                            relationshipStatus: 'Responded to your post',
-                            networkingContext: r.content || `Responded to connect with ${r.target_person}`,
-                            targetPersonName: targetName,
-                            userId: r.user_id,
-                        }));
-                        return (0, response_1.sendSuccess)(res, ownerPaths);
-                    }
+                    // Return only users who actually reacted / replied to this post
+                    const replies = await FeedRepository_1.FeedRepository.getRepliesForPost(postId);
+                    const responders = replies.map((r) => ({
+                        id: `reply-${r.reply_id}`,
+                        name: r.author_name,
+                        role: r.reply_type === 'CAN_CONNECT' || r.reply_type === 'can connect' ? 'Responded: Can Connect' : 'Responded: Wants to Meet',
+                        company: 'Responded to post',
+                        avatarUrl: r.author_avatar,
+                        mutualConnectionsCount: 1,
+                        relationshipStatus: 'Responded to post',
+                        networkingContext: r.content || `Responded to connect with ${r.target_person}`,
+                        targetPersonName: targetName,
+                        userId: r.user_id,
+                    }));
+                    return (0, response_1.sendSuccess)(res, responders);
                 }
             }
-            // 1. Fetch CRM contacts for introduction paths
-            const contactRes = await ContactRepository_1.ContactRepository.list(userId, { limit: 50 });
-            const contacts = contactRes.items || [];
-            // 2. Fetch Network User Profiles & Matches
-            const networkUsers = await (0, db_1.query)(`SELECT u.user_id, u.display_name, u.avatar_url, p.job_title, p.company, p.industry, p.location, p.bio
-         FROM users u
-         JOIN user_profiles p ON u.user_id = p.user_id
-         WHERE u.user_id != ? AND u.status = 'active'
-         LIMIT 30`, [userId]);
-            const paths = [];
-            contacts.forEach((c) => {
-                const companyMatch = targetCompany && c.company && c.company.toLowerCase().includes(targetCompany.toLowerCase());
-                const roleMatch = targetRole && c.job_title && c.job_title.toLowerCase().includes(targetRole.toLowerCase());
-                const isStrong = (c.relationship_strength || 0) >= 50;
-                const mutualCount = Math.floor(Math.random() * 4) + 2; // 2-5 mutual connections
-                let context = 'CRM Network Contact';
-                if (companyMatch)
-                    context = `Connected with ${c.company}`;
-                else if (roleMatch)
-                    context = `Shared ${c.job_title} expertise`;
-                else if (isStrong)
-                    context = `Strong relationship strength (${c.relationship_strength}%)`;
-                paths.push({
-                    id: `contact-${c.contact_id}`,
-                    name: `${c.first_name} ${c.last_name}`.trim(),
-                    role: c.job_title || 'Networking Contact',
-                    company: c.company || 'NexaLink Partner',
-                    avatarUrl: c.avatar_url,
-                    mutualConnectionsCount: mutualCount,
-                    relationshipStatus: `${mutualCount} mutual connections`,
-                    networkingContext: context,
-                    targetPersonName: targetName,
-                    location: c.location || 'India',
-                    bio: c.notes || null,
-                    contactId: c.contact_id,
-                });
-            });
-            networkUsers.forEach((u) => {
-                const exists = paths.some((p) => p.name.toLowerCase() === u.display_name.toLowerCase());
-                if (!exists) {
-                    const mutualCount = Math.floor(Math.random() * 5) + 1;
-                    paths.push({
-                        id: `user-${u.user_id}`,
-                        name: u.display_name,
-                        role: u.job_title || 'Network Member',
-                        company: u.company || 'NexaLink Network',
-                        avatarUrl: u.avatar_url,
-                        mutualConnectionsCount: mutualCount,
-                        relationshipStatus: `${mutualCount} mutual connections`,
-                        networkingContext: `Active Network Member in ${u.industry || 'Tech'}`,
-                        targetPersonName: targetName,
-                        location: u.location || 'India',
-                        bio: u.bio || null,
-                        userId: u.user_id,
-                    });
-                }
-            });
-            return (0, response_1.sendSuccess)(res, paths);
+            return (0, response_1.sendSuccess)(res, []);
         }
         catch (err) {
             next(err);

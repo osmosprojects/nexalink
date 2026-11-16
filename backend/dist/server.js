@@ -145,7 +145,7 @@ async function startServer() {
         console.error('⚠️ Could not connect to MySQL on configured port. Check database credentials in .env.');
     }
     app.listen(env_1.config.port, () => {
-        console.log(`🚀 NexaLink CRM Server running at http://localhost:${env_1.config.port}`);
+        console.log(`🚀 SansNetworks Server running at http://localhost:${env_1.config.port}`);
         console.log(`📡 API endpoints at http://localhost:${env_1.config.port}/api`);
         if (staticServed) {
             console.log(`🌐 Static frontend UI served directly by Express`);
