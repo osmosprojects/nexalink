@@ -741,7 +741,7 @@ export const AddConnectionModal: React.FC<AddConnectionModalProps> = ({
                 }}
                 className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
-                View Universal Feed
+                View Feed
               </button>
               <button
                 type="button"

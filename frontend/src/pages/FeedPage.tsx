@@ -283,7 +283,7 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
       {/* Header */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">{personal ? 'Personal Feed' : 'Universal Feed'}</h2>
+          <h2 className="text-lg font-bold text-slate-900">{personal ? 'Personal Feed' : 'Feed'}</h2>
           <p className="text-xs text-slate-500">
             {personal ? 'Your networking posts and posts you responded to' : 'Share networking requirements, updates, and community connections'}
           </p>

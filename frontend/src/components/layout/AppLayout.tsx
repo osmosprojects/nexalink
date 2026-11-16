@@ -23,7 +23,7 @@ const routeTitleMap: Record<string, { title: string; subtitle: string }> = {
   '/tasks': { title: 'Tasks & Follow-ups', subtitle: 'Actionable to-dos linked to your key relationships' },
   '/notes': { title: 'Notes & Context', subtitle: 'Rich contextual insights and discussion memos' },
   '/ai': { title: 'AI Networking Studio', subtitle: 'Prepare conversation starters, draft messages, and summarize meetings' },
-  '/feed': { title: 'Universal Feed', subtitle: 'Recent activity, milestones, and community updates' },
+  '/feed': { title: 'Feed', subtitle: 'Recent activity, milestones, and community updates' },
   '/analytics': { title: 'Analytics & Growth', subtitle: 'Relationship health, network velocity, and engagement metrics' },
   '/notifications': { title: 'Alerts & Reminders', subtitle: 'Timely reminders for follow-ups and meetings' },
   '/profile': { title: 'My Profile', subtitle: 'Complete your identity to unlock all CRM modules' },
