@@ -38,103 +38,27 @@ export const CanConnectDrawer: React.FC<CanConnectDrawerProps> = ({
 
   const isWantToMeet = intentKey === 'WANTS_TO_MEET';
 
-  const drawerTitle = isOwner
-    ? isWantToMeet
-      ? `People who can help you reach ${targetPersonName}`
-      : `People who want to meet ${targetPersonName}`
-    : `People who can help you reach ${targetPersonName}`;
+  const drawerTitle = isWantToMeet
+    ? `People who can help you reach ${targetPersonName}`
+    : `People who want to meet ${targetPersonName}`;
 
-  const drawerSubtitle = isOwner
-    ? isWantToMeet
-      ? 'People who responded to your networking request.'
-      : 'People who responded to your networking availability.'
-    : 'People in your network who may be able to introduce you.';
+  const drawerSubtitle = isWantToMeet
+    ? 'People who responded to help you connect.'
+    : 'People who responded to meet this connection.';
 
   const fetchPaths = async () => {
     if (!postId) return;
     setIsLoading(true);
     setIsError(false);
     try {
-      let data: CanConnectPerson[] = [];
-
-      // Try primary endpoint
-      try {
-        const res = await api.get<CanConnectPerson[]>(`/feed/${postId}/can-connect`);
-        if (Array.isArray(res)) {
-          data = res;
-        }
-      } catch (apiErr) {
-        console.warn('Primary /feed/:id/can-connect endpoint notice, using fallback network query:', apiErr);
-      }
-
-      if (data.length > 0) {
-        setPeople(data);
+      const res = await api.get<CanConnectPerson[]>(`/feed/${postId}/can-connect`);
+      if (Array.isArray(res)) {
+        setPeople(res);
       } else {
-        // Fallback: Query contacts and recommendations to construct intro paths
-        const fallbackList: CanConnectPerson[] = [];
-
-        try {
-          const contactsRes = await api.get<any>('/contacts?limit=50');
-          const contacts = Array.isArray(contactsRes?.items)
-            ? contactsRes.items
-            : Array.isArray(contactsRes)
-            ? contactsRes
-            : [];
-
-          contacts.forEach((c: any) => {
-            const mutualCount = Math.floor(Math.random() * 4) + 2;
-            fallbackList.push({
-              id: `contact-${c.contact_id}`,
-              name: `${c.first_name} ${c.last_name}`.trim(),
-              role: c.job_title || 'Networking Contact',
-              company: c.company || 'Osmos Multimedia Pvt Ltd',
-              avatarUrl: c.avatar_url,
-              mutualConnectionsCount: mutualCount,
-              relationshipStatus: `${mutualCount} mutual connections`,
-              networkingContext: c.company ? `Connected with ${c.company}` : 'Direct Network Contact',
-              targetPersonName: targetPersonName || 'Sanjeev',
-              location: c.location || 'India',
-              bio: c.notes || null,
-              contactId: c.contact_id,
-            });
-          });
-        } catch {
-          // Ignore contacts fallback error
-        }
-
-        try {
-          const recsRes = await api.get<any[]>('/recommendations');
-          const recs = Array.isArray(recsRes) ? recsRes : [];
-
-          recs.forEach((r: any) => {
-            const exists = fallbackList.some(
-              (p) => p.name.toLowerCase() === (r.recommended_name || '').toLowerCase()
-            );
-            if (!exists && r.recommended_name) {
-              const mutualCount = Math.floor(Math.random() * 5) + 1;
-              fallbackList.push({
-                id: `rec-${r.recommendation_id}`,
-                name: r.recommended_name,
-                role: r.recommended_role || 'Executive',
-                company: r.recommended_company || 'Tech Partner',
-                avatarUrl: r.avatar_url,
-                mutualConnectionsCount: mutualCount,
-                relationshipStatus: `${mutualCount} mutual connections`,
-                networkingContext: r.reason || 'Strategic Alignment',
-                targetPersonName: targetPersonName || 'Sanjeev',
-                location: r.location || 'India',
-                recommendationId: r.recommendation_id,
-              });
-            }
-          });
-        } catch {
-          // Ignore recommendations fallback error
-        }
-
-        setPeople(fallbackList);
+        setPeople([]);
       }
     } catch (err) {
-      console.error('Failed to fetch introduction paths:', err);
+      console.error('Failed to fetch responders:', err);
       setIsError(true);
     } finally {
       setIsLoading(false);
@@ -181,11 +105,9 @@ export const CanConnectDrawer: React.FC<CanConnectDrawerProps> = ({
             {!isLoading && !isError && people.length > 0 && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 mt-2 rounded-full text-[11px] font-bold bg-brand-50 text-brand-700 border border-brand-200">
                 <Users className="w-3 h-3" />
-                {isOwner
-                  ? isWantToMeet
-                    ? `${people.length} ${people.length === 1 ? 'person can help you connect' : 'people can help you connect'}`
-                    : `${people.length} ${people.length === 1 ? 'person wants to meet' : 'people want to meet'}`
-                  : `${people.length} ${people.length === 1 ? 'person can help you connect' : 'people can help you connect'}`}
+                {isWantToMeet
+                  ? `${people.length} ${people.length === 1 ? 'person can help connect' : 'people can help connect'}`
+                  : `${people.length} ${people.length === 1 ? 'person wants to meet' : 'people want to meet'}`}
               </span>
             )}
           </div>
@@ -236,22 +158,11 @@ export const CanConnectDrawer: React.FC<CanConnectDrawerProps> = ({
             <div className="text-center py-12 space-y-4 bg-slate-50/90 rounded-3xl p-6 border border-slate-200/80 my-auto">
               <UserCheck className="w-10 h-10 text-slate-400 mx-auto" />
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-slate-900">No direct introduction path found</h4>
+                <h4 className="text-sm font-bold text-slate-900">No responses yet</h4>
                 <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
-                  We couldn't find someone in your current network who can help you reach {targetPersonName}.
+                  No one has responded to this networking post yet.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  if (onExploreNetwork) onExploreNetwork();
-                }}
-                className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <Compass className="w-3.5 h-3.5" />
-                <span>Explore Network</span>
-              </button>
             </div>
           ) : (
             people.map((person) => (
