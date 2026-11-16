@@ -74,6 +74,7 @@ const EMOJI_OPTIONS = [
 ];
 
 export interface ReplyItem {
+  userId: number;
   id: string;
   authorName: string;
   authorAvatar?: string | null;
@@ -84,7 +85,7 @@ export interface ReplyItem {
   likesCount: number;
 }
 
-export const FeedPage: React.FC = () => {
+export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false }) => {
   const [postType, setPostType] = useState<'wants to meet' | 'can connect you to'>('wants to meet');
   const [content, setContent] = useState('');
   const { user, profile } = useAuth();
@@ -140,18 +141,10 @@ export const FeedPage: React.FC = () => {
   // Persisted Thread Conversations per post (synced via backend database API)
   const [postReplies, setPostReplies] = useState<Record<number, ReplyItem[]>>({});
 
-  const { data: posts = [], isLoading } = useQuery<Post[]>({
-    queryKey: ['feed'],
-    queryFn: () => api.get<Post[]>('/feed'),
-    select: (data) =>
-      data.filter((post) => {
-        const isOwnPost = Boolean(
-          (user?.userId && post.user_id && Number(user.userId) === Number(post.user_id)) ||
-          (profile?.user_id && post.user_id && Number(profile.user_id) === Number(post.user_id)) ||
-          (user?.displayName && post.author_name && user.displayName.trim().toLowerCase() === post.author_name.trim().toLowerCase())
-        );
-        return !isOwnPost;
-      }),
+  const { data: posts = [], isLoading, isError } = useQuery<Post[]>({
+    queryKey: ['feed', personal ? 'personal' : 'home', user?.userId],
+    queryFn: () => api.get<Post[]>(personal ? '/feed?view=personal' : '/feed'),
+    enabled: Boolean(user?.userId),
   });
 
   // Fetch replies from API for posts
@@ -161,6 +154,7 @@ export const FeedPage: React.FC = () => {
       if (Array.isArray(res)) {
         const formatted: ReplyItem[] = res.map((r) => ({
           id: String(r.reply_id),
+          userId: Number(r.user_id),
           authorName: r.author_name,
           authorAvatar: r.author_avatar,
           replyType: r.reply_type || 'wants to meet to',
@@ -241,6 +235,8 @@ export const FeedPage: React.FC = () => {
         targetPerson,
       });
       await fetchRepliesForPost(postId);
+      void queryClient.invalidateQueries({ queryKey: ['feed', 'personal'] });
+
       confetti({ particleCount: 35, spread: 50, origin: { y: 0.7 } });
     } catch (err) {
       console.error('Failed to respond to post:', err);
@@ -260,6 +256,7 @@ export const FeedPage: React.FC = () => {
       });
 
       await fetchRepliesForPost(postId);
+      void queryClient.invalidateQueries({ queryKey: ['feed', 'personal'] });
 
       setReplyContentInputs((prev) => ({ ...prev, [postId]: '' }));
       setExpandedThreadPostId(postId);
@@ -282,8 +279,10 @@ export const FeedPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Networking Feed</h2>
-          <p className="text-xs text-slate-500">Share networking requirements, updates, and community connections</p>
+          <h2 className="text-lg font-bold text-slate-900">{personal ? 'Personal Feed' : 'Networking Feed'}</h2>
+          <p className="text-xs text-slate-500">
+            {personal ? 'Your networking posts and posts you responded to' : 'Share networking requirements, updates, and community connections'}
+          </p>
         </div>
         <div className="flex items-center gap-2.5">
           <button
@@ -404,10 +403,16 @@ export const FeedPage: React.FC = () => {
             <div key={i} className="h-44 bg-slate-200 rounded-3xl" />
           ))}
         </div>
+      ) : isError ? (
+        <p role="alert" className="rounded-3xl bg-white p-8 text-center text-sm text-slate-600">
+          Could not load the feed. Please try again.
+        </p>
       ) : posts.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 space-y-2">
           <h3 className="text-base font-bold text-slate-800">No posts in feed</h3>
-          <p className="text-xs text-slate-500">Share your first requirement or update above.</p>
+          <p className="text-xs text-slate-500">
+            {personal ? 'Create a post or respond to one on Home to see it here.' : 'Share your first requirement or update above.'}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -432,18 +437,9 @@ export const FeedPage: React.FC = () => {
 
             const targetPersonInPost = details.split('\n')[0].split(',')[0].trim() || 'Target Connection';
 
-            const isOwnPost = Boolean(
-              (user?.userId && post.user_id && Number(user.userId) === Number(post.user_id)) ||
-              (profile?.user_id && post.user_id && Number(profile.user_id) === Number(post.user_id)) ||
-              (user?.displayName && post.author_name && user.displayName.trim().toLowerCase() === post.author_name.trim().toLowerCase())
-            );
-
+            const isOwnPost = Number(user?.userId) === Number(post.user_id);
             const replies: ReplyItem[] = postReplies[post.post_id] || [];
-
-            const userHasResponded = replies.some(
-              (r) =>
-                (user?.displayName && r.authorName.toLowerCase() === user.displayName.toLowerCase())
-            );
+            const userHasResponded = replies.some((reply) => Number(user?.userId) === reply.userId);
 
             const requestButton = !isOwnPost && (
               <button

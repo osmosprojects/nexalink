@@ -12,6 +12,7 @@ import {
   Calendar,
   FileText,
   Rss,
+  Newspaper,
   Settings,
   UserCheck,
   LogOut,
@@ -33,6 +34,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
 
   const primaryTabs = [
     { to: '/feed', label: 'Home', icon: Rss },
+    { to: '/personal-feed', label: 'Personal Feed', icon: Newspaper },
     { to: '/connections', label: 'My Network', icon: Users },
     { to: '/discover', label: 'Discover', icon: Compass },
     { to: '/profile', label: 'Profile', icon: UserCheck, highlight: !isProfileComplete },
@@ -43,7 +45,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
     { to: '/calendar', label: 'My Networking Calendar', icon: Calendar },
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/tasks', label: 'Tasks', icon: CheckSquare },
-    { to: '/interactions', label: 'Personal Feed', icon: MessageSquareShare },
+    { to: '/interactions', label: 'Interactions', icon: MessageSquareShare },
     { to: '/goals', label: 'Goals', icon: Target },
     { to: '/kanban', label: 'Kanban Board', icon: KanbanSquare },
     { to: '/notes', label: 'Notes', icon: FileText },
@@ -95,7 +97,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
                   key={tab.to}
                   to={tab.to}
                   className={({ isActive }) =>
-                    `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
+                    `flex flex-col items-center justify-center py-1 px-1.5 rounded-xl transition-all relative ${
                       isActive
                         ? 'text-brand-600 font-semibold scale-105'
                         : 'text-slate-500 hover:text-slate-800'
@@ -105,7 +107,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
                   <div className="relative">
                     <Icon className="w-5 h-5 mb-0.5" />
                   </div>
-                  <span className="text-[10px]">{tab.label}</span>
+                  <span className="whitespace-nowrap text-[10px]">{tab.label}</span>
                 </NavLink>
               );
             })}

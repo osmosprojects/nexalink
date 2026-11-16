@@ -43,7 +43,7 @@ export const InteractionsPage: React.FC = () => {
       {/* Top Header Card */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Personal Feed</h2>
+          <h2 className="text-lg font-bold text-slate-900">Interactions</h2>
           <p className="text-xs text-slate-500">Every coffee chat, meeting, phone call, and email in chronological order</p>
         </div>
 

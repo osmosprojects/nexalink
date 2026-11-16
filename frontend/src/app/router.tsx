@@ -127,6 +127,10 @@ export const router = createBrowserRouter([
         element: <FeedPage />,
       },
       {
+        path: 'personal-feed',
+        element: <FeedPage key="personal-feed" personal />,
+      },
+      {
         path: 'analytics',
         element: <AnalyticsPage />,
       },

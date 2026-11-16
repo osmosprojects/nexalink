@@ -78,6 +78,23 @@ class FeedRepository {
         }
         return posts.filter((post) => !hidden.has(post.post_id));
     }
+    static async listPersonal(userId) {
+        await this.ensureRepliesTableExist();
+        const posts = await (0, db_1.query)(`SELECT p.*
+       FROM posts p
+       WHERE (
+         p.user_id = ?
+         AND (
+           p.content LIKE '[wants to meet]%' OR p.content LIKE '[I want to meet]%'
+           OR p.content LIKE '[can connect you to]%' OR p.content LIKE '[I can connect You to]%'
+           OR p.content LIKE '[I can introduce]%'
+         )
+       ) OR EXISTS (
+         SELECT 1 FROM post_replies r WHERE r.post_id = p.post_id AND r.user_id = ?
+       )
+       ORDER BY p.created_at DESC, p.post_id DESC`, [userId, userId]);
+        return this.hideRedundantContactShares(posts);
+    }
     static async list(userId, limit = 30) {
         let rows = await (0, db_1.query)(`SELECT * FROM posts WHERE user_id != ? ORDER BY created_at DESC LIMIT 100`, [userId]);
         // Auto-generate welcome network posts disabled on TRUNCATE

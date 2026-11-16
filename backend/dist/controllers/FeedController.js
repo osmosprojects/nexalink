@@ -10,7 +10,9 @@ class FeedController {
     static async list(req, res, next) {
         try {
             const userId = req.user.userId;
-            const posts = await FeedRepository_1.FeedRepository.list(userId, 30);
+            const posts = req.query.view === 'personal'
+                ? await FeedRepository_1.FeedRepository.listPersonal(userId)
+                : await FeedRepository_1.FeedRepository.list(userId, 30);
             return (0, response_1.sendSuccess)(res, posts);
         }
         catch (err) {
