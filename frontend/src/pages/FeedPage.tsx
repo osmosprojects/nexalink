@@ -459,9 +459,9 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                 ? displayIntent.intentLabel[0].toUpperCase() + displayIntent.intentLabel.slice(1)
                 : displayIntent.intentLabel;
             const displayDetails = !displayedReply ? details : offersIntroduction ? (
-              <>You can connect <strong>{post.author_name}</strong> with <strong>{replyTarget}</strong>.</>
+              <><strong>{post.author_name}</strong> to <strong>{replyTarget}</strong>.</>
             ) : (
-              <>You want to meet <strong>{replyTarget}</strong> via <strong>{post.author_name}</strong>.</>
+              <><strong>{replyTarget}</strong> via <strong>{post.author_name}</strong>.</>
             );
 
             const requestButton = !isOwnPost && (
@@ -601,6 +601,23 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                       )}
                     </div>
                   </div>
+                )}
+
+                {personal && isOwnPost && replies.length > 0 && (
+                  <ul className="space-y-2 border-t border-slate-100 pt-3">
+                    {replies.map((reply) => {
+                      const target = reply.targetPerson.trim() || targetPersonInPost;
+                      const action = getReplyIntent(reply.replyType) === 'CAN_CONNECT'
+                        ? 'can connect you with'
+                        : 'wants to meet';
+                      return (
+                        <li key={reply.id} className="flex items-center gap-2 text-xs text-slate-700">
+                          <Avatar src={reply.authorAvatar} name={reply.authorName} className="h-6 w-6 shrink-0 rounded-full" />
+                          <span><strong>{reply.authorName}</strong> {action} <strong>{target}</strong>.</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 )}
 
                 {/* Responses */}
