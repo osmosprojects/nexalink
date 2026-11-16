@@ -35,7 +35,9 @@ export const NETWORKING_INTENT_ACTIONS = {
     intentBadgeIcon: '🤝',
     intentLabel: 'wants to meet',
     badgeStyle: 'bg-blue-800 text-white font-bold border border-blue-900',
+    responseAction: '✨ Can Connect',
     responseType: 'CAN_CONNECT',
+    respondedText: '✓ Can Connect sent',
     responseBtnStyle: 'bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-xs',
     respondedBtnStyle: 'bg-emerald-800 text-white font-bold border border-emerald-950',
     ownerSummaryText: (count: number) =>
@@ -49,7 +51,9 @@ export const NETWORKING_INTENT_ACTIONS = {
     intentBadgeIcon: '🌟',
     intentLabel: 'can connect you to',
     badgeStyle: 'bg-emerald-700 text-white font-bold border border-emerald-800',
+    responseAction: '🤝 Wants to Meet',
     responseType: 'WANTS_TO_MEET',
+    respondedText: '✓ Want to Meet sent',
     responseBtnStyle: 'bg-blue-800 hover:bg-blue-900 text-white font-bold shadow-xs',
     respondedBtnStyle: 'bg-blue-900 text-white font-bold border border-blue-950',
     ownerSummaryText: (count: number, target: string) =>
@@ -450,7 +454,7 @@ export const FeedPage: React.FC = () => {
                   userHasResponded ? intentConfig.respondedBtnStyle : intentConfig.responseBtnStyle
                 }`}
               >
-                {userHasResponded ? '✓ Request sent' : 'Request to'}
+                {userHasResponded ? intentConfig.respondedText : intentConfig.responseAction}
               </button>
             );
 
