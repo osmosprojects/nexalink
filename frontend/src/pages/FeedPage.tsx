@@ -47,7 +47,7 @@ export const NETWORKING_INTENT_ACTIONS = {
   CAN_CONNECT: {
     intentKey: 'CAN_CONNECT' as const,
     intentBadgeIcon: '🌟',
-    intentLabel: 'can introduce you to',
+    intentLabel: 'can connect you to',
     badgeStyle: 'bg-emerald-700 text-white font-bold border border-emerald-800',
     responseAction: (target: string) => `🤝 I want to meet ${target}`,
     responseType: 'WANTS_TO_MEET',
@@ -283,7 +283,7 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
       {/* Header */}
       <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-card flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">{personal ? 'Personal Feed' : 'Networking Feed'}</h2>
+          <h2 className="text-lg font-bold text-slate-900">{personal ? 'Personal Feed' : 'Universal Feed'}</h2>
           <p className="text-xs text-slate-500">
             {personal ? 'Your networking posts and posts you responded to' : 'Share networking requirements, updates, and community connections'}
           </p>
@@ -449,19 +449,19 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
             const displayIntent = displayedReply
               ? NETWORKING_INTENT_ACTIONS[getReplyIntent(displayedReply.replyType)]
               : intentConfig;
-            const displayAuthor = displayedReply?.authorName ?? post.author_name;
+            const displayAuthor = personal && (isOwnPost || displayedReply) ? 'You' : post.author_name;
             const displayAvatar = displayedReply ? displayedReply.authorAvatar : post.author_avatar;
-            const offersIntroduction = displayIntent.intentKey === 'CAN_CONNECT';
+            const displayTime = displayedReply?.timeAgo ?? formatDate(post.created_at, 'relative');
             const replyTarget = displayedReply?.targetPerson.trim() || targetPersonInPost;
-            const displayLabel = displayedReply && offersIntroduction
-              ? 'Can introduce'
-              : personal
-                ? displayIntent.intentLabel[0].toUpperCase() + displayIntent.intentLabel.slice(1)
-                : displayIntent.intentLabel;
-            const displayDetails = !displayedReply ? details : offersIntroduction ? (
+            const displayLabel = displayedReply
+              ? displayIntent.intentKey === 'CAN_CONNECT' ? 'offered to connect' : 'asked'
+              : personal && isOwnPost
+                ? isWantToMeet ? 'want to meet' : 'can connect people to'
+                : intentConfig.intentLabel;
+            const displayDetails = !displayedReply ? details : displayIntent.intentKey === 'CAN_CONNECT' ? (
               <><strong>{post.author_name}</strong> to <strong>{replyTarget}</strong>.</>
             ) : (
-              <><strong>{replyTarget}</strong> via <strong>{post.author_name}</strong>.</>
+              <><strong>{post.author_name}</strong> to connect you to <strong>{replyTarget}</strong>.</>
             );
 
             const requestButton = !isOwnPost && (
@@ -500,7 +500,7 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                       </h4>
                       <p className="text-xs text-slate-500 font-medium">{displayedReply ? userSubtitle : authorRoleTitle}</p>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-medium">{formatDate(post.created_at, 'relative')}</span>
+                    <span className="text-[11px] text-slate-400 font-medium">{displayTime}</span>
                   </div>
 
                   <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3.5 space-y-2">
@@ -550,9 +550,18 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                   </div>
 
                   <span className="text-[11px] text-slate-400 font-medium shrink-0">
-                    {formatDate(post.created_at, 'relative')}
+                    {displayTime}
                   </span>
                 </div>
+
+                {displayedReply && (
+                  <div className="rounded-xl bg-slate-50 px-3.5 py-2.5 text-xs text-slate-700">
+                    <p className="font-semibold text-slate-500">Original post</p>
+                    <p className="mt-1 whitespace-pre-wrap break-words">
+                      <strong>{post.author_name}</strong> {intentConfig.intentLabel} {details}
+                    </p>
+                  </div>
+                )}
 
                 {/* 3. REACTION ROW (HIDDEN WHEN SHOW_REACTIONS = FALSE) */}
                 {SHOW_REACTIONS && (
@@ -608,12 +617,15 @@ export const FeedPage: React.FC<{ personal?: boolean }> = ({ personal = false })
                     {replies.map((reply) => {
                       const target = reply.targetPerson.trim() || targetPersonInPost;
                       const action = getReplyIntent(reply.replyType) === 'CAN_CONNECT'
-                        ? 'can connect you with'
-                        : 'wants to meet';
+                        ? 'offered to connect you to'
+                        : 'asked you for an introduction to';
                       return (
                         <li key={reply.id} className="flex items-center gap-2 text-xs text-slate-700">
                           <Avatar src={reply.authorAvatar} name={reply.authorName} className="h-6 w-6 shrink-0 rounded-full" />
-                          <span><strong>{reply.authorName}</strong> {action} <strong>{target}</strong>.</span>
+                          <div className="min-w-0 break-words">
+                            <p><strong>{reply.authorName}</strong> {action} <strong>{target}</strong>.</p>
+                            {reply.content && <p className="mt-1 whitespace-pre-wrap">{reply.content}</p>}
+                          </div>
                         </li>
                       );
                     })}

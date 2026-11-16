@@ -81,7 +81,7 @@ export class FeedRepository {
     );
     if (existing.length > 0) {
       await query(
-        `UPDATE post_replies SET reply_type = ?, target_person = ?, content = ?, author_name = ?, author_avatar = ? WHERE reply_id = ?`,
+        `UPDATE post_replies SET reply_type = ?, target_person = ?, content = ?, author_name = ?, author_avatar = ?, created_at = CURRENT_TIMESTAMP WHERE reply_id = ?`,
         [replyType, targetPerson, content || null, authorName, authorAvatar || null, existing[0].reply_id]
       );
       return existing[0].reply_id;
@@ -148,8 +148,12 @@ export class FeedRepository {
        ) OR EXISTS (
          SELECT 1 FROM post_replies r WHERE r.post_id = p.post_id AND r.user_id = ?
        )
-       ORDER BY p.created_at DESC, p.post_id DESC`,
-      [userId, userId],
+       ORDER BY GREATEST(p.created_at, COALESCE((
+         SELECT MAX(r.created_at)
+         FROM post_replies r
+         WHERE r.post_id = p.post_id AND (p.user_id = ? OR r.user_id = ?)
+       ), p.created_at)) DESC, p.post_id DESC`,
+      [userId, userId, userId, userId],
     );
 
     return this.hideRedundantContactShares(posts);
@@ -157,8 +161,7 @@ export class FeedRepository {
 
   static async list(userId: number, limit = 30): Promise<PostRow[]> {
     let rows = await query<any[]>(
-      `SELECT * FROM posts WHERE user_id != ? ORDER BY created_at DESC LIMIT 100`,
-      [userId]
+      `SELECT * FROM posts ORDER BY created_at DESC, post_id DESC LIMIT 100`
     );
 
     // Auto-generate welcome network posts disabled on TRUNCATE

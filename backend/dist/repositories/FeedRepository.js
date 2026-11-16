@@ -37,7 +37,7 @@ class FeedRepository {
         await this.ensureRepliesTableExist();
         const existing = await (0, db_1.query)(`SELECT * FROM post_replies WHERE post_id = ? AND user_id = ?`, [postId, userId]);
         if (existing.length > 0) {
-            await (0, db_1.query)(`UPDATE post_replies SET reply_type = ?, target_person = ?, content = ?, author_name = ?, author_avatar = ? WHERE reply_id = ?`, [replyType, targetPerson, content || null, authorName, authorAvatar || null, existing[0].reply_id]);
+            await (0, db_1.query)(`UPDATE post_replies SET reply_type = ?, target_person = ?, content = ?, author_name = ?, author_avatar = ?, created_at = CURRENT_TIMESTAMP WHERE reply_id = ?`, [replyType, targetPerson, content || null, authorName, authorAvatar || null, existing[0].reply_id]);
             return existing[0].reply_id;
         }
         else {
@@ -92,11 +92,15 @@ class FeedRepository {
        ) OR EXISTS (
          SELECT 1 FROM post_replies r WHERE r.post_id = p.post_id AND r.user_id = ?
        )
-       ORDER BY p.created_at DESC, p.post_id DESC`, [userId, userId]);
+       ORDER BY GREATEST(p.created_at, COALESCE((
+         SELECT MAX(r.created_at)
+         FROM post_replies r
+         WHERE r.post_id = p.post_id AND (p.user_id = ? OR r.user_id = ?)
+       ), p.created_at)) DESC, p.post_id DESC`, [userId, userId, userId, userId]);
         return this.hideRedundantContactShares(posts);
     }
     static async list(userId, limit = 30) {
-        let rows = await (0, db_1.query)(`SELECT * FROM posts WHERE user_id != ? ORDER BY created_at DESC LIMIT 100`, [userId]);
+        let rows = await (0, db_1.query)(`SELECT * FROM posts ORDER BY created_at DESC, post_id DESC LIMIT 100`);
         // Auto-generate welcome network posts disabled on TRUNCATE
         /*
         if (rows.length === 0) {
