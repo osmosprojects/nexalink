@@ -135,7 +135,8 @@ export class FeedRepository {
 
   static async list(userId: number, limit = 30): Promise<PostRow[]> {
     let rows = await query<any[]>(
-      `SELECT * FROM posts ORDER BY created_at DESC LIMIT 100`
+      `SELECT * FROM posts WHERE user_id != ? ORDER BY created_at DESC LIMIT 100`,
+      [userId]
     );
 
     // Auto-generate welcome network posts disabled on TRUNCATE

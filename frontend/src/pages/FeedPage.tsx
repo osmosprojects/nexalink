@@ -139,6 +139,15 @@ export const FeedPage: React.FC = () => {
   const { data: posts = [], isLoading } = useQuery<Post[]>({
     queryKey: ['feed'],
     queryFn: () => api.get<Post[]>('/feed'),
+    select: (data) =>
+      data.filter((post) => {
+        const isOwnPost = Boolean(
+          (user?.userId && post.user_id && Number(user.userId) === Number(post.user_id)) ||
+          (profile?.user_id && post.user_id && Number(profile.user_id) === Number(post.user_id)) ||
+          (user?.displayName && post.author_name && user.displayName.trim().toLowerCase() === post.author_name.trim().toLowerCase())
+        );
+        return !isOwnPost;
+      }),
   });
 
   // Fetch replies from API for posts
