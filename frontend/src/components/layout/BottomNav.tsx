@@ -43,7 +43,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenQuickAdd }) => {
     { to: '/calendar', label: 'My Networking Calendar', icon: Calendar },
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/tasks', label: 'Tasks', icon: CheckSquare },
-    { to: '/interactions', label: 'Interactions', icon: MessageSquareShare },
+    { to: '/interactions', label: 'Personal Feed', icon: MessageSquareShare },
     { to: '/goals', label: 'Goals', icon: Target },
     { to: '/kanban', label: 'Kanban Board', icon: KanbanSquare },
     { to: '/notes', label: 'Notes', icon: FileText },
